@@ -68,6 +68,11 @@ static uint8_t test_frame_type_max_data[] = {
     0xC0, 0, 0x01, 0, 0, 0, 0, 0
 };
 
+static uint8_t test_frame_type_max_data_large[] = {
+    picoquic_frame_type_max_data,
+    0xBF, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xFF
+};
+
 static uint8_t test_frame_type_max_stream_data[] = {
     picoquic_frame_type_max_stream_data,
     1,
@@ -472,6 +477,7 @@ fuzi_q_frames_t fuzi_q_frame_list[] = {
     FUZI_Q_ITEM("application_close", test_type_application_close),
     FUZI_Q_ITEM("application_close", test_type_application_close_reason),
     FUZI_Q_ITEM("max_data", test_frame_type_max_data),
+    FUZI_Q_ITEM("max_data_large", test_frame_type_max_data_large),
     FUZI_Q_ITEM("max_stream_data", test_frame_type_max_stream_data),
     FUZI_Q_ITEM("max_streams_bidir", test_frame_type_max_streams_bidir),
     FUZI_Q_ITEM("max_streams_unidir", test_frame_type_max_streams_unidir),

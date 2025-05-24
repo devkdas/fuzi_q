@@ -330,13 +330,75 @@ void stream_frame_fuzzer(uint64_t fuzz_pilot, uint8_t* bytes, uint8_t* bytes_max
 
     bytes = fuzz_in_place_or_skip_varint(fuzz_pilot, bytes, bytes_max, fuzz_stream_id);
 
+    // Fuzz Offset if present
     if (off) {
-        bytes = fuzz_in_place_or_skip_varint(fuzz_pilot, bytes, bytes_max, fuzz_offset);
+        if (fuzz_offset) { // Check if we decided to fuzz this field
+            uint8_t* field_start = bytes;
+            uint8_t* field_end = (uint8_t*)picoquic_frames_varint_skip(field_start, bytes_max);
+
+            if (field_end != NULL) { // Successfully identified a varint
+                if ((fuzz_pilot & 0x03) == 0) { // 1-in-4 chance for boundary value
+                    fuzz_pilot >>= 2; // Consume bits
+                    size_t varint_len = field_end - field_start;
+                    if (varint_len > 0 && varint_len <= 8) {
+                        // Set to maximal value for this varint length, preserving 2 MSB of first byte
+                        field_start[0] |= 0x3F; // Set lower 6 bits of first byte to 1
+                        for (size_t i = 1; i < varint_len; i++) {
+                            field_start[i] = 0xFF;
+                        }
+                        bytes = field_end; // Advance bytes pointer
+                    } else {
+                        // Varint length invalid for this specific operation, fallback to regular fuzzing
+                        bytes = fuzz_in_place_or_skip_varint(fuzz_pilot, field_start, bytes_max, 1);
+                    }
+                } else { 
+                    fuzz_pilot >>= 2; // Consume bits if not taken by boundary value path
+                    bytes = fuzz_in_place_or_skip_varint(fuzz_pilot, field_start, bytes_max, 1);
+                }
+            } else {
+                // field_end is NULL, field_start is likely invalid or at/past bytes_max.
+                // Regular fuzzing will handle this (likely skip or do nothing if bytes is already NULL/invalid).
+                bytes = fuzz_in_place_or_skip_varint(fuzz_pilot, field_start, bytes_max, 1);
+            }
+        } else {
+            // Just skip if not fuzzing this field
+            bytes = (uint8_t*)picoquic_frames_varint_skip(bytes, bytes_max);
+        }
     }
 
-    /* TODO: may want to be a bit smarter when fuzzing the length */
+    // Fuzz Length if present
     if (len) {
-        bytes = fuzz_in_place_or_skip_varint(fuzz_pilot, bytes, bytes_max, fuzz_length);
+        if (fuzz_length) { // Check if we decided to fuzz this field
+            uint8_t* field_start = bytes;
+            uint8_t* field_end = (uint8_t*)picoquic_frames_varint_skip(field_start, bytes_max);
+
+            if (field_end != NULL) { // Successfully identified a varint
+                if ((fuzz_pilot & 0x03) == 0) { // 1-in-4 chance for boundary value
+                    fuzz_pilot >>= 2; // Consume bits
+                    size_t varint_len = field_end - field_start;
+                    if (varint_len > 0 && varint_len <= 8) {
+                        // Set to maximal value for this varint length, preserving 2 MSB of first byte
+                        field_start[0] |= 0x3F; // Set lower 6 bits of first byte to 1
+                        for (size_t i = 1; i < varint_len; i++) {
+                            field_start[i] = 0xFF;
+                        }
+                        bytes = field_end; // Advance bytes pointer
+                    } else {
+                        // Varint length invalid for this specific operation, fallback to regular fuzzing
+                        bytes = fuzz_in_place_or_skip_varint(fuzz_pilot, field_start, bytes_max, 1);
+                    }
+                } else { 
+                    fuzz_pilot >>= 2; // Consume bits if not taken by boundary value path
+                    bytes = fuzz_in_place_or_skip_varint(fuzz_pilot, field_start, bytes_max, 1);
+                }
+            } else {
+                // field_end is NULL. Regular fuzzing will handle this.
+                bytes = fuzz_in_place_or_skip_varint(fuzz_pilot, field_start, bytes_max, 1);
+            }
+        } else {
+            // Just skip if not fuzzing this field
+            bytes = (uint8_t*)picoquic_frames_varint_skip(bytes, bytes_max);
+        }
     }
 
     if (bytes != NULL && fuzz_random) {
