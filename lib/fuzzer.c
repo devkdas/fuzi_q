@@ -109,6 +109,94 @@ void fuzz_random_byte(uint64_t fuzz_pilot, uint8_t* bytes, uint8_t* bytes_max)
     }
 }
 
+/* ACK FREQUENCY frame fuzzer.
+ * ACK_FREQUENCY Frame {
+ *   Type (i) = 0xaf,
+ *   Sequence Number (i),
+ *   Packet Tolerance (i),
+ *   Update Max Ack Delay (i)
+ * }
+ * Fuzz one of the three varint fields, or a random byte in the payload.
+ */
+void ack_frequency_frame_fuzzer(uint64_t fuzz_pilot, uint8_t* bytes, uint8_t* bytes_max)
+{
+    uint8_t* payload_start = bytes;
+    uint8_t* current_field = bytes;
+
+    // Skip frame type
+    current_field = (uint8_t*)picoquic_frames_varint_skip(current_field, bytes_max);
+    payload_start = current_field;
+
+    if (current_field == NULL || current_field >= bytes_max) {
+        // Not enough space for even the type, or type parsing failed.
+        // Fallback to random byte fuzz on whatever is there, if anything.
+        if (bytes < bytes_max) {
+            fuzz_random_byte(fuzz_pilot, bytes, bytes_max);
+        }
+        return;
+    }
+
+    int choice = fuzz_pilot % 4;
+    fuzz_pilot >>= 2;
+
+    /* uint8_t* field_to_fuzz = NULL; Removed as per example, direct usage */
+
+    // Iterate to find the start of each field for potential fuzzing
+    uint8_t* seq_num_start = payload_start;
+    uint8_t* pkt_tol_start = NULL;
+    uint8_t* upd_delay_start = NULL;
+
+    if (seq_num_start < bytes_max) {
+        pkt_tol_start = (uint8_t*)picoquic_frames_varint_skip(seq_num_start, bytes_max);
+    }
+    if (pkt_tol_start != NULL && pkt_tol_start < bytes_max) {
+        upd_delay_start = (uint8_t*)picoquic_frames_varint_skip(pkt_tol_start, bytes_max);
+    }
+
+    switch (choice) {
+    case 0: // Fuzz Sequence Number
+        if (seq_num_start != NULL && seq_num_start < bytes_max) {
+            fuzz_in_place_or_skip_varint(fuzz_pilot, seq_num_start, bytes_max, 1);
+        }
+        break;
+    case 1: // Fuzz Packet Tolerance
+        if (pkt_tol_start != NULL && pkt_tol_start < bytes_max) {
+            fuzz_in_place_or_skip_varint(fuzz_pilot, pkt_tol_start, bytes_max, 1);
+        }
+        break;
+    case 2: // Fuzz Update Max Ack Delay
+        if (upd_delay_start != NULL && upd_delay_start < bytes_max) {
+            fuzz_in_place_or_skip_varint(fuzz_pilot, upd_delay_start, bytes_max, 1);
+        }
+        break;
+    case 3: // Fuzz a random byte in the payload
+        if (payload_start < bytes_max) {
+            // Determine the end of the actual frame data if possible
+            uint8_t* payload_end = bytes_max; // Default to bytes_max
+            if (upd_delay_start != NULL && upd_delay_start < bytes_max) {
+                 uint8_t* temp_end = (uint8_t*)picoquic_frames_varint_skip(upd_delay_start, bytes_max);
+                 if (temp_end != NULL) payload_end = temp_end;
+            } else if (pkt_tol_start != NULL && pkt_tol_start < bytes_max) {
+                 uint8_t* temp_end = (uint8_t*)picoquic_frames_varint_skip(pkt_tol_start, bytes_max);
+                 if (temp_end != NULL) payload_end = temp_end;
+            } else if (seq_num_start != NULL && seq_num_start < bytes_max) {
+                 uint8_t* temp_end = (uint8_t*)picoquic_frames_varint_skip(seq_num_start, bytes_max);
+                 if (temp_end != NULL) payload_end = temp_end;
+            }
+
+            if (payload_start < payload_end) { // ensure there's a valid range
+                 fuzz_random_byte(fuzz_pilot, payload_start, payload_end);
+            } else if (payload_start < bytes_max) { // fallback if payload_end is problematic
+                 fuzz_random_byte(fuzz_pilot, payload_start, bytes_max);
+            }
+        }
+        break;
+    default:
+        // Should not happen
+        break;
+    }
+}
+
 uint8_t* fuzz_in_place_or_skip_varint(uint64_t fuzz_pilot, uint8_t* bytes, uint8_t* bytes_max, int do_fuzz)
 {
     if (bytes != NULL) {
@@ -242,13 +330,75 @@ void stream_frame_fuzzer(uint64_t fuzz_pilot, uint8_t* bytes, uint8_t* bytes_max
 
     bytes = fuzz_in_place_or_skip_varint(fuzz_pilot, bytes, bytes_max, fuzz_stream_id);
 
+    // Fuzz Offset if present
     if (off) {
-        bytes = fuzz_in_place_or_skip_varint(fuzz_pilot, bytes, bytes_max, fuzz_offset);
+        if (fuzz_offset) { // Check if we decided to fuzz this field
+            uint8_t* field_start = bytes;
+            uint8_t* field_end = (uint8_t*)picoquic_frames_varint_skip(field_start, bytes_max);
+
+            if (field_end != NULL) { // Successfully identified a varint
+                if ((fuzz_pilot & 0x03) == 0) { // 1-in-4 chance for boundary value
+                    fuzz_pilot >>= 2; // Consume bits
+                    size_t varint_len = field_end - field_start;
+                    if (varint_len > 0 && varint_len <= 8) {
+                        // Set to maximal value for this varint length, preserving 2 MSB of first byte
+                        field_start[0] |= 0x3F; // Set lower 6 bits of first byte to 1
+                        for (size_t i = 1; i < varint_len; i++) {
+                            field_start[i] = 0xFF;
+                        }
+                        bytes = field_end; // Advance bytes pointer
+                    } else {
+                        // Varint length invalid for this specific operation, fallback to regular fuzzing
+                        bytes = fuzz_in_place_or_skip_varint(fuzz_pilot, field_start, bytes_max, 1);
+                    }
+                } else { 
+                    fuzz_pilot >>= 2; // Consume bits if not taken by boundary value path
+                    bytes = fuzz_in_place_or_skip_varint(fuzz_pilot, field_start, bytes_max, 1);
+                }
+            } else {
+                // field_end is NULL, field_start is likely invalid or at/past bytes_max.
+                // Regular fuzzing will handle this (likely skip or do nothing if bytes is already NULL/invalid).
+                bytes = fuzz_in_place_or_skip_varint(fuzz_pilot, field_start, bytes_max, 1);
+            }
+        } else {
+            // Just skip if not fuzzing this field
+            bytes = (uint8_t*)picoquic_frames_varint_skip(bytes, bytes_max);
+        }
     }
 
-    /* TODO: may want to be a bit smarter when fuzzing the length */
+    // Fuzz Length if present
     if (len) {
-        bytes = fuzz_in_place_or_skip_varint(fuzz_pilot, bytes, bytes_max, fuzz_length);
+        if (fuzz_length) { // Check if we decided to fuzz this field
+            uint8_t* field_start = bytes;
+            uint8_t* field_end = (uint8_t*)picoquic_frames_varint_skip(field_start, bytes_max);
+
+            if (field_end != NULL) { // Successfully identified a varint
+                if ((fuzz_pilot & 0x03) == 0) { // 1-in-4 chance for boundary value
+                    fuzz_pilot >>= 2; // Consume bits
+                    size_t varint_len = field_end - field_start;
+                    if (varint_len > 0 && varint_len <= 8) {
+                        // Set to maximal value for this varint length, preserving 2 MSB of first byte
+                        field_start[0] |= 0x3F; // Set lower 6 bits of first byte to 1
+                        for (size_t i = 1; i < varint_len; i++) {
+                            field_start[i] = 0xFF;
+                        }
+                        bytes = field_end; // Advance bytes pointer
+                    } else {
+                        // Varint length invalid for this specific operation, fallback to regular fuzzing
+                        bytes = fuzz_in_place_or_skip_varint(fuzz_pilot, field_start, bytes_max, 1);
+                    }
+                } else { 
+                    fuzz_pilot >>= 2; // Consume bits if not taken by boundary value path
+                    bytes = fuzz_in_place_or_skip_varint(fuzz_pilot, field_start, bytes_max, 1);
+                }
+            } else {
+                // field_end is NULL. Regular fuzzing will handle this.
+                bytes = fuzz_in_place_or_skip_varint(fuzz_pilot, field_start, bytes_max, 1);
+            }
+        } else {
+            // Just skip if not fuzzing this field
+            bytes = (uint8_t*)picoquic_frames_varint_skip(bytes, bytes_max);
+        }
     }
 
     if (bytes != NULL && fuzz_random) {
@@ -366,20 +516,111 @@ void padding_frame_fuzzer(uint64_t fuzz_pilot, uint8_t* bytes, uint8_t* bytes_ma
  * Either fuzz one of the 2 parameters, or fuzz the token itself.
  * Fuzzing the token might cause an issue in a follow on connection.
  */
-void new_token_frame_fuzzer(uint64_t fuzz_pilot, uint8_t* bytes, uint8_t* bytes_max)
+void new_token_frame_fuzzer(uint64_t fuzz_pilot, uint8_t* frame_start, uint8_t* bytes_max)
 {
-    int x = (fuzz_pilot % 3) == 0;
-    fuzz_pilot >>= 2;
-    if (x){
-        /* fuzz the token */
-        if ((bytes = (uint8_t*)picoquic_frames_varint_skip(bytes, bytes_max)) != NULL &&
-            (bytes = (uint8_t*)picoquic_frames_varint_skip(bytes, bytes_max)) != NULL &&
-            (bytes = (uint8_t*)picoquic_frames_varint_skip(bytes, bytes_max)) != NULL) {
-            fuzz_random_byte(fuzz_pilot, bytes, bytes_max);
+    uint8_t* token_len_varint_start;
+    uint8_t* token_data_start;
+    uint64_t actual_token_length_val;
+
+    // Skip Frame Type
+    token_len_varint_start = (uint8_t*)picoquic_frames_varint_skip(frame_start, bytes_max);
+
+    if (token_len_varint_start == NULL || token_len_varint_start >= bytes_max) {
+        if (frame_start < bytes_max) { // Fuzz type if nothing else
+            fuzz_random_byte(fuzz_pilot, frame_start, bytes_max);
         }
+        return;
     }
-    else {
-        varint_frame_fuzzer(fuzz_pilot, bytes, bytes_max, 3);
+
+    // Decode where token data would start, to calculate available space later
+    // This also decodes the current token length value
+    token_data_start = (uint8_t*)picoquic_frames_varint_decode(token_len_varint_start, bytes_max, &actual_token_length_val);
+
+    if (token_data_start == NULL) { // If token length varint itself is invalid / too long
+        // Fuzz the token length varint in place as a fallback
+        fuzz_in_place_or_skip_varint(fuzz_pilot, token_len_varint_start, bytes_max, 1);
+        return;
+    }
+
+    int choice = fuzz_pilot % 4;
+    fuzz_pilot >>= 2;
+
+    switch (choice) {
+    case 0: // Fuzz Token Length varint with specific boundary values
+        {
+            size_t space_for_token_data = (bytes_max > token_data_start) ? (bytes_max - token_data_start) : 0;
+            uint64_t target_len_val = 0;
+            int len_choice = fuzz_pilot % 4;
+            fuzz_pilot >>= 2;
+
+            switch (len_choice) {
+            case 0: target_len_val = 0; break;
+            case 1: target_len_val = space_for_token_data; break;
+            case 2: target_len_val = space_for_token_data + 1; break;
+            default: // Max value for current varint encoding of token_len_varint_start
+                {
+                    uint8_t* temp_len_end = (uint8_t*)picoquic_frames_varint_skip(token_len_varint_start, bytes_max);
+                    size_t len_varint_byte_len = (temp_len_end > token_len_varint_start) ? (temp_len_end - token_len_varint_start) : 0;
+                    if (len_varint_byte_len > 0) {
+                        token_len_varint_start[0] |= 0x3F; // Max out 6 LSBs
+                        for (size_t i = 1; i < len_varint_byte_len; i++) {
+                            token_len_varint_start[i] = 0xFF;
+                        }
+                    }
+                    // This case directly modifies, so return
+                    return;
+                }
+            }
+            // Encode target_len_val into token_len_varint_start. This is complex if it changes varint length.
+            // Simplification: If target_len_val fits into existing varint_len_varint_start's byte length, write it. Otherwise, pick another strategy.
+            // For now, let's just use the default varint fuzzer for token length for this sub-case if direct write is too complex for worker.
+            // The "max value for current varint encoding" (len_choice == default) is already good.
+            // Let's make cases 0,1,2 also use a direct write if simple, or fall to general fuzz for token length.
+            // For simplicity in this subtask, this case will just use the powerful default varint fuzzer
+            // on the token_len_varint_start. The "max value" case is specific enough.
+            if (len_choice < 3) { // For 0, available_space, available_space + 1
+                 // Picoquic doesn't have a public "picoquic_encode_varint_in_place".
+                 // So, for these, we'll just fall through to the general varint fuzzer for Token Length.
+            } else { // max value already handled
+                 return;
+            }
+        }
+        // Fall through to Choice 3 (fuzz token length varint generally) for simplicity for specific target_len_vals
+        // NO BREAK: Deliberate fall-through for len_choice < 3
+
+    case 3: // Fuzz Token Length varint generally (was Choice 3, also target for fall-through)
+        fuzz_in_place_or_skip_varint(fuzz_pilot, token_len_varint_start, bytes_max, 1);
+        break;
+
+    case 1: // Fuzz Token Data with patterned data
+        if (token_data_start < bytes_max && actual_token_length_val > 0) {
+            uint8_t* effective_token_data_end = token_data_start + actual_token_length_val;
+            if (effective_token_data_end > bytes_max) {
+                effective_token_data_end = bytes_max;
+            }
+            if (token_data_start < effective_token_data_end) { // Ensure there's space to write
+                uint8_t pattern = 0x00;
+                int pattern_choice = fuzz_pilot % 3;
+                fuzz_pilot >>= 2;
+                if (pattern_choice == 0) pattern = 0x00;
+                else if (pattern_choice == 1) pattern = 0xFF;
+                else pattern = 0xA5;
+                memset(token_data_start, pattern, effective_token_data_end - token_data_start);
+            }
+        }
+        break;
+
+    case 2: // Fuzz Token Data with fuzz_random_byte
+        if (token_data_start < bytes_max && actual_token_length_val > 0) {
+            uint8_t* effective_token_data_end = token_data_start + actual_token_length_val;
+            if (effective_token_data_end > bytes_max) {
+                effective_token_data_end = bytes_max;
+            }
+            if (token_data_start < effective_token_data_end) { // Ensure there's space to write
+                fuzz_random_byte(fuzz_pilot, token_data_start, effective_token_data_end);
+            }
+        }
+        break;
     }
 }
 
@@ -412,6 +653,139 @@ void new_cid_frame_fuzzer(uint64_t fuzz_pilot, uint8_t* bytes, uint8_t* bytes_ma
     }
     else {
         varint_frame_fuzzer(fuzz_pilot, bytes, bytes_max, 5);
+    }
+}
+
+// retire_connection_id_frame_fuzzer
+void retire_connection_id_frame_fuzzer(uint64_t fuzz_pilot, uint8_t* bytes, uint8_t* bytes_max)
+{
+    uint8_t* frame_payload_start = (uint8_t*)picoquic_frames_varint_skip(bytes, bytes_max);
+
+    if (frame_payload_start == NULL || frame_payload_start >= bytes_max) {
+        // Not enough space for sequence number or type parsing failed.
+        // Fallback to random byte fuzz on whatever is there (likely just type).
+        if (bytes < bytes_max) {
+            fuzz_random_byte(fuzz_pilot, bytes, bytes_max);
+        }
+        return;
+    }
+
+    uint8_t* seq_num_start = frame_payload_start;
+    uint8_t* seq_num_end = (uint8_t*)picoquic_frames_varint_skip(seq_num_start, bytes_max);
+
+    if (seq_num_end == NULL) { 
+      // This implies seq_num_start was invalid (e.g. at bytes_max or beyond)
+      // or that bytes_max was too small for a full varint.
+      // Fallback to general fuzzing on what might be the start of the sequence number.
+      fuzz_in_place_or_skip_varint(fuzz_pilot >> 2, seq_num_start, bytes_max, 1);
+      return;
+    }
+
+    int choice = fuzz_pilot % 4;
+    fuzz_pilot >>= 2;
+
+    size_t varint_len = seq_num_end - seq_num_start;
+
+    // If varint_len is 0 (e.g., seq_num_start == seq_num_end, potentially if seq_num_start was bytes_max),
+    // and we are not in default case, switch to default case.
+    if (varint_len == 0 && choice !=3) { 
+        choice = 3; 
+    }
+
+    switch (choice) {
+    case 0: // Set Sequence Number to 0
+        if (varint_len > 0) {
+            uint8_t prefix = seq_num_start[0] & 0xC0; // Preserve 2 MSBs encoding length
+            seq_num_start[0] = prefix; // Set value bits to 0 for first byte
+            for (size_t i = 1; i < varint_len; i++) {
+                seq_num_start[i] = 0x00; // Set subsequent bytes to 0
+            }
+        }
+        break;
+    case 1: // Set Sequence Number to 1
+        if (varint_len > 0) {
+            uint8_t prefix = seq_num_start[0] & 0xC0; // Preserve 2 MSBs
+            if (varint_len == 1) {
+                seq_num_start[0] = prefix | 0x01; // Set value to 1 for 1-byte varint
+            } else {
+                // For multi-byte varint, set first byte's value part to 0,
+                // all intermediate bytes to 0, and last byte to 1.
+                seq_num_start[0] = prefix; 
+                for (size_t i = 1; i < varint_len -1; i++) {
+                    seq_num_start[i] = 0x00;
+                }
+                seq_num_start[varint_len - 1] = 0x01;
+            }
+        }
+        break;
+    case 2: // Set Sequence Number to max value for its current varint length
+        if (varint_len > 0) {
+            seq_num_start[0] |= 0x3F; // Preserve 2 MSBs, set lower 6 bits to 1
+            for (size_t i = 1; i < varint_len; i++) {
+                seq_num_start[i] = 0xFF;
+            }
+        }
+        break;
+    default: // Case 3: General fuzzing
+        fuzz_in_place_or_skip_varint(fuzz_pilot, seq_num_start, bytes_max, 1 /* do_fuzz = true */);
+        break;
+    }
+}
+
+void path_abandon_frame_fuzzer(uint64_t fuzz_pilot, uint8_t* frame_start, uint8_t* bytes_max)
+{
+    uint8_t* path_id_varint_start;
+    uint8_t* error_code_varint_start;
+
+    path_id_varint_start = (uint8_t*)picoquic_frames_varint_skip(frame_start, bytes_max); // Skip Type
+
+    if (path_id_varint_start == NULL || path_id_varint_start >= bytes_max) {
+        if (frame_start < bytes_max) fuzz_random_byte(fuzz_pilot, frame_start, bytes_max); // Fuzz type
+        return;
+    }
+
+    error_code_varint_start = (uint8_t*)picoquic_frames_varint_skip(path_id_varint_start, bytes_max); // Skip Path ID to get to Error Code
+
+    // If error_code_varint_start is NULL, it means Path ID varint was too long or invalid.
+
+    int choice = fuzz_pilot % 3;
+    fuzz_pilot >>= 2;
+
+    switch (choice) {
+    case 0: // Target Path ID
+        // Sub-choices for 0, 1, max_val, general fuzz_in_place (similar to retire_connection_id_fuzzer)
+        // For this subtask, let's simplify to just general fuzz for Path ID here
+        fuzz_in_place_or_skip_varint(fuzz_pilot, path_id_varint_start, bytes_max, 1);
+        // Optionally, a light fuzz or skip for error code if it exists
+        if (error_code_varint_start != NULL && error_code_varint_start < bytes_max) {
+            fuzz_in_place_or_skip_varint(fuzz_pilot >> 4, error_code_varint_start, bytes_max, (fuzz_pilot & 1)); // Small chance to also fuzz error code
+        }
+        break;
+
+    case 1: // Target Error Code
+        if (error_code_varint_start != NULL && error_code_varint_start < bytes_max) {
+            // Sub-choices for specific error codes, max_val, general fuzz_in_place
+            // For this subtask, simplify to just general fuzz for Error Code
+            fuzz_in_place_or_skip_varint(fuzz_pilot, error_code_varint_start, bytes_max, 1);
+        } else {
+            // Error code not reachable, so fuzz Path ID instead
+            fuzz_in_place_or_skip_varint(fuzz_pilot, path_id_varint_start, bytes_max, 1);
+        }
+        break;
+
+    default: // Case 2: Fuzz both generally or random byte over payload
+        fuzz_in_place_or_skip_varint(fuzz_pilot, path_id_varint_start, bytes_max, 1);
+        if (error_code_varint_start != NULL && error_code_varint_start < bytes_max) {
+             // Re-get start of error code varint, as path_id fuzzing might have shifted things if not careful
+             // This re-evaluation of error_code_varint_start is crucial if path_id_varint_start's length could change.
+             // However, fuzz_in_place_or_skip_varint is not supposed to change the varint's byte length.
+             // So, the original error_code_varint_start should still be valid if it was valid before.
+             uint8_t* current_error_code_start = (uint8_t*)picoquic_frames_varint_skip(path_id_varint_start, bytes_max);
+             if (current_error_code_start != NULL && current_error_code_start < bytes_max) {
+                fuzz_in_place_or_skip_varint(fuzz_pilot >> 4, current_error_code_start, bytes_max, 1);
+             }
+        }
+        break;
     }
 }
 
@@ -504,8 +878,7 @@ int frame_header_fuzzer(uint64_t fuzz_pilot,
                 varint_frame_fuzzer(fuzz_pilot, frame_byte, frame_max, 2);
                 break;
             case picoquic_frame_type_retire_connection_id:
-                /* Consider special values */
-                varint_frame_fuzzer(fuzz_pilot, frame_byte, frame_max, 2);
+                retire_connection_id_frame_fuzzer(fuzz_pilot, frame_byte, frame_max);
                 break;
             case picoquic_frame_type_connection_close:
             case picoquic_frame_type_application_close:
@@ -546,15 +919,13 @@ int frame_header_fuzzer(uint64_t fuzz_pilot,
                         ack_frame_fuzzer(fuzz_pilot, frame_byte, frame_max);
                         break;
                     case picoquic_frame_type_ack_frequency:
-                        /* Treat last byte as if varint */
-                        varint_frame_fuzzer(fuzz_pilot, frame_byte, frame_max, 4);
+                        ack_frequency_frame_fuzzer(fuzz_pilot, frame_byte, frame_max);
                         break;
                     case picoquic_frame_type_time_stamp:
                         varint_frame_fuzzer(fuzz_pilot, frame_byte, frame_max, 2);
                         break;
                     case picoquic_frame_type_path_abandon:
-                        /* matching multipath draft 11 */
-                        varint_frame_fuzzer(fuzz_pilot, frame_byte, frame_max, 3);
+                        path_abandon_frame_fuzzer(fuzz_pilot, frame_byte, frame_max);
                         break;
                     case picoquic_frame_type_path_available:
                     case picoquic_frame_type_path_backup:
