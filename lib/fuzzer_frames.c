@@ -389,19 +389,19 @@ static uint8_t test_frame_type_crypto_hs_alt[] = {
 };
 
 static uint8_t test_frame_crypto_zero_len[] = {
-    picoquic_frame_type_crypto, 0x00, 0x00
+    picoquic_frame_type_crypto_hs, 0x00, 0x00
 };
 
 static uint8_t test_frame_crypto_large_offset[] = {
-    picoquic_frame_type_crypto, 0x50, 0x00, 0x05, 'd','u','m','m','y'
+    picoquic_frame_type_crypto_hs, 0x50, 0x00, 0x05, 'd','u','m','m','y'
 };
 
 static uint8_t test_frame_crypto_fragment1[] = {
-    picoquic_frame_type_crypto, 0x00, 0x05, 'H','e','l','l','o'
+    picoquic_frame_type_crypto_hs, 0x00, 0x05, 'H','e','l','l','o'
 };
 
 static uint8_t test_frame_crypto_fragment2[] = {
-    picoquic_frame_type_crypto, 0x05, 0x05, 'W','o','r','l','d'
+    picoquic_frame_type_crypto_hs, 0x05, 0x05, 'W','o','r','l','d'
 };
 
 static uint8_t test_frame_type_retire_connection_id[] = {
