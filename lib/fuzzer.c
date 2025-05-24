@@ -109,6 +109,94 @@ void fuzz_random_byte(uint64_t fuzz_pilot, uint8_t* bytes, uint8_t* bytes_max)
     }
 }
 
+/* ACK FREQUENCY frame fuzzer.
+ * ACK_FREQUENCY Frame {
+ *   Type (i) = 0xaf,
+ *   Sequence Number (i),
+ *   Packet Tolerance (i),
+ *   Update Max Ack Delay (i)
+ * }
+ * Fuzz one of the three varint fields, or a random byte in the payload.
+ */
+void ack_frequency_frame_fuzzer(uint64_t fuzz_pilot, uint8_t* bytes, uint8_t* bytes_max)
+{
+    uint8_t* payload_start = bytes;
+    uint8_t* current_field = bytes;
+
+    // Skip frame type
+    current_field = (uint8_t*)picoquic_frames_varint_skip(current_field, bytes_max);
+    payload_start = current_field;
+
+    if (current_field == NULL || current_field >= bytes_max) {
+        // Not enough space for even the type, or type parsing failed.
+        // Fallback to random byte fuzz on whatever is there, if anything.
+        if (bytes < bytes_max) {
+            fuzz_random_byte(fuzz_pilot, bytes, bytes_max);
+        }
+        return;
+    }
+
+    int choice = fuzz_pilot % 4;
+    fuzz_pilot >>= 2;
+
+    /* uint8_t* field_to_fuzz = NULL; Removed as per example, direct usage */
+
+    // Iterate to find the start of each field for potential fuzzing
+    uint8_t* seq_num_start = payload_start;
+    uint8_t* pkt_tol_start = NULL;
+    uint8_t* upd_delay_start = NULL;
+
+    if (seq_num_start < bytes_max) {
+        pkt_tol_start = (uint8_t*)picoquic_frames_varint_skip(seq_num_start, bytes_max);
+    }
+    if (pkt_tol_start != NULL && pkt_tol_start < bytes_max) {
+        upd_delay_start = (uint8_t*)picoquic_frames_varint_skip(pkt_tol_start, bytes_max);
+    }
+
+    switch (choice) {
+    case 0: // Fuzz Sequence Number
+        if (seq_num_start != NULL && seq_num_start < bytes_max) {
+            fuzz_in_place_or_skip_varint(fuzz_pilot, seq_num_start, bytes_max, 1);
+        }
+        break;
+    case 1: // Fuzz Packet Tolerance
+        if (pkt_tol_start != NULL && pkt_tol_start < bytes_max) {
+            fuzz_in_place_or_skip_varint(fuzz_pilot, pkt_tol_start, bytes_max, 1);
+        }
+        break;
+    case 2: // Fuzz Update Max Ack Delay
+        if (upd_delay_start != NULL && upd_delay_start < bytes_max) {
+            fuzz_in_place_or_skip_varint(fuzz_pilot, upd_delay_start, bytes_max, 1);
+        }
+        break;
+    case 3: // Fuzz a random byte in the payload
+        if (payload_start < bytes_max) {
+            // Determine the end of the actual frame data if possible
+            uint8_t* payload_end = bytes_max; // Default to bytes_max
+            if (upd_delay_start != NULL && upd_delay_start < bytes_max) {
+                 uint8_t* temp_end = (uint8_t*)picoquic_frames_varint_skip(upd_delay_start, bytes_max);
+                 if (temp_end != NULL) payload_end = temp_end;
+            } else if (pkt_tol_start != NULL && pkt_tol_start < bytes_max) {
+                 uint8_t* temp_end = (uint8_t*)picoquic_frames_varint_skip(pkt_tol_start, bytes_max);
+                 if (temp_end != NULL) payload_end = temp_end;
+            } else if (seq_num_start != NULL && seq_num_start < bytes_max) {
+                 uint8_t* temp_end = (uint8_t*)picoquic_frames_varint_skip(seq_num_start, bytes_max);
+                 if (temp_end != NULL) payload_end = temp_end;
+            }
+
+            if (payload_start < payload_end) { // ensure there's a valid range
+                 fuzz_random_byte(fuzz_pilot, payload_start, payload_end);
+            } else if (payload_start < bytes_max) { // fallback if payload_end is problematic
+                 fuzz_random_byte(fuzz_pilot, payload_start, bytes_max);
+            }
+        }
+        break;
+    default:
+        // Should not happen
+        break;
+    }
+}
+
 uint8_t* fuzz_in_place_or_skip_varint(uint64_t fuzz_pilot, uint8_t* bytes, uint8_t* bytes_max, int do_fuzz)
 {
     if (bytes != NULL) {
@@ -546,8 +634,7 @@ int frame_header_fuzzer(uint64_t fuzz_pilot,
                         ack_frame_fuzzer(fuzz_pilot, frame_byte, frame_max);
                         break;
                     case picoquic_frame_type_ack_frequency:
-                        /* Treat last byte as if varint */
-                        varint_frame_fuzzer(fuzz_pilot, frame_byte, frame_max, 4);
+                        ack_frequency_frame_fuzzer(fuzz_pilot, frame_byte, frame_max);
                         break;
                     case picoquic_frame_type_time_stamp:
                         varint_frame_fuzzer(fuzz_pilot, frame_byte, frame_max, 2);

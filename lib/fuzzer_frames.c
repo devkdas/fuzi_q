@@ -34,6 +34,8 @@
 
 static uint8_t test_frame_type_padding[] = { 0, 0, 0 };
 
+static uint8_t test_frame_type_padding_5_bytes[] = { 0, 0, 0, 0, 0 };
+
 static uint8_t test_frame_type_reset_stream[] = {
     picoquic_frame_type_reset_stream,
     17,
@@ -80,6 +82,11 @@ static uint8_t test_frame_type_max_streams_bidir[] = {
 static uint8_t test_frame_type_max_streams_unidir[] = {
     picoquic_frame_type_max_streams_unidir,
     0x41, 7
+};
+
+static uint8_t test_frame_type_max_streams_bidir_alt[] = {
+    picoquic_frame_type_max_streams_bidir,
+    0x42, 0x0A
 };
 
 static uint8_t test_frame_type_ping[] = {
@@ -180,6 +187,13 @@ static uint8_t test_frame_type_crypto_hs[] = {
     0x10,
     0xA0, 0xA1, 0xA2, 0xA3, 0xA4, 0xA5, 0xA6, 0xA7,
     0xA8, 0xA9, 0xAA, 0xAB, 0xAC, 0xAD, 0xAE, 0xAF
+};
+
+static uint8_t test_frame_type_crypto_hs_alt[] = {
+    picoquic_frame_type_crypto_hs,
+    0x40, 0x10, /* Offset */
+    0x08, /* Length */
+    0xC0, 0xC1, 0xC2, 0xC3, 0xC4, 0xC5, 0xC6, 0xC7 /* Crypto Data */
 };
 
 static uint8_t test_frame_type_retire_connection_id[] = {
@@ -378,6 +392,16 @@ static uint8_t test_frame_type_bad_datagram[] = {
     0xA8, 0xA9, 0xAA, 0xAB, 0xAC, 0xAD, 0xAE, 0xAF
 };
 
+static uint8_t test_frame_type_new_connection_id_alt[] = {
+    picoquic_frame_type_new_connection_id,
+    0x0A, /* Sequence Number */
+    0x03, /* Retire Prior To */
+    8,    /* Length */
+    8, 7, 6, 5, 4, 3, 2, 1, /* Connection ID */
+    0xB0, 0xB1, 0xB2, 0xB3, 0xB4, 0xB5, 0xB6, 0xB7,
+    0xB8, 0xB9, 0xBA, 0xBB, 0xBC, 0xBD, 0xBE, 0xBF /* Stateless Reset Token */
+};
+
 static uint8_t test_frame_stream_hang[] = {
     0x01, 0x00, 0x0D, 0xFF, 0xFF, 0xFF, 0x01, 0x00,
     0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
@@ -442,6 +466,7 @@ static uint8_t test_frame_type_bdp_bad_length[] = {
 
 fuzi_q_frames_t fuzi_q_frame_list[] = {
     FUZI_Q_ITEM("padding", test_frame_type_padding),
+    FUZI_Q_ITEM("padding_5_bytes", test_frame_type_padding_5_bytes),
     FUZI_Q_ITEM("reset_stream", test_frame_type_reset_stream),
     FUZI_Q_ITEM("connection_close", test_type_connection_close),
     FUZI_Q_ITEM("application_close", test_type_application_close),
@@ -450,12 +475,14 @@ fuzi_q_frames_t fuzi_q_frame_list[] = {
     FUZI_Q_ITEM("max_stream_data", test_frame_type_max_stream_data),
     FUZI_Q_ITEM("max_streams_bidir", test_frame_type_max_streams_bidir),
     FUZI_Q_ITEM("max_streams_unidir", test_frame_type_max_streams_unidir),
+    FUZI_Q_ITEM("max_streams_bidir_alt", test_frame_type_max_streams_bidir_alt),
     FUZI_Q_ITEM("ping", test_frame_type_ping),
     FUZI_Q_ITEM("blocked", test_frame_type_blocked),
     FUZI_Q_ITEM("stream_data_blocked", test_frame_type_stream_blocked),
     FUZI_Q_ITEM("streams_blocked_bidir", test_frame_type_streams_blocked_bidir),
     FUZI_Q_ITEM("streams_blocked_unidir", test_frame_type_streams_blocked_unidir),
     FUZI_Q_ITEM("new_connection_id", test_frame_type_new_connection_id),
+    FUZI_Q_ITEM("new_connection_id_alt", test_frame_type_new_connection_id_alt),
     FUZI_Q_ITEM("stop_sending", test_frame_type_stop_sending),
     FUZI_Q_ITEM("challenge", test_frame_type_path_challenge),
     FUZI_Q_ITEM("response", test_frame_type_path_response),
@@ -465,6 +492,7 @@ fuzi_q_frames_t fuzi_q_frame_list[] = {
     FUZI_Q_ITEM("stream_min", test_frame_type_stream_range_min),
     FUZI_Q_ITEM("stream_max", test_frame_type_stream_range_max),
     FUZI_Q_ITEM("crypto_hs", test_frame_type_crypto_hs),
+    FUZI_Q_ITEM("crypto_hs_alt", test_frame_type_crypto_hs_alt),
     FUZI_Q_ITEM("retire_connection_id", test_frame_type_retire_connection_id),
     FUZI_Q_ITEM("datagram", test_frame_type_datagram),
     FUZI_Q_ITEM("datagram_l", test_frame_type_datagram_l),
