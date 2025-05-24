@@ -465,6 +465,13 @@ static uint8_t test_frame_type_path_backup[] = {
     0x0F, /* Sequence = 0x0F */
 };
 
+static uint8_t test_frame_type_path_backup[] = {
+    (uint8_t)(0x80 | (picoquic_frame_type_path_backup >> 24)), (uint8_t)(picoquic_frame_type_path_backup >> 16),
+    (uint8_t)(picoquic_frame_type_path_backup >> 8), (uint8_t)(picoquic_frame_type_path_backup & 0xFF),
+    0x00, /* Path 0 */
+    0x0F, /* Sequence = 0x0F */
+};
+
 static uint8_t test_frame_type_path_available[] = {
     (uint8_t)(0x80 | (picoquic_frame_type_path_available >> 24)), (uint8_t)(picoquic_frame_type_path_available >> 16),
     (uint8_t)(picoquic_frame_type_path_available >> 8), (uint8_t)(picoquic_frame_type_path_available & 0xFF),
@@ -792,6 +799,7 @@ fuzi_q_frames_t fuzi_q_frame_list[] = {
     FUZI_Q_ITEM("time_stamp", test_frame_type_time_stamp),
     FUZI_Q_ITEM("path_abandon_0", test_frame_type_path_abandon_0),
     FUZI_Q_ITEM("path_abandon_1", test_frame_type_path_abandon_1),
+    FUZI_Q_ITEM("path_backup", test_frame_type_path_backup),
     FUZI_Q_ITEM("path_available", test_frame_type_path_available),
     FUZI_Q_ITEM("path_backup", test_frame_type_path_backup),
     FUZI_Q_ITEM("path_blocked", test_frame_type_path_blocked),
