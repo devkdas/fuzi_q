@@ -36,6 +36,10 @@ static uint8_t test_frame_type_padding[] = { 0, 0, 0 };
 
 static uint8_t test_frame_type_padding_5_bytes[] = { 0, 0, 0, 0, 0 };
 
+static uint8_t test_frame_type_padding_7_bytes[] = { 0, 0, 0, 0, 0, 0, 0 };
+
+static uint8_t test_frame_type_padding_13_bytes[] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+
 static uint8_t test_frame_type_reset_stream[] = {
     picoquic_frame_type_reset_stream,
     17,
@@ -43,11 +47,23 @@ static uint8_t test_frame_type_reset_stream[] = {
     1
 };
 
+static uint8_t test_frame_type_reset_stream_high_error[] = {
+    picoquic_frame_type_reset_stream,
+    0x11,
+    0xBF, 0xFF, 0xAA, 0xAA, // Application Protocol Error Code: 0x3FFFAAAA
+    0x41, 0x00 // Final Size: 0x100
+};
+
 static uint8_t test_type_connection_close[] = {
     picoquic_frame_type_connection_close,
     0x80, 0x00, 0xCF, 0xFF, 0,
     9,
     '1', '2', '3', '4', '5', '6', '7', '8', '9'
+};
+
+static uint8_t test_frame_connection_close_transport_long_reason[] = {
+    picoquic_frame_type_connection_close, 0x1A, 0x00, 0x20,
+    'T','h','i','s',' ','i','s',' ','a',' ','v','e','r','y',' ','l','o','n','g',' ','t','e','s','t',' ','r','e','a','s','o','n','.'
 };
 
 static uint8_t test_type_application_close[] = {
@@ -61,6 +77,11 @@ static uint8_t test_type_application_close_reason[] = {
     0x44, 4,
     4,
     't', 'e', 's', 't'
+};
+
+static uint8_t test_frame_application_close_long_reason[] = {
+    picoquic_frame_type_application_close, 0x2B, 0x1E,
+    'A','n','o','t','h','e','r',' ','l','o','n','g',' ','a','p','p','l','i','c','a','t','i','o','n',' ','e','r','r','o','r','.'
 };
 
 static uint8_t test_frame_type_max_data[] = {
@@ -94,6 +115,16 @@ static uint8_t test_frame_type_max_streams_bidir_alt[] = {
     0x42, 0x0A
 };
 
+static uint8_t test_frame_type_max_streams_bidir_zero[] = {
+    picoquic_frame_type_max_streams_bidir,
+    0x00
+};
+
+static uint8_t test_frame_type_max_streams_unidir_zero[] = {
+    picoquic_frame_type_max_streams_unidir,
+    0x00
+};
+
 static uint8_t test_frame_type_ping[] = {
     picoquic_frame_type_ping
 };
@@ -103,10 +134,21 @@ static uint8_t test_frame_type_blocked[] = {
     0x80, 0x01, 0, 0
 };
 
+static uint8_t test_frame_type_data_blocked_large_offset[] = {
+    picoquic_frame_type_data_blocked,
+    0xBF, 0x12, 0x34, 0x56, 0x78, 0x9A, 0xBC, 0xDE
+};
+
 static uint8_t test_frame_type_stream_blocked[] = {
     picoquic_frame_type_stream_data_blocked,
     0x80, 1, 0, 0,
     0x80, 0x02, 0, 0
+};
+
+static uint8_t test_frame_type_stream_data_blocked_large_limits[] = {
+    picoquic_frame_type_stream_data_blocked,
+    0xBA, 0x1B, 0x2C, 0x3D, // Stream ID
+    0xBE, 0x4F, 0x5D, 0x6C  // Stream Data Limit
 };
 
 static uint8_t test_frame_type_streams_blocked_bidir[] = {
@@ -135,14 +177,30 @@ static uint8_t test_frame_type_stop_sending[] = {
     0x17
 };
 
+static uint8_t test_frame_type_stop_sending_high_error[] = {
+    picoquic_frame_type_stop_sending,
+    0x12,
+    0xBF, 0xFF, 0xBB, 0xBB // Application Protocol Error Code: 0x3FFFBBBB
+};
+
 static uint8_t test_frame_type_path_challenge[] = {
     picoquic_frame_type_path_challenge,
     1, 2, 3, 4, 5, 6, 7, 8
 };
 
+static uint8_t test_frame_type_path_challenge_alt_data[] = {
+    picoquic_frame_type_path_challenge,
+    0xFF, 0xEE, 0xDD, 0xCC, 0xBB, 0xAA, 0x99, 0x88
+};
+
 static uint8_t test_frame_type_path_response[] = {
     picoquic_frame_type_path_response,
     1, 2, 3, 4, 5, 6, 7, 8
+};
+
+static uint8_t test_frame_type_path_response_alt_data[] = {
+    picoquic_frame_type_path_response,
+    0x88, 0x99, 0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0xFF
 };
 
 static uint8_t test_frame_type_new_token[] = {
@@ -472,26 +530,38 @@ static uint8_t test_frame_type_bdp_bad_length[] = {
 fuzi_q_frames_t fuzi_q_frame_list[] = {
     FUZI_Q_ITEM("padding", test_frame_type_padding),
     FUZI_Q_ITEM("padding_5_bytes", test_frame_type_padding_5_bytes),
+    FUZI_Q_ITEM("padding_7_bytes", test_frame_type_padding_7_bytes),
+    FUZI_Q_ITEM("padding_13_bytes", test_frame_type_padding_13_bytes),
     FUZI_Q_ITEM("reset_stream", test_frame_type_reset_stream),
+    FUZI_Q_ITEM("reset_stream_high_error", test_frame_type_reset_stream_high_error),
     FUZI_Q_ITEM("connection_close", test_type_connection_close),
+    FUZI_Q_ITEM("connection_close_transport_long_reason", test_frame_connection_close_transport_long_reason),
     FUZI_Q_ITEM("application_close", test_type_application_close),
     FUZI_Q_ITEM("application_close", test_type_application_close_reason),
+    FUZI_Q_ITEM("application_close_long_reason", test_frame_application_close_long_reason),
     FUZI_Q_ITEM("max_data", test_frame_type_max_data),
     FUZI_Q_ITEM("max_data_large", test_frame_type_max_data_large),
     FUZI_Q_ITEM("max_stream_data", test_frame_type_max_stream_data),
     FUZI_Q_ITEM("max_streams_bidir", test_frame_type_max_streams_bidir),
     FUZI_Q_ITEM("max_streams_unidir", test_frame_type_max_streams_unidir),
     FUZI_Q_ITEM("max_streams_bidir_alt", test_frame_type_max_streams_bidir_alt),
+    FUZI_Q_ITEM("max_streams_bidir_zero", test_frame_type_max_streams_bidir_zero),
+    FUZI_Q_ITEM("max_streams_unidir_zero", test_frame_type_max_streams_unidir_zero),
     FUZI_Q_ITEM("ping", test_frame_type_ping),
     FUZI_Q_ITEM("blocked", test_frame_type_blocked),
+    FUZI_Q_ITEM("data_blocked_large_offset", test_frame_type_data_blocked_large_offset),
     FUZI_Q_ITEM("stream_data_blocked", test_frame_type_stream_blocked),
+    FUZI_Q_ITEM("stream_data_blocked_large_limits", test_frame_type_stream_data_blocked_large_limits),
     FUZI_Q_ITEM("streams_blocked_bidir", test_frame_type_streams_blocked_bidir),
     FUZI_Q_ITEM("streams_blocked_unidir", test_frame_type_streams_blocked_unidir),
     FUZI_Q_ITEM("new_connection_id", test_frame_type_new_connection_id),
     FUZI_Q_ITEM("new_connection_id_alt", test_frame_type_new_connection_id_alt),
     FUZI_Q_ITEM("stop_sending", test_frame_type_stop_sending),
+    FUZI_Q_ITEM("stop_sending_high_error", test_frame_type_stop_sending_high_error),
     FUZI_Q_ITEM("challenge", test_frame_type_path_challenge),
+    FUZI_Q_ITEM("path_challenge_alt_data", test_frame_type_path_challenge_alt_data),
     FUZI_Q_ITEM("response", test_frame_type_path_response),
+    FUZI_Q_ITEM("path_response_alt_data", test_frame_type_path_response_alt_data),
     FUZI_Q_ITEM("new_token", test_frame_type_new_token),
     FUZI_Q_ITEM("ack", test_frame_type_ack),
     FUZI_Q_ITEM("ack_ecn", test_frame_type_ack_ecn),
