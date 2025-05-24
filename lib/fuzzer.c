@@ -141,14 +141,12 @@ void ack_frequency_frame_fuzzer(uint64_t fuzz_pilot, uint8_t* bytes, uint8_t* by
     int choice = fuzz_pilot % 4;
     fuzz_pilot >>= 2;
 
-    /* uint8_t* field_to_fuzz = NULL; Removed as per example, direct usage */
-
     // Iterate to find the start of each field for potential fuzzing
     uint8_t* seq_num_start = payload_start;
     uint8_t* pkt_tol_start = NULL;
     uint8_t* upd_delay_start = NULL;
 
-    if (seq_num_start < bytes_max) {
+    if (seq_num_start < bytes_max) { // Check if payload_start is valid before using
         pkt_tol_start = (uint8_t*)picoquic_frames_varint_skip(seq_num_start, bytes_max);
     }
     if (pkt_tol_start != NULL && pkt_tol_start < bytes_max) {
@@ -175,20 +173,21 @@ void ack_frequency_frame_fuzzer(uint64_t fuzz_pilot, uint8_t* bytes, uint8_t* by
         if (payload_start < bytes_max) {
             // Determine the end of the actual frame data if possible
             uint8_t* payload_end = bytes_max; // Default to bytes_max
+            // Check upd_delay_start first as it's the last field
             if (upd_delay_start != NULL && upd_delay_start < bytes_max) {
                  uint8_t* temp_end = (uint8_t*)picoquic_frames_varint_skip(upd_delay_start, bytes_max);
-                 if (temp_end != NULL) payload_end = temp_end;
+                 if (temp_end != NULL && temp_end <= bytes_max) payload_end = temp_end; // temp_end can be == bytes_max if varint is last thing
             } else if (pkt_tol_start != NULL && pkt_tol_start < bytes_max) {
                  uint8_t* temp_end = (uint8_t*)picoquic_frames_varint_skip(pkt_tol_start, bytes_max);
-                 if (temp_end != NULL) payload_end = temp_end;
-            } else if (seq_num_start != NULL && seq_num_start < bytes_max) {
+                 if (temp_end != NULL && temp_end <= bytes_max) payload_end = temp_end;
+            } else if (seq_num_start != NULL && seq_num_start < bytes_max) { // seq_num_start is payload_start
                  uint8_t* temp_end = (uint8_t*)picoquic_frames_varint_skip(seq_num_start, bytes_max);
-                 if (temp_end != NULL) payload_end = temp_end;
+                 if (temp_end != NULL && temp_end <= bytes_max) payload_end = temp_end;
             }
-
-            if (payload_start < payload_end) { // ensure there's a valid range
+            // Ensure payload_start is strictly less than payload_end before fuzzing
+            if (payload_start < payload_end) {
                  fuzz_random_byte(fuzz_pilot, payload_start, payload_end);
-            } else if (payload_start < bytes_max) { // fallback if payload_end is problematic
+            } else if (payload_start < bytes_max) { // Fallback: fuzz between payload_start and bytes_max if payload_end logic was problematic
                  fuzz_random_byte(fuzz_pilot, payload_start, bytes_max);
             }
         }
