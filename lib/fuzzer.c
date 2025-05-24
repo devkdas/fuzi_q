@@ -27,6 +27,8 @@
 #include <string.h>
 #include "fuzi_q.h"
 
+uint8_t* fuzz_in_place_or_skip_varint(uint64_t fuzz_pilot, uint8_t* bytes, uint8_t* bytes_max, int do_fuzz);
+
 /*
  * Basic fuzz test just tries to flip some bits in random packets
  */
@@ -548,15 +550,15 @@ void new_token_frame_fuzzer(uint64_t fuzz_pilot, uint8_t* frame_start, uint8_t* 
     switch (choice) {
     case 0: // Fuzz Token Length varint with specific boundary values
         {
-            size_t space_for_token_data = (bytes_max > token_data_start) ? (bytes_max - token_data_start) : 0;
-            uint64_t target_len_val = 0;
+            // size_t space_for_token_data = (bytes_max > token_data_start) ? (bytes_max - token_data_start) : 0; // Kept for context if needed later
+            // uint64_t target_len_val = 0; // Removed as unused
             int len_choice = fuzz_pilot % 4;
             fuzz_pilot >>= 2;
 
             switch (len_choice) {
-            case 0: target_len_val = 0; break;
-            case 1: target_len_val = space_for_token_data; break;
-            case 2: target_len_val = space_for_token_data + 1; break;
+            case 0: /* target_len_val = 0; */ break; // Assignment removed
+            case 1: /* target_len_val = space_for_token_data; */ break; // Assignment removed
+            case 2: /* target_len_val = space_for_token_data + 1; */ break; // Assignment removed
             default: // Max value for current varint encoding of token_len_varint_start
                 {
                     uint8_t* temp_len_end = (uint8_t*)picoquic_frames_varint_skip(token_len_varint_start, bytes_max);
