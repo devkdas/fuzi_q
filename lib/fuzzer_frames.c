@@ -52,6 +52,15 @@ static uint8_t test_frame_padding_50_bytes[] = {
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00  // 50
 };
 
+/* PADDING frame (type 0x00) followed by non-zero bytes that are part of the padding */
+static uint8_t test_frame_padding_mixed_payload[] = {
+    0x00,       /* Type: PADDING frame */
+    0xFF,       /* Arbitrary byte 1 */
+    0xAA,       /* Arbitrary byte 2 */
+    0x55,       /* Arbitrary byte 3 */
+    0xCC        /* Arbitrary byte 4 */
+};
+
 static uint8_t test_frame_type_reset_stream[] = {
     picoquic_frame_type_reset_stream,
     17,
@@ -170,6 +179,12 @@ static uint8_t test_frame_type_max_streams_unidir_zero[] = {
 
 static uint8_t test_frame_max_streams_uni_very_high[] = {
     picoquic_frame_type_max_streams_unidir, 0xBF, 0xFF, 0xFF, 0xFE
+};
+
+/* MAX_STREAMS (Unidirectional) frame with a very large stream limit (2^60) */
+static uint8_t test_frame_max_streams_uni_at_limit[] = {
+    0x13,       /* Type: MAX_STREAMS (Unidirectional) */
+    0xC0, 0x00, 0x00, 0x00, 0x10, 0x00, 0x00, 0x00 /* Max Streams: 2^60 (Varint encoded) */
 };
 
 static uint8_t test_frame_type_ping[] = {
@@ -350,6 +365,35 @@ static uint8_t test_frame_ack_ecn_counts_high[] = {
     picoquic_frame_type_ack_ecn, 0x10, 0x01, 0x00, 0x00,  0x41, 0x00,  0x42, 0x00,  0x43, 0x00
 };
 
+/* ACK frame with Largest Ack = 50, ACK Delay = 10, 20 ACK ranges, each acking a single packet */
+static uint8_t test_frame_ack_many_small_ranges[] = {
+    0x02,       /* Type: ACK frame */
+    0x32,       /* Largest Acknowledged: 50 */
+    0x0A,       /* ACK Delay: 10 */
+    0x13,       /* ACK Range Count: 19 (represents 20 ranges: First + 19 more) */
+    0x00,       /* First ACK Range: 0 (acks packet 50) */
+    /* 19 more ranges, each Gap=0, Range=0 */
+    0x00, 0x00, /* Gap 0, Range 0 (acks 49) */
+    0x00, 0x00, /* Gap 0, Range 0 (acks 48) */
+    0x00, 0x00, /* Gap 0, Range 0 (acks 47) */
+    0x00, 0x00, /* Gap 0, Range 0 (acks 46) */
+    0x00, 0x00, /* Gap 0, Range 0 (acks 45) */
+    0x00, 0x00, /* Gap 0, Range 0 (acks 44) */
+    0x00, 0x00, /* Gap 0, Range 0 (acks 43) */
+    0x00, 0x00, /* Gap 0, Range 0 (acks 42) */
+    0x00, 0x00, /* Gap 0, Range 0 (acks 41) */
+    0x00, 0x00, /* Gap 0, Range 0 (acks 40) */
+    0x00, 0x00, /* Gap 0, Range 0 (acks 39) */
+    0x00, 0x00, /* Gap 0, Range 0 (acks 38) */
+    0x00, 0x00, /* Gap 0, Range 0 (acks 37) */
+    0x00, 0x00, /* Gap 0, Range 0 (acks 36) */
+    0x00, 0x00, /* Gap 0, Range 0 (acks 35) */
+    0x00, 0x00, /* Gap 0, Range 0 (acks 34) */
+    0x00, 0x00, /* Gap 0, Range 0 (acks 33) */
+    0x00, 0x00, /* Gap 0, Range 0 (acks 32) */
+    0x00, 0x00  /* Gap 0, Range 0 (acks 31) */
+};
+
 static uint8_t test_frame_type_stream_range_min[] = {
     picoquic_frame_type_stream_range_min,
     1,
@@ -372,6 +416,15 @@ static uint8_t test_frame_stream_no_offset_len_no_fin[] = { 0x0A, 0x01, 0x04, 'd
 static uint8_t test_frame_stream_all_bits_set[] = { 0x0F, 0x01, 0x40, 0x20, 0x04, 'd','a','t','a' };
 static uint8_t test_frame_stream_zero_len_data[] = { 0x0A, 0x01, 0x00 };
 static uint8_t test_frame_stream_max_offset_final[] = { 0x0D, 0x01, 0x52, 0x34, 'e','n','d' };
+
+/* STREAM frame with OFF, LEN, FIN bits set, Stream ID 1, Offset 64, Length 0, No data */
+static uint8_t test_frame_stream_off_len_empty_fin[] = {
+    0x0F,       /* Type: OFF, LEN, FIN bits set */
+    0x01,       /* Stream ID: 1 */
+    0x40, 0x40, /* Offset: 64 (Varint encoded) */
+    0x00        /* Length: 0 (Varint encoded) */
+    /* No Stream Data */
+};
 
 static uint8_t test_frame_type_crypto_hs[] = {
     picoquic_frame_type_crypto_hs,
@@ -634,6 +687,17 @@ static uint8_t test_frame_new_cid_long_id[] = {
     picoquic_frame_type_new_connection_id, 0x0D, 0x0B, 20,
     0x01,0x02,0x03,0x04,0x05,0x06,0x07,0x08,0x09,0x0A,0x0B,0x0C,0x0D,0x0E,0x0F,0x10,0x11,0x12,0x13,0x14,
     0xD0,0xD1,0xD2,0xD3,0xD4,0xD5,0xD6,0xD7,0xD8,0xD9,0xDA,0xDB,0xDC,0xDD,0xDE,0xDF
+};
+
+/* NEW_CONNECTION_ID frame with Sequence Number 0, Retire Prior To 0 */
+static uint8_t test_frame_new_cid_seq_much_lower[] = {
+    0x18,       /* Type: NEW_CONNECTION_ID */
+    0x00,       /* Sequence Number: 0 */
+    0x00,       /* Retire Prior To: 0 */
+    0x08,       /* Length: 8 */
+    0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, /* Connection ID */
+    0xA0, 0xA1, 0xA2, 0xA3, 0xA4, 0xA5, 0xA6, 0xA7, /* Stateless Reset Token */
+    0xA8, 0xA9, 0xAA, 0xAB, 0xAC, 0xAD, 0xAE, 0xAF
 };
 
 static uint8_t test_frame_stream_hang[] = {
@@ -1388,7 +1452,14 @@ fuzi_q_frames_t fuzi_q_frame_list[] = {
     FUZI_Q_ITEM("retire_cid_seq_much_higher", test_frame_retire_cid_seq_much_higher),
     FUZI_Q_ITEM("datagram_len_shorter_than_data", test_frame_datagram_len_shorter_than_data),
     FUZI_Q_ITEM("datagram_len_longer_than_data", test_frame_datagram_len_longer_than_data),
-    FUZI_Q_ITEM("datagram_zero_len_with_data", test_frame_datagram_zero_len_with_data)
+    FUZI_Q_ITEM("datagram_zero_len_with_data", test_frame_datagram_zero_len_with_data),
+
+    /* New test frames based on RFC 9000 review */
+    FUZI_Q_ITEM("stream_off_len_empty_fin", test_frame_stream_off_len_empty_fin),
+    FUZI_Q_ITEM("ack_many_small_ranges", test_frame_ack_many_small_ranges),
+    FUZI_Q_ITEM("new_cid_seq_much_lower", test_frame_new_cid_seq_much_lower),
+    FUZI_Q_ITEM("padding_mixed_payload", test_frame_padding_mixed_payload),
+    FUZI_Q_ITEM("max_streams_uni_at_limit", test_frame_max_streams_uni_at_limit)
 };
 
 size_t nb_fuzi_q_frame_list = sizeof(fuzi_q_frame_list) / sizeof(fuzi_q_frames_t);
