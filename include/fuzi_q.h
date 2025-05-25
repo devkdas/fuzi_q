@@ -79,6 +79,14 @@ typedef struct st_fuzzer_icid_ctx_t {
     int target_wait;
     int wait_count[fuzzer_cnx_state_max];
     int already_fuzzed;
+    /* For MAX_DATA stateful fuzzing */
+    uint64_t last_sent_max_data;
+    int has_sent_max_data; 
+    /* For NEW_CONNECTION_ID / RETIRE_CONNECTION_ID stateful fuzzing */
+    uint64_t last_new_cid_seq_no_sent;
+    int new_cid_seq_no_available; /* Boolean flag */
+    /* For Handshake Completion/Interruption fuzzing */
+    int handshake_done_sent_by_server;
 } fuzzer_icid_ctx_t;
 
 typedef struct st_fuzzer_ctx_t {
