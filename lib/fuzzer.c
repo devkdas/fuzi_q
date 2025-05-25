@@ -249,18 +249,64 @@ void varint_frame_fuzzer(uint64_t fuzz_pilot, uint8_t* bytes, uint8_t* bytes_max
  * ACK frame is composed of a series of varints. Default fuzz picks one of these varints
  * at random and flips it.
  */
-void ack_frame_fuzzer(uint64_t fuzz_pilot, uint8_t* bytes, uint8_t* bytes_max)
+void ack_frame_fuzzer(uint64_t fuzz_pilot, uint8_t* frame_start_bytes, uint8_t* frame_max_bytes)
 {
-    /* Assume that we have short integers, one per byte */
-    size_t nb_skipped = 0;
-    uint8_t* first_byte = bytes;
-    /* Count the varints in the list */
-    while (bytes != NULL && bytes < bytes_max) {
-        nb_skipped++;
-        bytes = (uint8_t*)picoquic_frames_varint_skip(bytes, bytes_max);
+    /* General varint fuzzing first */
+    uint8_t* current_bytes = frame_start_bytes;
+    size_t num_varints_in_frame = 0;
+    while (current_bytes != NULL && current_bytes < frame_max_bytes) {
+        num_varints_in_frame++;
+        current_bytes = (uint8_t*)picoquic_frames_varint_skip(current_bytes, frame_max_bytes);
     }
-    /* Call the varint fuzzer */
-    varint_frame_fuzzer(fuzz_pilot, first_byte, bytes_max, nb_skipped);
+    varint_frame_fuzzer(fuzz_pilot, frame_start_bytes, frame_max_bytes, num_varints_in_frame);
+
+    /* Specific ACK field fuzzing with a small probability */
+    if ((fuzz_pilot & 0xF) == 0x1) { /* 1 in 16 chance */
+        fuzz_pilot >>= 4; /* Consume the bits used for the chance */
+
+        uint8_t* largest_ack_ptr = NULL;
+        uint8_t* ack_delay_ptr = NULL;
+        uint8_t* ack_range_count_ptr = NULL;
+        uint8_t* temp_ptr = frame_start_bytes;
+
+        /* Skip Type field (already fuzzed by varint_frame_fuzzer if chosen) */
+        temp_ptr = (uint8_t*)picoquic_frames_varint_skip(temp_ptr, frame_max_bytes);
+        if (temp_ptr == NULL || temp_ptr >= frame_max_bytes) return;
+        largest_ack_ptr = temp_ptr;
+
+        temp_ptr = (uint8_t*)picoquic_frames_varint_skip(temp_ptr, frame_max_bytes);
+        if (temp_ptr == NULL || temp_ptr >= frame_max_bytes) return;
+        ack_delay_ptr = temp_ptr; /* Not used for specific value fuzzing here, but good to identify */
+
+        temp_ptr = (uint8_t*)picoquic_frames_varint_skip(temp_ptr, frame_max_bytes);
+        if (temp_ptr == NULL || temp_ptr >= frame_max_bytes) return;
+        ack_range_count_ptr = temp_ptr;
+
+        /* Fuzz 'Largest Acknowledged' to 0 or 1 */
+        if ((fuzz_pilot & 0x1) == 0) { /* 1 in 2 chance for Largest Ack after specific fuzz is triggered */
+            if (largest_ack_ptr != NULL && largest_ack_ptr < frame_max_bytes) {
+                uint8_t value_to_write = (fuzz_pilot >> 1) & 0x1; /* 0 or 1 based on next bit */
+                /* Overwrite the first byte of the varint.
+                 * If it's a 1-byte varint (value < 64), this correctly sets it to 0 or 1.
+                 * If it's a multi-byte varint, this makes it a 1-byte varint 0 or 1,
+                 * effectively shortening it and changing its value. The parser will read it
+                 * as 0 or 1. The remaining bytes of the original varint become part of the
+                 * next field or garbage, which is acceptable for fuzzing.
+                 */
+                largest_ack_ptr[0] = value_to_write;
+            }
+        }
+        fuzz_pilot >>= 2; /* Consume bits used for Largest Ack choice and value */
+
+        /* Fuzz 'ACK Range Count' to 0 */
+        /* This is done regardless of the Largest Ack fuzz choice if specific fuzz is triggered */
+        if (ack_range_count_ptr != NULL && ack_range_count_ptr < frame_max_bytes) {
+             /* Similar logic to Largest Acknowledged: setting the first byte to 0
+              * makes the varint represent the value 0.
+              */
+            ack_range_count_ptr[0] = 0x00;
+        }
+    }
 }
 
 /* Stream frame fuzzer. 
