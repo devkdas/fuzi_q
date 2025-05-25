@@ -1170,6 +1170,50 @@ static uint8_t test_frame_stop_sending_non_minimal_error_code[] = {
     0x40, 0x00  /* Non-minimal encoding of error code 0 */
 };
 
+/* New static test cases for less common frame variations */
+
+/* Test Case 1: test_frame_retire_cid_seq_much_higher */
+/* Type: picoquic_frame_type_retire_connection_id (0x19)
+ * Sequence Number: 10000 (Varint encoded as 0x67, 0x10)
+ */
+static uint8_t test_frame_retire_cid_seq_much_higher[] = {
+    picoquic_frame_type_retire_connection_id,
+    0x67, 0x10  /* Sequence Number: 10000 */
+};
+
+/* Test Case 2: test_frame_datagram_len_shorter_than_data */
+/* Type: picoquic_frame_type_datagram_l (0x31)
+ * Length: 5 (Varint encoded as 0x05)
+ * Datagram Data: "thisislongdatagramdata" (24 bytes)
+ */
+static uint8_t test_frame_datagram_len_shorter_than_data[] = {
+    picoquic_frame_type_datagram_l,
+    0x05,       /* Length: 5 */
+    't', 'h', 'i', 's', 'i', 's', 'l', 'o', 'n', 'g', 'd', 'a', 't', 'a', 'g', 'r', 'a', 'm', 'd', 'a', 't', 'a'
+};
+
+/* Test Case 3: test_frame_datagram_len_longer_than_data */
+/* Type: picoquic_frame_type_datagram_l (0x31)
+ * Length: 20 (Varint encoded as 0x14)
+ * Datagram Data: "shortdata" (9 bytes)
+ */
+static uint8_t test_frame_datagram_len_longer_than_data[] = {
+    picoquic_frame_type_datagram_l,
+    0x14,       /* Length: 20 */
+    's', 'h', 'o', 'r', 't', 'd', 'a', 't', 'a'
+};
+
+/* Test Case 4: test_frame_datagram_zero_len_with_data */
+/* Type: picoquic_frame_type_datagram_l (0x31)
+ * Length: 0 (Varint encoded as 0x00)
+ * Datagram Data: "actualdatagramdata" (18 bytes)
+ */
+static uint8_t test_frame_datagram_zero_len_with_data[] = {
+    picoquic_frame_type_datagram_l,
+    0x00,       /* Length: 0 */
+    'a', 'c', 't', 'u', 'a', 'l', 'd', 'a', 't', 'a', 'g', 'r', 'a', 'm', 'd', 'a', 't', 'a'
+};
+
 
 #define FUZI_Q_ITEM(n, x) \
     {                        \
@@ -1339,7 +1383,12 @@ fuzi_q_frames_t fuzi_q_frame_list[] = {
     /* New fuzzy varint test items */
     FUZI_Q_ITEM("max_data_non_minimal_varint", test_frame_max_data_non_minimal_varint),
     FUZI_Q_ITEM("reset_stream_invalid_9_byte_varint", test_frame_reset_stream_invalid_9_byte_varint),
-    FUZI_Q_ITEM("stop_sending_non_minimal_error_code", test_frame_stop_sending_non_minimal_error_code)
+    FUZI_Q_ITEM("stop_sending_non_minimal_error_code", test_frame_stop_sending_non_minimal_error_code),
+    /* New static test cases for less common frame variations */
+    FUZI_Q_ITEM("retire_cid_seq_much_higher", test_frame_retire_cid_seq_much_higher),
+    FUZI_Q_ITEM("datagram_len_shorter_than_data", test_frame_datagram_len_shorter_than_data),
+    FUZI_Q_ITEM("datagram_len_longer_than_data", test_frame_datagram_len_longer_than_data),
+    FUZI_Q_ITEM("datagram_zero_len_with_data", test_frame_datagram_zero_len_with_data)
 };
 
 size_t nb_fuzi_q_frame_list = sizeof(fuzi_q_frame_list) / sizeof(fuzi_q_frames_t);

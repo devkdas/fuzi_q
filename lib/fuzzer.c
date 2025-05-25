@@ -779,60 +779,175 @@ void retire_connection_id_frame_fuzzer(uint64_t fuzz_pilot, uint8_t* bytes, uint
     }
 }
 
+/* Helper function to encode and overwrite/pad (similar to max_data_fuzzer) */
+/* Returns 1 if successful, 0 otherwise. original_varint_end is the end of the original varint being replaced. */
+static int encode_and_overwrite_varint(uint8_t* field_start, uint8_t* field_end, uint8_t* frame_max, uint64_t new_value)
+{
+    if (field_start == NULL || field_end == NULL || field_start >= field_end || field_start >= frame_max) {
+        return 0; /* Invalid parameters or no space for original varint */
+    }
+
+    size_t original_varint_len = field_end - field_start;
+    uint8_t temp_buffer[16]; /* Max varint is 8 bytes, plus some buffer */
+    uint8_t* temp_encode_end = picoquic_varint_encode(temp_buffer, sizeof(temp_buffer), new_value);
+    
+    if (temp_encode_end == temp_buffer) { /* Encoding failed or value is zero and encode wrote nothing (should write 0x00 for 0) */
+        if (new_value == 0) { /* Handle encoding of 0 explicitly if needed */
+            temp_buffer[0] = 0;
+            temp_encode_end = temp_buffer + 1;
+        } else {
+            return 0; /* Encoding error */
+        }
+    }
+    
+    size_t new_varint_len = temp_encode_end - temp_buffer;
+
+    if (new_varint_len <= original_varint_len) {
+        memcpy(field_start, temp_buffer, new_varint_len);
+        if (new_varint_len < original_varint_len) {
+            /* Pad with 0x00 if the new varint is shorter */
+            memset(field_start + new_varint_len, 0, original_varint_len - new_varint_len);
+        }
+        return 1;
+    }
+    return 0; /* New varint is too long to fit in original space */
+}
+
+
+/* 1. Modify path_abandon_frame_fuzzer */
 void path_abandon_frame_fuzzer(uint64_t fuzz_pilot, uint8_t* frame_start, uint8_t* bytes_max)
 {
-    uint8_t* path_id_varint_start;
-    uint8_t* error_code_varint_start;
+    uint8_t* p = frame_start;
+    uint64_t frame_type;
+    int specific_fuzz_done = 0;
 
-    path_id_varint_start = (uint8_t*)picoquic_frames_varint_skip(frame_start, bytes_max); // Skip Type
-
-    if (path_id_varint_start == NULL || path_id_varint_start >= bytes_max) {
-        if (frame_start < bytes_max) fuzz_random_byte(fuzz_pilot, frame_start, bytes_max); // Fuzz type
+    /* Decode frame type (varint) */
+    p = (uint8_t*)picoquic_frames_varint_decode(p, bytes_max, &frame_type);
+    if (p == NULL || p >= bytes_max) {
+        default_frame_fuzzer(fuzz_pilot, frame_start, bytes_max);
         return;
     }
 
-    error_code_varint_start = (uint8_t*)picoquic_frames_varint_skip(path_id_varint_start, bytes_max); // Skip Path ID to get to Error Code
+    uint8_t* path_id_start = p;
+    uint64_t original_path_id;
+    uint8_t* path_id_end = (uint8_t*)picoquic_frames_varint_decode(path_id_start, bytes_max, &original_path_id);
 
-    // If error_code_varint_start is NULL, it means Path ID varint was too long or invalid.
+    if (path_id_end == NULL || path_id_start == path_id_end) { // Parsing failed or empty varint
+        default_frame_fuzzer(fuzz_pilot, frame_start, bytes_max);
+        return;
+    }
+
+    uint8_t* error_code_start = path_id_end;
+    uint64_t original_error_code;
+    uint8_t* error_code_end = (uint8_t*)picoquic_frames_varint_decode(error_code_start, bytes_max, &original_error_code);
+    
+    if (error_code_end == NULL || error_code_start == error_code_end) { // Parsing failed or empty varint
+         /* If error code cannot be parsed, we might still fuzz Path ID or default */
+         error_code_start = NULL; /* Mark as invalid */
+         error_code_end = NULL;
+    }
+
+    /* With a 1-in-4 chance, attempt specific value fuzzing */
+    if ((fuzz_pilot & 0x03) == 0) {
+        fuzz_pilot >>= 2;
+        int fuzz_target_choice = fuzz_pilot % 2; /* 0 for Path ID, 1 for Error Code */
+        fuzz_pilot >>= 1;
+
+        if (fuzz_target_choice == 0) { /* Fuzz Path ID */
+            if (path_id_start != NULL && path_id_end != NULL) {
+                uint64_t new_path_id_val = ((fuzz_pilot >> 1) & 1) ? 0x3FFFFFFFFFFFFFFF : 0;
+                if (encode_and_overwrite_varint(path_id_start, path_id_end, bytes_max, new_path_id_val)) {
+                    specific_fuzz_done = 1;
+                }
+            }
+        } else { /* Fuzz Error Code */
+            if (error_code_start != NULL && error_code_end != NULL) {
+                uint64_t new_error_code_val;
+                int error_choice = fuzz_pilot % 3;
+                fuzz_pilot >>= 2;
+                if (error_choice == 0) {
+                    new_error_code_val = 0;
+                } else if (error_choice == 1) {
+                    new_error_code_val = PICOQUIC_TRANSPORT_FRAME_ENCODING_ERROR;
+                } else {
+                    new_error_code_val = 0x3FFFFFFFFFFFFFFF;
+                }
+                if (encode_and_overwrite_varint(error_code_start, error_code_end, bytes_max, new_error_code_val)) {
+                    specific_fuzz_done = 1;
+                }
+            }
+        }
+    }
+
+    if (!specific_fuzz_done) {
+        /* Fallback to bit-flipping or default fuzzer */
+        uint8_t* current_field = frame_start;
+        current_field = (uint8_t*)picoquic_frames_varint_skip(current_field, bytes_max); // Skip Type
+
+        if (current_field != NULL && current_field < bytes_max) { // Path ID
+            current_field = fuzz_in_place_or_skip_varint(fuzz_pilot, current_field, bytes_max, 1);
+            fuzz_pilot >>= 8; // Shift pilot for next field
+        }
+        if (current_field != NULL && current_field < bytes_max) { // Error Code
+            fuzz_in_place_or_skip_varint(fuzz_pilot, current_field, bytes_max, 1);
+        }
+    }
+}
+
+/* 2. Create path_id_sequence_frame_fuzzer */
+void path_id_sequence_frame_fuzzer(uint64_t fuzz_pilot, uint8_t* frame_start, uint8_t* frame_max)
+{
+    uint8_t* p = frame_start;
+    uint64_t frame_type;
+    int specific_fuzz_done = 0;
+
+    /* Decode frame type (varint) */
+    p = (uint8_t*)picoquic_frames_varint_decode(p, frame_max, &frame_type);
+    if (p == NULL || p >= frame_max) {
+        default_frame_fuzzer(fuzz_pilot, frame_start, frame_max);
+        return;
+    }
+
+    uint8_t* path_id_start = p;
+    uint64_t original_path_id;
+    uint8_t* path_id_end = (uint8_t*)picoquic_frames_varint_decode(path_id_start, frame_max, &original_path_id);
+
+    if (path_id_end == NULL || path_id_start == path_id_end) {
+        default_frame_fuzzer(fuzz_pilot, frame_start, frame_max);
+        return;
+    }
+
+    uint8_t* seq_no_start = path_id_end;
+    uint64_t original_seq_no;
+    uint8_t* seq_no_end = (uint8_t*)picoquic_frames_varint_decode(seq_no_start, frame_max, &original_seq_no);
+    
+    if (seq_no_end == NULL || seq_no_start == seq_no_end) {
+        seq_no_start = NULL; /* Mark as invalid for specific fuzzing */
+        seq_no_end = NULL;
+    }
 
     int choice = fuzz_pilot % 3;
-    fuzz_pilot >>= 2;
+    fuzz_pilot >>= 2; 
 
-    switch (choice) {
-    case 0: // Target Path ID
-        // Sub-choices for 0, 1, max_val, general fuzz_in_place (similar to retire_connection_id_fuzzer)
-        // For this subtask, let's simplify to just general fuzz for Path ID here
-        fuzz_in_place_or_skip_varint(fuzz_pilot, path_id_varint_start, bytes_max, 1);
-        // Optionally, a light fuzz or skip for error code if it exists
-        if (error_code_varint_start != NULL && error_code_varint_start < bytes_max) {
-            fuzz_in_place_or_skip_varint(fuzz_pilot >> 4, error_code_varint_start, bytes_max, (fuzz_pilot & 1)); // Small chance to also fuzz error code
+    if (choice == 0) { /* 1-in-3: Target Path ID */
+        if (path_id_start && path_id_end) {
+            uint64_t new_path_id_val = (fuzz_pilot & 1) ? 0x3FFFFFFFFFFFFFFF : 0;
+            if (encode_and_overwrite_varint(path_id_start, path_id_end, frame_max, new_path_id_val)) {
+                specific_fuzz_done = 1;
+            }
         }
-        break;
+    } else if (choice == 1) { /* 1-in-3: Target Sequence Number */
+        if (seq_no_start && seq_no_end) {
+            uint64_t new_seq_no_val = (fuzz_pilot & 1) ? 0x3FFFFFFFFFFFFFFF : 0;
+            if (encode_and_overwrite_varint(seq_no_start, seq_no_end, frame_max, new_seq_no_val)) {
+                specific_fuzz_done = 1;
+            }
+        }
+    }
+    /* Else (choice == 2, 1-in-3), no specific fuzzing, fall through to default */
 
-    case 1: // Target Error Code
-        if (error_code_varint_start != NULL && error_code_varint_start < bytes_max) {
-            // Sub-choices for specific error codes, max_val, general fuzz_in_place
-            // For this subtask, simplify to just general fuzz for Error Code
-            fuzz_in_place_or_skip_varint(fuzz_pilot, error_code_varint_start, bytes_max, 1);
-        } else {
-            // Error code not reachable, so fuzz Path ID instead
-            fuzz_in_place_or_skip_varint(fuzz_pilot, path_id_varint_start, bytes_max, 1);
-        }
-        break;
-
-    default: // Case 2: Fuzz both generally or random byte over payload
-        fuzz_in_place_or_skip_varint(fuzz_pilot, path_id_varint_start, bytes_max, 1);
-        if (error_code_varint_start != NULL && error_code_varint_start < bytes_max) {
-             // Re-get start of error code varint, as path_id fuzzing might have shifted things if not careful
-             // This re-evaluation of error_code_varint_start is crucial if path_id_varint_start's length could change.
-             // However, fuzz_in_place_or_skip_varint is not supposed to change the varint's byte length.
-             // So, the original error_code_varint_start should still be valid if it was valid before.
-             uint8_t* current_error_code_start = (uint8_t*)picoquic_frames_varint_skip(path_id_varint_start, bytes_max);
-             if (current_error_code_start != NULL && current_error_code_start < bytes_max) {
-                fuzz_in_place_or_skip_varint(fuzz_pilot >> 4, current_error_code_start, bytes_max, 1);
-             }
-        }
-        break;
+    if (!specific_fuzz_done) {
+        default_frame_fuzzer(fuzz_pilot, frame_start, frame_max);
     }
 }
 
@@ -852,9 +967,69 @@ void default_frame_fuzzer(uint64_t fuzz_pilot, uint8_t* bytes, uint8_t* bytes_ma
     fuzz_random_byte(fuzz_pilot, bytes, bytes_max); 
 }
 
+/* Step 3: Create a new function max_data_fuzzer in lib/fuzzer.c */
+void max_data_fuzzer(uint64_t fuzz_pilot, uint8_t* frame_start, uint8_t* frame_max, fuzzer_ctx_t* f_ctx, fuzzer_icid_ctx_t* icid_ctx)
+{
+    uint8_t* original_varint_start = frame_start;
+    uint8_t* p_val = original_varint_start;
+    uint64_t original_max_data;
+    uint8_t* original_varint_end;
+
+    /* Skip the frame type to get to the Maximum Data field. */
+    /* MAX_DATA frame type is 1 byte, not varint */
+    if (p_val < frame_max) {
+        p_val++; 
+    } else {
+        default_frame_fuzzer(fuzz_pilot >> 2, frame_start, frame_max);
+        return;
+    }
+    original_varint_start = p_val; // Start of the Maximum Data varint
+
+    original_varint_end = (uint8_t*)picoquic_frames_varint_decode(p_val, frame_max, &original_max_data);
+
+    if (original_varint_end != NULL && original_varint_start < original_varint_end) { // Successfully parsed
+        if (icid_ctx != NULL) { // Ensure icid_ctx is valid
+            icid_ctx->last_sent_max_data = original_max_data;
+            icid_ctx->has_sent_max_data = 1;
+        }
+
+        /* Probabilistic fuzzing: 1 in 4 chance */
+        if ((fuzz_pilot & 0x03) == 0) {
+            if (icid_ctx != NULL && icid_ctx->has_sent_max_data && icid_ctx->last_sent_max_data > 0) {
+                uint64_t fuzzed_val = icid_ctx->last_sent_max_data / 2;
+                if (fuzzed_val == icid_ctx->last_sent_max_data && fuzzed_val > 0) { // Avoid infinite loop if last_sent_max_data is 1
+                    fuzzed_val--;
+                }
+
+                int fuzzed_varint_len = picoquic_frames_varint_encode_length(fuzzed_val);
+                size_t original_varint_len = original_varint_end - original_varint_start;
+
+                if (fuzzed_varint_len <= original_varint_len) {
+                    picoquic_frames_varint_encode(original_varint_start, frame_max, fuzzed_val);
+                    /* If new varint is shorter, pad with 0x00 if there's space within original varint length */
+                    if (fuzzed_varint_len < original_varint_len) {
+                        size_t padding_len = original_varint_len - fuzzed_varint_len;
+                        if (original_varint_start + fuzzed_varint_len + padding_len <= frame_max) {
+                           memset(original_varint_start + fuzzed_varint_len, 0, padding_len);
+                        }
+                    }
+                }
+                /* Else, if fuzzed_varint_len > original_varint_len, do nothing for this specific fuzz type */
+                /* Fall through to default_frame_fuzzer is handled after this block */
+                default_frame_fuzzer(fuzz_pilot >> 2, frame_start, frame_max);
+                return; 
+            }
+        }
+    }
+    /* Fallback: Call default_frame_fuzzer if any step failed or probability check didn't pass */
+    default_frame_fuzzer(fuzz_pilot >> 2, frame_start, frame_max);
+}
+
 #define FUZZER_MAX_NB_FRAMES 32
 
-int frame_header_fuzzer(uint64_t fuzz_pilot,
+/* Step 4: Modify frame_header_fuzzer in lib/fuzzer.c */
+/* New signature for frame_header_fuzzer */
+int frame_header_fuzzer(fuzzer_ctx_t* ctx, fuzzer_icid_ctx_t* icid_ctx, uint64_t fuzz_pilot,
     uint8_t* bytes, size_t bytes_max, size_t length, size_t header_length)
 {
     uint8_t* frame_head[FUZZER_MAX_NB_FRAMES];
@@ -903,7 +1078,8 @@ int frame_header_fuzzer(uint64_t fuzz_pilot,
                 varint_frame_fuzzer(fuzz_pilot, frame_byte, frame_max, 3);
                 break;
             case picoquic_frame_type_max_data:
-                varint_frame_fuzzer(fuzz_pilot, frame_byte, frame_max, 2);
+                /* Call the new max_data_fuzzer */
+                max_data_fuzzer(fuzz_pilot, frame_byte, frame_max, ctx, icid_ctx);
                 break;
             case picoquic_frame_type_max_stream_data:
                 varint_frame_fuzzer(fuzz_pilot, frame_byte, frame_max, 3);
@@ -976,7 +1152,7 @@ int frame_header_fuzzer(uint64_t fuzz_pilot,
                         break;
                     case picoquic_frame_type_path_available:
                     case picoquic_frame_type_path_backup:
-                        varint_frame_fuzzer(fuzz_pilot, frame_byte, frame_max, 3);
+                        path_id_sequence_frame_fuzzer(fuzz_pilot, frame_byte, frame_max);
                         break;
                     case picoquic_frame_type_paths_blocked:
                         varint_frame_fuzzer(fuzz_pilot, frame_byte, frame_max, 2);
@@ -1132,7 +1308,7 @@ uint32_t fuzi_q_fuzzer(void* fuzz_ctx, picoquic_cnx_t* cnx,
             }
 
             if (!was_fuzzed || fuzz_more) {
-                was_fuzzed |= frame_header_fuzzer(fuzz_pilot, bytes, bytes_max, final_pad, header_length);
+                was_fuzzed |= frame_header_fuzzer(ctx, icid_ctx, fuzz_pilot, bytes, bytes_max, final_pad, header_length);
                 if (!was_fuzzed) {
                     fuzzed_length = basic_packet_fuzzer(ctx, fuzz_pilot, bytes, bytes_max, length, header_length);
                 }

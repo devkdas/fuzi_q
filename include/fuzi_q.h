@@ -79,6 +79,9 @@ typedef struct st_fuzzer_icid_ctx_t {
     int target_wait;
     int wait_count[fuzzer_cnx_state_max];
     int already_fuzzed;
+    /* For MAX_DATA stateful fuzzing */
+    uint64_t last_sent_max_data;
+    int has_sent_max_data; 
 } fuzzer_icid_ctx_t;
 
 typedef struct st_fuzzer_ctx_t {
