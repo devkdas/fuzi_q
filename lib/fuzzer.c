@@ -65,6 +65,16 @@ static inline uint32_t local_picoquic_val32be(const uint8_t* bytes) {
     return (((uint32_t)bytes[0]) << 24) | (((uint32_t)bytes[1]) << 16) | (((uint32_t)bytes[2]) << 8) | ((uint32_t)bytes[3]);
 }
 
+#ifndef picoquic_varint_encode_length
+static inline int local_picoquic_varint_encode_length(uint64_t n64) {
+    if (n64 < 0x40) return 1;
+    else if (n64 < 0x4000) return 2;
+    else if (n64 < 0x40000000) return 4;
+    else return 8; /* Matches standard picoquic varint encoding lengths */
+}
+#define picoquic_varint_encode_length local_picoquic_varint_encode_length
+#endif
+
 // For picoquic_max_bits, it's often a static inline. If it's not found,
 // it's a strong indication picoquic_utils.h isn't properly included or is a different version.
 // Let's try to provide a common definition if it's missing.
@@ -1198,7 +1208,7 @@ void max_data_fuzzer(uint64_t fuzz_pilot, uint8_t* frame_start, uint8_t* frame_m
                     fuzzed_val--;
                 }
 
-                int fuzzed_varint_len = picoquic_varint_encode_16(fuzzed_val);
+                int fuzzed_varint_len = picoquic_varint_encode_length(fuzzed_val);
                 size_t original_varint_len = original_varint_end - original_varint_start;
 
                 if (fuzzed_varint_len <= original_varint_len) {
@@ -1301,14 +1311,14 @@ int frame_header_fuzzer(fuzzer_ctx_t* f_ctx, picoquic_cnx_t* cnx, fuzzer_icid_ct
                 break;
             case picoquic_frame_type_datagram:
             case picoquic_frame_type_datagram_l:
-                datagram_frame_fuzzer(ctx, icid_ctx, fuzz_pilot, frame_byte, frame_max);
+                datagram_frame_fuzzer(f_ctx, icid_ctx, fuzz_pilot, frame_byte, frame_max);
                 break;
             case picoquic_frame_type_path_challenge:
             case picoquic_frame_type_path_response:
                 challenge_frame_fuzzer(fuzz_pilot, frame_byte, frame_max);
                 break;
             case picoquic_frame_type_crypto_hs:
-                crypto_frame_fuzzer_logic(fuzz_pilot, frame_byte, frame_max, ctx, icid_ctx);
+                crypto_frame_fuzzer_logic(fuzz_pilot, frame_byte, frame_max, f_ctx, icid_ctx);
                 break;
             case picoquic_frame_type_padding:
             case picoquic_frame_type_ping:
