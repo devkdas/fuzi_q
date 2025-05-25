@@ -82,6 +82,9 @@ typedef struct st_fuzzer_icid_ctx_t {
     /* For MAX_DATA stateful fuzzing */
     uint64_t last_sent_max_data;
     int has_sent_max_data; 
+    /* For NEW_CONNECTION_ID / RETIRE_CONNECTION_ID stateful fuzzing */
+    uint64_t last_new_cid_seq_no_sent;
+    int new_cid_seq_no_available; /* Boolean flag */
 } fuzzer_icid_ctx_t;
 
 typedef struct st_fuzzer_ctx_t {

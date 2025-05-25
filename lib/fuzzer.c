@@ -37,6 +37,24 @@ uint32_t basic_packet_fuzzer(fuzzer_ctx_t* ctx, uint64_t fuzz_pilot,
     uint8_t* bytes, size_t bytes_max, size_t length, size_t header_length)
 {
     uint32_t fuzz_index = 0;
+    uint64_t initial_fuzz_pilot = fuzz_pilot; /* Save for independent fuzz actions */
+
+    /* 1. Enhance basic_packet_fuzzer for Short Header Reserved Bits */
+    if (length > 0 && (bytes[0] & 0x80) == 0) { /* is_short_header */
+        if ((initial_fuzz_pilot & 0x07) == 0) { /* 1-in-8 chance */
+            if ((initial_fuzz_pilot >> 3) & 1) {
+                bytes[0] ^= 0x20; /* Flip bit 5 (second reserved bit) */
+            } else {
+                bytes[0] ^= 0x10; /* Flip bit 4 (first reserved bit) */
+            }
+            /* This is an additional fuzz, independent of the main logic below.
+             * We don't decrement ctx->nb_fuzzed here as the main logic might still run.
+             * Consume some bits from initial_fuzz_pilot if it were to be reused for other
+             * independent actions, but for now, the main fuzz_pilot is separate.
+             */
+        }
+    }
+    /* Continue with original fuzz_pilot for the main fuzzing logic */
 
     /* Once in 64, fuzz by changing the length */
     if ((fuzz_pilot & 0x3F) == 0xD) {
@@ -251,6 +269,18 @@ void varint_frame_fuzzer(uint64_t fuzz_pilot, uint8_t* bytes, uint8_t* bytes_max
  */
 void ack_frame_fuzzer(uint64_t fuzz_pilot, uint8_t* frame_start_bytes, uint8_t* frame_max_bytes)
 {
+    /* 2. Modify ack_frame_fuzzer for ACK Frame Reserved Bits */
+    if (frame_start_bytes < frame_max_bytes) { /* Ensure frame_start_bytes is valid */
+        if (((fuzz_pilot >> 16) & 0x07) == 1) { /* 1-in-8 chance, using different pilot bits */
+            /* ACK frame type byte is 0x02 or 0x03. Bits 2-6 (0x7C) are reserved. */
+            /* Bit numbers from MSB: 01234567. Reserved: xR RRRRx. Mask 0x7C = 01111100 */
+            uint8_t bit_to_flip = 1 << (((fuzz_pilot >> 19) % 5) + 2); /* Selects one bit from mask 0x7C (bits 2,3,4,5,6) */
+                                                                    /* ((pilot % 5) results in 0-4. +2 gives 2-6 for bit position) */
+            frame_start_bytes[0] ^= bit_to_flip;
+            /* This is an additional fuzz. */
+        }
+    }
+
     /* General varint fuzzing first */
     uint8_t* current_bytes = frame_start_bytes;
     size_t num_varints_in_frame = 0;
@@ -671,7 +701,131 @@ void new_token_frame_fuzzer(uint64_t fuzz_pilot, uint8_t* frame_start, uint8_t* 
     }
 }
 
-/* New CID frame fuzzer 
+/* Step 3: Create new_connection_id_frame_fuzzer_logic */
+void new_connection_id_frame_fuzzer_logic(uint64_t fuzz_pilot, uint8_t* frame_start, uint8_t* frame_max, fuzzer_icid_ctx_t* icid_ctx)
+{
+    uint8_t* p = frame_start;
+    uint64_t frame_type;
+    int specific_fuzz_applied = 0;
+
+    /* Frame Type (already known to be NEW_CONNECTION_ID, but skip it) */
+    p = (uint8_t*)picoquic_frames_varint_skip(p, frame_max);
+    if (p == NULL || p >= frame_max) {
+        default_frame_fuzzer(fuzz_pilot, frame_start, frame_max);
+        return;
+    }
+
+    uint8_t* seq_no_start = p;
+    uint64_t original_seq_no;
+    uint8_t* seq_no_end = (uint8_t*)picoquic_frames_varint_decode(seq_no_start, frame_max, &original_seq_no);
+    if (seq_no_end == NULL || seq_no_start == seq_no_end) {
+        default_frame_fuzzer(fuzz_pilot, frame_start, frame_max);
+        return;
+    }
+
+    if (icid_ctx != NULL) {
+        icid_ctx->last_new_cid_seq_no_sent = original_seq_no;
+        icid_ctx->new_cid_seq_no_available = 1;
+    }
+
+    uint8_t* retire_prior_to_start = seq_no_end;
+    uint64_t original_retire_prior_to;
+    uint8_t* retire_prior_to_end = (uint8_t*)picoquic_frames_varint_decode(retire_prior_to_start, frame_max, &original_retire_prior_to);
+    if (retire_prior_to_end == NULL || retire_prior_to_start == retire_prior_to_end) {
+        default_frame_fuzzer(fuzz_pilot, frame_start, frame_max);
+        return;
+    }
+    
+    uint8_t* length_field_ptr = retire_prior_to_end;
+    if (length_field_ptr >= frame_max) {
+        default_frame_fuzzer(fuzz_pilot, frame_start, frame_max);
+        return;
+    }
+    uint8_t original_cid_len = *length_field_ptr;
+    
+    uint8_t* cid_start = length_field_ptr + 1;
+    if (cid_start + original_cid_len > frame_max) { 
+        default_frame_fuzzer(fuzz_pilot, frame_start, frame_max);
+        return;
+    }
+    uint8_t* token_start = cid_start + original_cid_len;
+    if (token_start + PICOQUIC_STATELESS_RESET_TOKEN_SIZE > frame_max) {
+        default_frame_fuzzer(fuzz_pilot, frame_start, frame_max);
+        return;
+    }
+    
+    if ((fuzz_pilot % 3) == 0) { 
+        fuzz_pilot >>=2; 
+
+        int target_choice = fuzz_pilot % 5;
+        fuzz_pilot >>= 3; 
+
+        switch (target_choice) {
+        case 0: /* Target Sequence Number */
+            {
+                uint64_t new_seq_val;
+                int val_choice = fuzz_pilot % 3;
+                if (val_choice == 0) new_seq_val = 0;
+                else if (val_choice == 1) new_seq_val = 0x3FFF;
+                else new_seq_val = fuzz_pilot % 16;
+                
+                if (encode_and_overwrite_varint(seq_no_start, seq_no_end, frame_max, new_seq_val)) {
+                    specific_fuzz_applied = 1;
+                }
+            }
+            break;
+        case 1: /* Target Retire Prior To */
+            {
+                uint64_t new_retire_val;
+                int val_choice = fuzz_pilot % 3;
+                if (val_choice == 0) new_retire_val = original_seq_no; /* Retire the one just sent */
+                else if (val_choice == 1) new_retire_val = 0;
+                else new_retire_val = (original_seq_no > 0) ? (original_seq_no - 1) : 0; /* Retire one before */
+                
+                if (encode_and_overwrite_varint(retire_prior_to_start, retire_prior_to_end, frame_max, new_retire_val)) {
+                    specific_fuzz_applied = 1;
+                }
+            }
+            break;
+        case 2: /* Target Length field */
+            {
+                int val_choice = fuzz_pilot % 3;
+                if (val_choice == 0) *length_field_ptr = 0;
+                else if (val_choice == 1) *length_field_ptr = PICOQUIC_CONNECTION_ID_MAX_SIZE;
+                else *length_field_ptr = PICOQUIC_CONNECTION_ID_MAX_SIZE + 1; /* Invalid length */
+                specific_fuzz_applied = 1;
+            }
+            break;
+        case 3: /* Target CID */
+            if (original_cid_len > 0) {
+                int flips = 1 + (fuzz_pilot % 2); 
+                for (int i = 0; i < flips; i++) {
+                    if (original_cid_len == 0) break;
+                    size_t idx = (fuzz_pilot >> (i*4)) % original_cid_len;
+                    cid_start[idx] ^= (uint8_t)((fuzz_pilot >> (i*8 + 3)) & 0xFF);
+                }
+                specific_fuzz_applied = 1;
+            }
+            break;
+        case 4: /* Target Stateless Reset Token */
+            {
+                int flips = 1 + (fuzz_pilot % 2); 
+                 for (int i = 0; i < flips; i++) {
+                    size_t idx = (fuzz_pilot >> (i*4)) % PICOQUIC_STATELESS_RESET_TOKEN_SIZE;
+                    token_start[idx] ^= (uint8_t)((fuzz_pilot >> (i*8 + 3)) & 0xFF);
+                }
+                specific_fuzz_applied = 1;
+            }
+            break;
+        }
+    }
+
+    if (!specific_fuzz_applied) {
+        default_frame_fuzzer(fuzz_pilot, frame_start, frame_max);
+    }
+}
+
+/* New CID frame fuzzer (old, to be replaced by logic above in frame_header_fuzzer)
  * Either fuzz one of the varint parameters, or in rare cases fuzz the
  * value of the CID. No point fuzzing the reset token. 
  * NEW_CONNECTION_ID Frame {
@@ -683,60 +837,45 @@ void new_token_frame_fuzzer(uint64_t fuzz_pilot, uint8_t* frame_start, uint8_t* 
  *   Stateless Reset Token (128),
  * }
  */
-void new_cid_frame_fuzzer(uint64_t fuzz_pilot, uint8_t* bytes, uint8_t* bytes_max)
+void new_cid_frame_fuzzer(uint64_t fuzz_pilot, uint8_t* bytes, uint8_t* bytes_max) 
 {
-    int x = (fuzz_pilot % 7) == 0;
-    fuzz_pilot >>= 2;
-    if (x) {
-        /* fuzz the token */
-        uint64_t length = 0;
-        if ((bytes = (uint8_t*)picoquic_frames_varint_skip(bytes, bytes_max)) != NULL &&
-            (bytes = (uint8_t*)picoquic_frames_varint_skip(bytes, bytes_max)) != NULL &&
-            (bytes = (uint8_t*)picoquic_frames_varint_skip(bytes, bytes_max)) != NULL &&
-            (bytes = (uint8_t*)picoquic_frames_varint_decode(bytes, bytes_max, &length)) != NULL &&
-            length > 0 && (bytes + length) < bytes_max){
-            fuzz_random_byte(fuzz_pilot, bytes, bytes_max);
-        }
-    }
-    else {
-        varint_frame_fuzzer(fuzz_pilot, bytes, bytes_max, 5);
-    }
+    /* This function is effectively replaced by new_connection_id_frame_fuzzer_logic 
+     * called directly from frame_header_fuzzer.
+     * Keeping a stub or removing it depends on whether it's called elsewhere,
+     * but the plan is to replace the call in frame_header_fuzzer.
+     * For now, let it call the default.
+     */
+    default_frame_fuzzer(fuzz_pilot, bytes, bytes_max);
 }
 
 // retire_connection_id_frame_fuzzer
-void retire_connection_id_frame_fuzzer(uint64_t fuzz_pilot, uint8_t* bytes, uint8_t* bytes_max)
+void retire_connection_id_frame_fuzzer(uint64_t fuzz_pilot, uint8_t* bytes, uint8_t* frame_max) /* Changed bytes_max to frame_max for consistency */
 {
-    uint8_t* frame_payload_start = (uint8_t*)picoquic_frames_varint_skip(bytes, bytes_max);
+    uint8_t* frame_payload_start = (uint8_t*)picoquic_frames_varint_skip(bytes, frame_max); /* Use frame_max */
 
-    if (frame_payload_start == NULL || frame_payload_start >= bytes_max) {
-        // Not enough space for sequence number or type parsing failed.
-        // Fallback to random byte fuzz on whatever is there (likely just type).
-        if (bytes < bytes_max) {
-            fuzz_random_byte(fuzz_pilot, bytes, bytes_max);
+    if (frame_payload_start == NULL || frame_payload_start >= frame_max) { /* Use frame_max */
+        if (bytes < frame_max) { /* Use frame_max */
+            fuzz_random_byte(fuzz_pilot, bytes, frame_max); /* Use frame_max */
         }
         return;
     }
 
     uint8_t* seq_num_start = frame_payload_start;
-    uint8_t* seq_num_end = (uint8_t*)picoquic_frames_varint_skip(seq_num_start, bytes_max);
+    uint64_t original_seq_no; /* For context, though not directly used by older logic */
+    uint8_t* seq_num_end = (uint8_t*)picoquic_frames_varint_decode(seq_num_start, frame_max, &original_seq_no); /* Use decode to get end */
 
-    if (seq_num_end == NULL) { 
-      // This implies seq_num_start was invalid (e.g. at bytes_max or beyond)
-      // or that bytes_max was too small for a full varint.
-      // Fallback to general fuzzing on what might be the start of the sequence number.
-      fuzz_in_place_or_skip_varint(fuzz_pilot >> 2, seq_num_start, bytes_max, 1);
+    if (seq_num_end == NULL || seq_num_start == seq_num_end) { /* Check if decode failed or varint empty */
+      fuzz_in_place_or_skip_varint(fuzz_pilot >> 2, seq_num_start, frame_max, 1); /* Use frame_max */
       return;
     }
 
-    int choice = fuzz_pilot % 4;
+    int choice = fuzz_pilot % 4; /* Original 4 choices: 0,1,2 for specific values, 3 for general fuzz */
     fuzz_pilot >>= 2;
 
     size_t varint_len = seq_num_end - seq_num_start;
 
-    // If varint_len is 0 (e.g., seq_num_start == seq_num_end, potentially if seq_num_start was bytes_max),
-    // and we are not in default case, switch to default case.
-    if (varint_len == 0 && choice !=3) { 
-        choice = 3; 
+    if (varint_len == 0 && choice !=3) { /* If varint_len is 0 (should not happen if seq_num_end > seq_num_start), default to general fuzz */
+        choice = 3;
     }
 
     switch (choice) {
@@ -767,14 +906,26 @@ void retire_connection_id_frame_fuzzer(uint64_t fuzz_pilot, uint8_t* bytes, uint
         break;
     case 2: // Set Sequence Number to max value for its current varint length
         if (varint_len > 0) {
-            seq_num_start[0] |= 0x3F; // Preserve 2 MSBs, set lower 6 bits to 1
+            seq_num_start[0] |= 0x3F; 
             for (size_t i = 1; i < varint_len; i++) {
                 seq_num_start[i] = 0xFF;
             }
         }
         break;
-    default: // Case 3: General fuzzing
-        fuzz_in_place_or_skip_varint(fuzz_pilot, seq_num_start, bytes_max, 1 /* do_fuzz = true */);
+    /* Default case (3) is general fuzzing of the sequence number varint */
+    default: 
+        /* New: Add a 1-in-3 chance (within this default/general fuzz path) to pick a small value */
+        if ((fuzz_pilot & 0x03) == 0) { /* Approx 1-in-4, let's make it 1-in-3 of this path */
+            fuzz_pilot >>=2;
+            uint64_t small_seq_val = fuzz_pilot % 16; /* Value 0-15 */
+            if (!encode_and_overwrite_varint(seq_num_start, seq_num_end, frame_max, small_seq_val)) {
+                 /* If encoding failed (e.g. new varint too long, though unlikely for 0-15), fallback to bit flip */
+                 fuzz_in_place_or_skip_varint(fuzz_pilot >> 4, seq_num_start, frame_max, 1);
+            }
+        } else {
+            /* Original general fuzzing for this path */
+            fuzz_in_place_or_skip_varint(fuzz_pilot >> 2, seq_num_start, frame_max, 1);
+        }
         break;
     }
 }
@@ -1126,7 +1277,7 @@ int frame_header_fuzzer(fuzzer_ctx_t* ctx, fuzzer_icid_ctx_t* icid_ctx, uint64_t
                 padding_frame_fuzzer(fuzz_pilot, frame_byte, frame_max);
                 break;
             case picoquic_frame_type_new_connection_id:
-                new_cid_frame_fuzzer(fuzz_pilot, frame_byte, frame_max);
+                new_connection_id_frame_fuzzer_logic(fuzz_pilot, frame_byte, frame_max, icid_ctx);
                 break;
             case picoquic_frame_type_new_token:
                 new_token_frame_fuzzer(fuzz_pilot, frame_byte, frame_max);
@@ -1207,6 +1358,315 @@ size_t length_non_padded(uint8_t* bytes, size_t length, size_t header_length)
     return (final_pad == NULL) ? length : (final_pad - bytes_begin);
 }
 
+/* Create version_negotiation_packet_fuzzer function */
+size_t version_negotiation_packet_fuzzer(uint64_t fuzz_pilot, uint8_t* bytes, size_t vn_header_len, size_t current_length, size_t bytes_max)
+{
+    size_t original_current_length = current_length;
+
+    if (vn_header_len > current_length || vn_header_len > bytes_max) {
+        /* Invalid input, header alone is longer than current_length or buffer */
+        return current_length;
+    }
+
+    uint8_t* version_list_start = bytes + vn_header_len;
+    size_t version_list_len = current_length - vn_header_len;
+    
+    if (version_list_len % 4 != 0) {
+        /* Malformed version list length, not a multiple of 4. Don't fuzz further. */
+        return current_length;
+    }
+    size_t num_versions = version_list_len / 4;
+
+    int choice = fuzz_pilot % 16; /* More choices for VN packet */
+    fuzz_pilot >>= 4;
+
+    switch (choice) {
+    case 0: /* Corrupt First Byte (Type/Flags) */
+        if (vn_header_len > 0) { 
+            bytes[0] ^= (uint8_t)(fuzz_pilot & 0x3F);
+        }
+        break;
+
+    case 1: /* Corrupt DCID/SCID lengths - No-op as per previous decision, focus on version list */
+        break;
+
+    case 2: /* Empty Version List */
+        if (vn_header_len <= bytes_max) {
+            current_length = vn_header_len;
+        }
+        break;
+
+    case 3: /* Truncate Version List (incomplete last version) */
+        if (num_versions > 0) {
+            size_t bytes_to_remove = (fuzz_pilot % 3) + 1; /* Remove 1, 2, or 3 bytes */
+            fuzz_pilot >>= 2;
+            if (current_length > vn_header_len + bytes_to_remove) {
+                current_length -= bytes_to_remove;
+            } else if (current_length > vn_header_len) {
+                current_length = vn_header_len; /* Max truncation */
+            }
+        }
+        break;
+
+    case 4: /* Corrupt a Version Value - Overwrite with reserved (0x0A0A0A0A) */
+    case 5: /* Corrupt a Version Value - Overwrite with reserved (0x1A1A1A1A) */
+    case 6: /* Corrupt a Version Value - Flip bits */
+        if (num_versions > 0) {
+            size_t version_idx = fuzz_pilot % num_versions;
+            fuzz_pilot >>= 4; 
+            uint8_t* version_ptr = version_list_start + (version_idx * 4);
+
+            if (version_ptr + 4 <= bytes + original_current_length) { // Check against original_current_length for read/write
+                if (choice == 4) {
+                    picoquic_val32be_to_bytes(0x0A0A0A0A, version_ptr);
+                } else if (choice == 5) {
+                    picoquic_val32be_to_bytes(0x1A1A1A1A, version_ptr);
+                } else { // choice == 6
+                    version_ptr[0] ^= (uint8_t)(fuzz_pilot & 0xFF);
+                    version_ptr[1] ^= (uint8_t)((fuzz_pilot >> 8) & 0xFF);
+                    version_ptr[2] ^= (uint8_t)((fuzz_pilot >> 16) & 0xFF);
+                    version_ptr[3] ^= (uint8_t)((fuzz_pilot >> 24) & 0xFF);
+                }
+            }
+        }
+        break;
+
+    case 7: /* Duplicate Versions */
+        if (num_versions >= 2) {
+            size_t v_idx_target = fuzz_pilot % num_versions;
+            fuzz_pilot >>= 4;
+            size_t v_idx_source = fuzz_pilot % num_versions;
+            fuzz_pilot >>= 4;
+
+            if (v_idx_target != v_idx_source) {
+                uint8_t* target_ptr = version_list_start + (v_idx_target * 4);
+                uint8_t* source_ptr = version_list_start + (v_idx_source * 4);
+                if (target_ptr + 4 <= bytes + original_current_length && source_ptr + 4 <= bytes + original_current_length) {
+                    memcpy(target_ptr, source_ptr, 4);
+                }
+            }
+        }
+        break;
+
+    case 8: /* Add Too Many Versions (Overflow) - append one garbage version if space */
+        if (current_length + 4 <= bytes_max) {
+            uint8_t* new_version_ptr = bytes + current_length;
+            new_version_ptr[0] = (uint8_t)(fuzz_pilot & 0xFF);
+            new_version_ptr[1] = (uint8_t)((fuzz_pilot >> 8) & 0xFF);
+            new_version_ptr[2] = (uint8_t)((fuzz_pilot >> 16) & 0xFF);
+            new_version_ptr[3] = (uint8_t)((fuzz_pilot >> 24) & 0xFF);
+            current_length += 4;
+        }
+        break;
+    
+    case 9: /* Swap two versions */
+        if (num_versions >= 2) {
+            size_t v_idx1 = fuzz_pilot % num_versions;
+            fuzz_pilot >>= 4;
+            size_t v_idx2 = fuzz_pilot % num_versions;
+            fuzz_pilot >>= 4;
+
+            if (v_idx1 != v_idx2) {
+                uint8_t* ptr1 = version_list_start + (v_idx1 * 4);
+                uint8_t* ptr2 = version_list_start + (v_idx2 * 4);
+                if (ptr1 + 4 <= bytes + original_current_length && ptr2 + 4 <= bytes + original_current_length) {
+                    uint32_t temp_version = picoquic_val32be(ptr1);
+                    memcpy(ptr1, ptr2, 4);
+                    picoquic_val32be_to_bytes(temp_version, ptr2);
+                }
+            }
+        }
+        break;
+
+    default: /* No specific VN fuzz or other choices, could be random byte on versions */
+        if (version_list_len > 0 && version_list_start < bytes + current_length ) { /* check version_list_len > 0 */
+            size_t fuzz_offset_in_list = fuzz_pilot % version_list_len;
+            fuzz_pilot >>= 6; 
+            version_list_start[fuzz_offset_in_list] ^= (uint8_t)(fuzz_pilot & 0xFF);
+        }
+        break;
+    }
+
+    /* Ensure current_length is not less than vn_header_len, especially after truncation. */
+    if (current_length < vn_header_len) {
+        current_length = vn_header_len;
+    }
+    /* Ensure current_length does not exceed bytes_max */
+    if (current_length > bytes_max) {
+        current_length = bytes_max;
+    }
+
+    return current_length;
+}
+
+/* Create retry_packet_fuzzer function */
+size_t retry_packet_fuzzer(uint64_t fuzz_pilot, uint8_t* bytes, size_t current_length, size_t bytes_max)
+{
+    size_t original_length = current_length;
+
+    /* Minimum length: 1 (type) + 4 (version) + 1 (DCID len) + 0 (DCID) + 1 (SCID len) + 0 (SCID) + 0 (token) + 16 (tag) = 23 */
+    /* However, RFC 9000 states first byte is 0xF?, Version (4), DCID Len (1), DCID (0-20), SCID Len (1), SCID (0-20), Retry Token, Integrity Tag (16) */
+    /* Smallest possible ODCID is 0 length, so ODCID Len byte itself is not present in Retry Packet as per Figure 18.
+     * The packet contains DCID and SCID, which are the server's choice for its new CIDs.
+     * The ODCID is what the client initially sent. It's implicitly used for the tag calculation but not in the packet fields directly other than for token generation.
+     * The header contains: Type (1), Version (4), DCID Len (1), DCID (dcid_len), SCID Len (1), SCID (scid_len).
+     * So minimal header before token is 1+4+1+0+1+0 = 7.
+     * Minimal packet is 7 (header) + 0 (token) + 16 (tag) = 23.
+     */
+    if (current_length < 23) {
+        return current_length;
+    }
+
+    uint8_t dcid_len = bytes[5];
+    if (dcid_len > PICOQUIC_CONNECTION_ID_MAX_SIZE) {
+        return current_length;
+    }
+
+    size_t scid_len_offset = 1 + 4 + 1 + dcid_len;
+    if (scid_len_offset >= original_length) return current_length; 
+    
+    uint8_t scid_len = bytes[scid_len_offset];
+    if (scid_len > PICOQUIC_CONNECTION_ID_MAX_SIZE) {
+        return current_length; 
+    }
+
+    uint8_t* token_start = bytes + scid_len_offset + 1 + scid_len;
+    uint8_t* integrity_tag_start = bytes + original_length - 16;
+
+    if (token_start > integrity_tag_start) {
+        return current_length; 
+    }
+    size_t token_len = integrity_tag_start - token_start;
+
+
+    int choice = fuzz_pilot % 16;
+    fuzz_pilot >>= 4;
+
+    switch (choice) {
+    case 0: /* Corrupt First Byte (lower 4 bits - "unused" in RFC for Retry type 0xF) */
+        bytes[0] ^= (uint8_t)(fuzz_pilot & 0x0F);
+        break;
+
+    case 1: /* Corrupt Version (one byte of it) */
+        if (original_length >= 5) { 
+            bytes[1 + (fuzz_pilot % 4)] ^= (uint8_t)(fuzz_pilot >> 2);
+        }
+        break;
+
+    case 2: /* Flip random bytes in Token */
+        if (token_len > 0) {
+            size_t num_flips = 1 + (fuzz_pilot % 3); 
+            fuzz_pilot >>= 2;
+            for (size_t i = 0; i < num_flips; i++) {
+                if (token_len == 0) break; 
+                size_t flip_idx = fuzz_pilot % token_len;
+                fuzz_pilot >>= (token_len > 1 ? picoquic_max_bits(token_len -1) : 1); 
+                token_start[flip_idx] ^= (uint8_t)(fuzz_pilot & 0xFF);
+                fuzz_pilot >>= 8;
+            }
+        }
+        break;
+
+    case 3: /* Corrupt Retry Integrity Tag */
+        {
+            size_t num_flips = 1 + (fuzz_pilot % 4); 
+            fuzz_pilot >>= 2;
+            for (size_t i = 0; i < num_flips; i++) {
+                size_t flip_idx = fuzz_pilot % 16; 
+                fuzz_pilot >>= 4; 
+                integrity_tag_start[flip_idx] ^= (uint8_t)(fuzz_pilot & 0xFF);
+                fuzz_pilot >>= 8;
+            }
+        }
+        break;
+
+    case 4: /* Truncate Packet: Cut off part of Integrity Tag */
+        if (original_length > 23) { 
+            size_t cut_amount = 1 + (fuzz_pilot % 15); 
+            fuzz_pilot >>= 4;
+            if (original_length > cut_amount) {
+                 current_length = original_length - cut_amount;
+                 if (current_length < (scid_len_offset + 1 + scid_len + token_len)) { 
+                     current_length = scid_len_offset + 1 + scid_len + token_len; 
+                 }
+            }
+        }
+        break;
+
+    case 5: /* Truncate Packet: Cut off part of Token (and all of Integrity Tag) */
+        if (token_len > 0) {
+            size_t cut_amount = 1 + (fuzz_pilot % token_len);
+            fuzz_pilot >>= (token_len > 1 ? picoquic_max_bits(token_len-1):1);
+            current_length = (token_start - bytes) + (token_len - cut_amount);
+        } else if (original_length > (scid_len_offset + 1 + scid_len)) {
+            current_length = scid_len_offset + 1 + scid_len;
+        }
+        break;
+
+    case 6: /* Extend Packet and corrupt tag */
+        if (bytes_max > original_length) {
+            size_t add_amount = 1 + (fuzz_pilot % 8);
+            fuzz_pilot >>= 3;
+            if (original_length + add_amount > bytes_max) {
+                add_amount = bytes_max - original_length;
+            }
+            if (add_amount > 0) {
+                for (size_t i = 0; i < add_amount; i++) {
+                    bytes[original_length + i] = (uint8_t)(fuzz_pilot & 0xFF);
+                    fuzz_pilot >>= (i % 2 == 0 ? 3: 5) ; 
+                }
+                current_length = original_length + add_amount;
+                
+                if (original_length >= 16) { 
+                    uint8_t* original_tag_loc = bytes + original_length - 16;
+                     /* Check if original_tag_loc is still within the potentially shorter current_length after other fuzzing.
+                      * However, this case extends, so original_length is the key.
+                      * The goal is to corrupt the *original* tag bytes if they are not part of the *new* tag location.
+                      */
+                    if (original_tag_loc < bytes + current_length - 16) { 
+                         original_tag_loc[fuzz_pilot % 16] ^= (uint8_t)((fuzz_pilot>>4)&0xFF);
+                    }
+                }
+            }
+        }
+        break;
+
+    case 7: /* Zero out DCID len */
+        if (original_length > 5) bytes[5] = 0;
+        break;
+
+    case 8: /* Zero out SCID len */
+         if (scid_len_offset < original_length) bytes[scid_len_offset] = 0;
+        break;
+        
+    default: 
+        {
+            size_t header_and_cid_len = scid_len_offset + 1 + scid_len;
+            if (header_and_cid_len > 0) {
+                 size_t flip_idx = fuzz_pilot % header_and_cid_len;
+                 if (flip_idx < original_length) { // Ensure flip_idx is within original bounds
+                    bytes[flip_idx] ^= (uint8_t)((fuzz_pilot >> 6) & 0xFF);
+                 }
+            } else if (token_len > 0) { 
+                 size_t flip_idx = fuzz_pilot % token_len;
+                 token_start[flip_idx] ^= (uint8_t)((fuzz_pilot >> 6) & 0xFF);
+            }
+        }
+        break;
+    }
+
+    size_t min_hdr_len_for_retry = 1 + 4 + 1 + 0 + 1 + 0; /* type, ver, dcid_len, 0-dcid, scid_len, 0-scid */
+    if (current_length < min_hdr_len_for_retry + 16) { /* min header + tag */
+        current_length = min_hdr_len_for_retry + 16;
+    }
+    if (current_length > bytes_max) {
+        current_length = bytes_max;
+    }
+
+    return current_length;
+}
+
+
 fuzzer_cnx_state_enum fuzzer_get_cnx_state(picoquic_cnx_t* cnx)
 {
     picoquic_state_enum cnx_state = picoquic_get_cnx_state(cnx);
@@ -1235,15 +1695,85 @@ uint32_t fuzi_q_fuzzer(void* fuzz_ctx, picoquic_cnx_t* cnx,
     uint64_t fuzz_pilot = picoquic_test_random(&icid_ctx->random_context);
     fuzzer_cnx_state_enum fuzz_cnx_state = fuzzer_get_cnx_state(cnx);
     uint32_t fuzzed_length = (uint32_t)length;
-    int fuzz_again = ((fuzz_pilot & 0xf) <= 7);
+
+    /* Check for Version Negotiation Packet */
+    if (length >= 5 && (bytes[0] & 0x80) != 0 && picoquic_val32be(bytes + 1) == 0x00000000) {
+        if (icid_ctx != NULL && icid_ctx->target_state < fuzzer_cnx_state_max && icid_ctx->target_state >= 0 &&
+            (!icid_ctx->already_fuzzed || ((fuzz_pilot & 0xf) <= 7))) { 
+            
+            fuzz_pilot >>=4; 
+
+            uint8_t dcid_len = 0;
+            uint8_t scid_len = 0;
+            size_t vn_header_len = 1 + 4; /* Type + Version Zero */
+
+            if (length >= vn_header_len + 1) { /* Check space for DCID len */
+                dcid_len = bytes[vn_header_len];
+                vn_header_len += 1 + dcid_len;
+                if (length >= vn_header_len + 1) { /* Check space for SCID len */
+                    scid_len = bytes[vn_header_len - dcid_len]; /* SCID len is after DCID value */
+                    vn_header_len += 1 + scid_len;
+
+                    if (vn_header_len <= length) { /* Check if calculated header is valid */
+                         /* Only call VN fuzzer if there's potential for a version list, 
+                            though VN fuzzer itself can handle empty list case.
+                            The prompt says vn_header_len < current_length, so we ensure there's *some* list.
+                         */
+                        if (vn_header_len < length) { 
+                            fuzzed_length = (uint32_t)version_negotiation_packet_fuzzer(fuzz_pilot, bytes, vn_header_len, length, bytes_max);
+                        }
+                        /* Update fuzzing stats for VN packet */
+                        if (icid_ctx->already_fuzzed == 0) {
+                            icid_ctx->already_fuzzed = 1;
+                             ctx->nb_cnx_tried[icid_ctx->target_state] += 1; /* Or a specific VN counter? */
+                             ctx->nb_cnx_fuzzed[fuzz_cnx_state] += 1;
+                        }
+                        ctx->nb_packets_fuzzed[fuzz_cnx_state] +=1;
+                        return fuzzed_length;
+                    }
+                }
+            }
+        }
+        /* If not fuzzed (e.g. already_fuzzed and no fuzz_again), return original length for VN */
+        return (uint32_t)length;
+    }
+    /* Check for Retry Packet */
+    /* Condition: Type bits are 0xF (Retry), and it's not a VN packet (version is not 0) */
+    /* Also ensure length is minimal for a retry packet (e.g. >= 23 bytes) */
+    else if (length >= 23 && (bytes[0] & 0xF0) == 0xF0 && (length < 5 || picoquic_val32be(bytes + 1) != 0x00000000) ) {
+        if (icid_ctx != NULL && icid_ctx->target_state < fuzzer_cnx_state_max && icid_ctx->target_state >= 0 &&
+            (!icid_ctx->already_fuzzed || ((fuzz_pilot & 0xf) <= 7))) {
+            
+            fuzz_pilot >>=4; /* Consume already_fuzzed choice bits */
+            fuzzed_length = (uint32_t)retry_packet_fuzzer(fuzz_pilot, bytes, length, bytes_max);
+
+            if (icid_ctx->already_fuzzed == 0) {
+                icid_ctx->already_fuzzed = 1;
+                ctx->nb_cnx_tried[icid_ctx->target_state] += 1; /* Or a specific Retry counter? */
+                ctx->nb_cnx_fuzzed[fuzz_cnx_state] += 1;
+            }
+            ctx->nb_packets_fuzzed[fuzz_cnx_state] +=1;
+            return fuzzed_length;
+        }
+        return (uint32_t)length; /* Not fuzzed due to already_fuzzed logic */
+    }
+
+
+    int fuzz_again = ((fuzz_pilot & 0xf) <= 7); 
 
     if (fuzz_cnx_state < 0 || fuzz_cnx_state >= fuzzer_cnx_state_max) {
         fuzz_cnx_state = fuzzer_cnx_state_closing;
     }
 
-    fuzz_pilot >>= 4;
+    /* fuzz_pilot was already shifted by 4 if VN packet was not identified and fuzzed.
+     * If VN packet was identified, its fuzz_pilot was shifted.
+     * The main fuzzing logic needs its own shift if it's not a VN packet.
+     */
+    /* The main fuzz_pilot shift (fuzz_pilot >>= 4;) is done after the VN check. */
+
 
     if (icid_ctx != NULL && icid_ctx->target_state < fuzzer_cnx_state_max && icid_ctx->target_state >= 0) {
+        fuzz_pilot >>= 4; /* Shift pilot for main fuzzing logic if not VN */
         ctx->nb_packets++;
         ctx->nb_packets_state[fuzz_cnx_state] += 1;
         icid_ctx->wait_count[fuzz_cnx_state]++;
@@ -1313,6 +1843,40 @@ uint32_t fuzi_q_fuzzer(void* fuzz_ctx, picoquic_cnx_t* cnx,
                     fuzzed_length = basic_packet_fuzzer(ctx, fuzz_pilot, bytes, bytes_max, length, header_length);
                 }
             }
+            
+            /* Step 5: Implement "Immediate Retire" logic */
+            if (((fuzz_pilot >> 20) & 0x03) == 0) { /* Approx 1-in-4 chance, using different pilot bits */
+                if (icid_ctx->new_cid_seq_no_available == 1) {
+                    uint8_t retire_frame_buffer[24]; /* Max type varint + max seq_no varint */
+                    uint8_t* p_retire = retire_frame_buffer;
+                    uint8_t* p_retire_max = retire_frame_buffer + sizeof(retire_frame_buffer);
+
+                    p_retire = picoquic_frames_varint_encode(p_retire, p_retire_max, picoquic_frame_type_retire_connection_id);
+                    if (p_retire != NULL) {
+                        p_retire = picoquic_frames_varint_encode(p_retire, p_retire_max, icid_ctx->last_new_cid_seq_no_sent);
+                    }
+
+                    if (p_retire != NULL) {
+                        size_t retire_len = p_retire - retire_frame_buffer;
+                        /* Ensure final_pad reflects the true end of current frames before appending */
+                        /* If fuzzed_length was changed by frame_header_fuzzer, use that as basis. */
+                        /* However, frame_header_fuzzer returns int, not the length. */
+                        /* We need to use `final_pad` which is calculated based on original `length` or `header_length + len` if replaced. */
+                        /* If `was_fuzzed` by adding/replacing, `final_pad` is the new end. */
+                        /* If `was_fuzzed` by `frame_header_fuzzer`, `final_pad` might not be accurate if `frame_header_fuzzer` changed length. */
+                        /* Let's use `fuzzed_length` if it was modified by earlier steps, otherwise `final_pad`. */
+                        size_t current_packet_end = fuzzed_length; /* fuzzed_length is current end of packet data */
+                        
+                        if (current_packet_end + retire_len <= bytes_max) {
+                            memcpy(&bytes[current_packet_end], retire_frame_buffer, retire_len);
+                            fuzzed_length = (uint32_t)(current_packet_end + retire_len);
+                            /* was_fuzzed is already true or set by frame_header_fuzzer */
+                        }
+                    }
+                    icid_ctx->new_cid_seq_no_available = 0;
+                }
+            }
+
 
             if (icid_ctx->already_fuzzed == 0) {
                 icid_ctx->already_fuzzed = 1;
