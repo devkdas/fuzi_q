@@ -19,6 +19,8 @@
 * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
+#define PICOQUIC_STATELESS_RESET_TOKEN_SIZE 16
+
 #include <picoquic.h>
 #include <picoquic_utils.h>
 #include <picoquic_internal.h>
@@ -27,7 +29,80 @@
 #include <string.h>
 #include "fuzi_q.h"
 
+#define FUZZER_MAX_NB_FRAMES 32
+
+// Forward declarations for picoquic functions/macros if not found by compiler
+// These are added as a workaround for potential build environment/include issues.
+
+// extern void picoquic_val32be_to_bytes(uint32_t val32, uint8_t* bytes);
+// extern uint32_t picoquic_val32be(const uint8_t* bytes);
+// extern int picoquic_max_bits(uint64_t val);
+
+/*
+ * The following functions are generally defined as static inline in picoquic_utils.h or picoquic_internal.h.
+ * Providing extern declarations here might conflict if the headers are eventually processed correctly.
+ * Instead, we rely on the existing includes (`picoquic_utils.h`, `picoquic_internal.h`) to provide them.
+ * If errors persist for these, it points to a deeper include or version issue.
+ * Forcing an extern declaration for a static inline function is not standard.
+ *
+ * picoquic_val32be_to_bytes IS NOT STATIC INLINE, it's in internal.h
+ * picoquic_val32be IS NOT STATIC INLINE, it's in internal.h
+ * picoquic_max_bits IS STATIC INLINE in picoquic_utils.h
+ */
+
+// Corrected approach: Provide prototypes for non-static-inline functions if they are missing.
+// For static inline functions like picoquic_max_bits, the include should be sufficient.
+// If picoquic_max_bits is still an error, the problem is likely that picoquic_utils.h is not being processed as expected.
+
+static inline void local_picoquic_val32be_to_bytes(uint32_t val32, uint8_t* bytes) {
+    bytes[0] = (uint8_t)(val32 >> 24);
+    bytes[1] = (uint8_t)(val32 >> 16);
+    bytes[2] = (uint8_t)(val32 >> 8);
+    bytes[3] = (uint8_t)(val32);
+}
+
+static inline uint32_t local_picoquic_val32be(const uint8_t* bytes) {
+    return (((uint32_t)bytes[0]) << 24) | (((uint32_t)bytes[1]) << 16) | (((uint32_t)bytes[2]) << 8) | ((uint32_t)bytes[3]);
+}
+
+#ifndef picoquic_varint_encode_length
+static inline int local_picoquic_varint_encode_length(uint64_t n64) {
+    if (n64 < 0x40) return 1;
+    else if (n64 < 0x4000) return 2;
+    else if (n64 < 0x40000000) return 4;
+    else return 8; /* Matches standard picoquic varint encoding lengths */
+}
+#define picoquic_varint_encode_length local_picoquic_varint_encode_length
+#endif
+
+// For picoquic_max_bits, it's often a static inline. If it's not found,
+// it's a strong indication picoquic_utils.h isn't properly included or is a different version.
+// Let's try to provide a common definition if it's missing.
+#ifndef picoquic_max_bits
+static inline int local_picoquic_max_bits(uint64_t val) {
+    int ret = 0;
+    if (val == 0) {
+        ret = -1;
+    } else {
+        while (val != 0) {
+            ret++;
+            val >>= 1;
+        }
+    }
+    return ret;
+}
+#define picoquic_max_bits local_picoquic_max_bits
+#endif
+
+// Use local definitions for val32be functions to avoid potential linkage issues with extern
+// if the functions are indeed available in headers but somehow not seen by the compiler pass.
+// This is safer than extern declarations for functions that might be static inline elsewhere.
+#define picoquic_val32be_to_bytes local_picoquic_val32be_to_bytes
+#define picoquic_val32be local_picoquic_val32be
+
+static int encode_and_overwrite_varint(uint8_t* field_start, uint8_t* field_end, uint8_t* frame_max, uint64_t new_value);
 uint8_t* fuzz_in_place_or_skip_varint(uint64_t fuzz_pilot, uint8_t* bytes, uint8_t* bytes_max, int do_fuzz);
+void default_frame_fuzzer(uint64_t fuzz_pilot, uint8_t* bytes, uint8_t* bytes_max);
 
 /*
  * Basic fuzz test just tries to flip some bits in random packets
@@ -369,7 +444,6 @@ void datagram_frame_fuzzer(fuzzer_ctx_t* ctx, fuzzer_icid_ctx_t* icid_ctx, uint6
 
     uint8_t type_byte = frame_start[0];
     uint8_t* payload_start = frame_start + 1;
-    int specific_length_fuzz_applied = 0;
 
     if (payload_start > frame_max) {
          frame_start[0] ^= (uint8_t)(fuzz_pilot & 0xFF);
@@ -389,16 +463,11 @@ void datagram_frame_fuzzer(fuzzer_ctx_t* ctx, fuzzer_icid_ctx_t* icid_ctx, uint6
 
             if (choice < 2) {
                 uint64_t large_value = (choice == 0) ? 65536 : 0x3FFFFFFFFFFFFFFF;
-                if(encode_and_overwrite_varint(length_start, length_end, frame_max, large_value)) {
-                    specific_length_fuzz_applied = 1;
-                }
+                encode_and_overwrite_varint(length_start, length_end, frame_max, large_value);
             } else if (choice == 2) {
-                if(encode_and_overwrite_varint(length_start, length_end, frame_max, 0)) {
-                    specific_length_fuzz_applied = 1;
-                }
+                encode_and_overwrite_varint(length_start, length_end, frame_max, 0);
             } else if (choice < 5) {
                 fuzz_in_place_or_skip_varint(fuzz_pilot, length_start, frame_max, 1);
-                specific_length_fuzz_applied = 1;
             }
 
             if (data_actual_start < frame_max) {
@@ -472,7 +541,7 @@ void padding_frame_fuzzer(picoquic_cnx_t* cnx, fuzzer_icid_ctx_t* icid_ctx, uint
     if (l == 0) return;
 
     /* HANDSHAKE_DONE tracking */
-    if (icid_ctx != NULL && cnx != NULL && !cnx->is_client && bytes[0] == picoquic_frame_type_handshake_done) {
+    if (icid_ctx != NULL && cnx != NULL && !picoquic_is_client(cnx) && bytes[0] == picoquic_frame_type_handshake_done) {
         icid_ctx->handshake_done_sent_by_server = 1;
     }
 
@@ -643,7 +712,6 @@ void new_token_frame_fuzzer(uint64_t fuzz_pilot, uint8_t* frame_start, uint8_t* 
 void new_connection_id_frame_fuzzer_logic(uint64_t fuzz_pilot, uint8_t* frame_start, uint8_t* frame_max, fuzzer_icid_ctx_t* icid_ctx)
 {
     uint8_t* p = frame_start;
-    uint64_t frame_type;
     int specific_fuzz_applied = 0;
 
     p = (uint8_t*)picoquic_frames_varint_skip(p, frame_max);
@@ -850,18 +918,18 @@ static int encode_and_overwrite_varint(uint8_t* field_start, uint8_t* field_end,
 
     size_t original_varint_len = field_end - field_start;
     uint8_t temp_buffer[16];
-    uint8_t* temp_encode_end = picoquic_varint_encode(temp_buffer, sizeof(temp_buffer), new_value);
+    size_t encoded_len = picoquic_varint_encode(temp_buffer, sizeof(temp_buffer), new_value);
 
-    if (temp_encode_end == temp_buffer) {
+    if (encoded_len == 0) {
         if (new_value == 0) {
             temp_buffer[0] = 0;
-            temp_encode_end = temp_buffer + 1;
+            encoded_len = 1;
         } else {
             return 0;
         }
     }
 
-    size_t new_varint_len = temp_encode_end - temp_buffer;
+    size_t new_varint_len = encoded_len;
 
     if (new_varint_len <= original_varint_len) {
         memcpy(field_start, temp_buffer, new_varint_len);
@@ -923,7 +991,7 @@ void path_abandon_frame_fuzzer(uint64_t fuzz_pilot, uint8_t* frame_start, uint8_
                 if (error_choice == 0) {
                     new_error_code_val = 0;
                 } else if (error_choice == 1) {
-                    new_error_code_val = PICOQUIC_TRANSPORT_FRAME_ENCODING_ERROR;
+                    new_error_code_val = PICOQUIC_TRANSPORT_FRAME_FORMAT_ERROR;
                 } else {
                     new_error_code_val = 0x3FFFFFFFFFFFFFFF;
                 }
@@ -951,7 +1019,6 @@ void path_abandon_frame_fuzzer(uint64_t fuzz_pilot, uint8_t* frame_start, uint8_
 void crypto_frame_fuzzer_logic(uint64_t fuzz_pilot, uint8_t* frame_start, uint8_t* frame_max, fuzzer_ctx_t* ctx, fuzzer_icid_ctx_t* icid_ctx)
 {
     uint8_t* p = frame_start;
-    uint64_t frame_type;
     int specific_fuzz_applied = 0;
 
     p = (uint8_t*)picoquic_frames_varint_skip(p, frame_max);
@@ -1141,11 +1208,11 @@ void max_data_fuzzer(uint64_t fuzz_pilot, uint8_t* frame_start, uint8_t* frame_m
                     fuzzed_val--;
                 }
 
-                int fuzzed_varint_len = picoquic_varint_encode_length(fuzzed_val); /* Corrected function name */
+                int fuzzed_varint_len = picoquic_varint_encode_length(fuzzed_val);
                 size_t original_varint_len = original_varint_end - original_varint_start;
 
                 if (fuzzed_varint_len <= original_varint_len) {
-                    picoquic_varint_encode(original_varint_start, frame_max, fuzzed_val); /* Corrected function name */
+                    picoquic_varint_encode(original_varint_start, (size_t)(frame_max - original_varint_start), fuzzed_val);
                     if (fuzzed_varint_len < original_varint_len) {
                         size_t padding_len = original_varint_len - fuzzed_varint_len;
                         if (original_varint_start + fuzzed_varint_len + padding_len <= frame_max) {
@@ -1162,10 +1229,9 @@ void max_data_fuzzer(uint64_t fuzz_pilot, uint8_t* frame_start, uint8_t* frame_m
 }
 
 /* frame_header_fuzzer: MODIFIED signature */
-int frame_header_fuzzer(picoquic_cnx_t* cnx, fuzzer_icid_ctx_t* icid_ctx, uint64_t fuzz_pilot,
+int frame_header_fuzzer(fuzzer_ctx_t* f_ctx, picoquic_cnx_t* cnx, fuzzer_icid_ctx_t* icid_ctx, uint64_t fuzz_pilot,
     uint8_t* bytes, size_t bytes_max, size_t length, size_t header_length)
 {
-    fuzzer_ctx_t* ctx = (icid_ctx != NULL && icid_ctx->icid_node.tree != NULL) ? (fuzzer_ctx_t*)icid_ctx->icid_node.tree->parent_payload : NULL;
     uint8_t* frame_head[FUZZER_MAX_NB_FRAMES];
     uint8_t* frame_next[FUZZER_MAX_NB_FRAMES];
     uint8_t* last_byte = bytes + bytes_max;
@@ -1197,7 +1263,7 @@ int frame_header_fuzzer(picoquic_cnx_t* cnx, fuzzer_icid_ctx_t* icid_ctx, uint64
         fuzz_pilot >>= 5;
 
         /* HANDSHAKE_DONE tracking moved here */
-        if (cnx != NULL && !cnx->is_client && icid_ctx != NULL && *frame_byte == picoquic_frame_type_handshake_done) {
+        if (cnx != NULL && !picoquic_is_client(cnx) && icid_ctx != NULL && *frame_byte == picoquic_frame_type_handshake_done) {
             icid_ctx->handshake_done_sent_by_server = 1;
         }
 
@@ -1217,7 +1283,7 @@ int frame_header_fuzzer(picoquic_cnx_t* cnx, fuzzer_icid_ctx_t* icid_ctx, uint64
                 varint_frame_fuzzer(fuzz_pilot, frame_byte, frame_max, 3);
                 break;
             case picoquic_frame_type_max_data:
-                max_data_fuzzer(fuzz_pilot, frame_byte, frame_max, ctx, icid_ctx);
+                max_data_fuzzer(fuzz_pilot, frame_byte, frame_max, f_ctx, icid_ctx);
                 break;
             case picoquic_frame_type_max_stream_data:
                 varint_frame_fuzzer(fuzz_pilot, frame_byte, frame_max, 3);
@@ -1245,14 +1311,14 @@ int frame_header_fuzzer(picoquic_cnx_t* cnx, fuzzer_icid_ctx_t* icid_ctx, uint64
                 break;
             case picoquic_frame_type_datagram:
             case picoquic_frame_type_datagram_l:
-                datagram_frame_fuzzer(ctx, icid_ctx, fuzz_pilot, frame_byte, frame_max);
+                datagram_frame_fuzzer(f_ctx, icid_ctx, fuzz_pilot, frame_byte, frame_max);
                 break;
             case picoquic_frame_type_path_challenge:
             case picoquic_frame_type_path_response:
                 challenge_frame_fuzzer(fuzz_pilot, frame_byte, frame_max);
                 break;
             case picoquic_frame_type_crypto_hs:
-                crypto_frame_fuzzer_logic(fuzz_pilot, frame_byte, frame_max, ctx, icid_ctx);
+                crypto_frame_fuzzer_logic(fuzz_pilot, frame_byte, frame_max, f_ctx, icid_ctx);
                 break;
             case picoquic_frame_type_padding:
             case picoquic_frame_type_ping:
@@ -1750,14 +1816,14 @@ uint32_t fuzi_q_fuzzer(void* fuzz_ctx_param, picoquic_cnx_t* cnx,
                     final_pad = current_pos;
                     if (ping_count > 0) was_fuzzed++;
                 }
-            } else if (main_strategy_choice == 4 && cnx != NULL && cnx->is_client &&
+            } else if (main_strategy_choice == 4 && cnx != NULL && picoquic_is_client(cnx) &&
                        fuzzer_get_cnx_state(cnx) < fuzzer_cnx_state_ready && header_length + 1 <= bytes_max) {
                 /* Client sends HANDSHAKE_DONE */
                 sub_fuzzer_pilot = fuzz_pilot;
                 bytes[header_length] = picoquic_frame_type_handshake_done;
                 final_pad = header_length + 1;
                 was_fuzzed++;
-            } else if (main_strategy_choice == 5 && cnx != NULL && !cnx->is_client &&
+            } else if (main_strategy_choice == 5 && cnx != NULL && !picoquic_is_client(cnx) &&
                        icid_ctx->handshake_done_sent_by_server == 1) {
                 /* Server sends CRYPTO after HANDSHAKE_DONE */
                 sub_fuzzer_pilot = fuzz_pilot;
@@ -1794,7 +1860,7 @@ uint32_t fuzi_q_fuzzer(void* fuzz_ctx_param, picoquic_cnx_t* cnx,
             if (!was_fuzzed || fuzz_more) {
                 int fuzzed_by_header_fuzzer = 0;
                 if (final_pad > header_length) {
-                    fuzzed_by_header_fuzzer = frame_header_fuzzer(cnx, icid_ctx, sub_fuzzer_pilot, bytes, bytes_max, final_pad, header_length);
+                    fuzzed_by_header_fuzzer = frame_header_fuzzer(ctx, cnx, icid_ctx, sub_fuzzer_pilot, bytes, bytes_max, final_pad, header_length);
                 }
                 if (!fuzzed_by_header_fuzzer && !was_fuzzed) {
                     fuzzed_length = basic_packet_fuzzer(ctx, sub_fuzzer_pilot, bytes, bytes_max, length, header_length);
