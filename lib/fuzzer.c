@@ -27,7 +27,11 @@
 #include <string.h>
 #include "fuzi_q.h"
 
+#define FUZZER_MAX_NB_FRAMES 32
+
+static int encode_and_overwrite_varint(uint8_t* field_start, uint8_t* field_end, uint8_t* frame_max, uint64_t new_value);
 uint8_t* fuzz_in_place_or_skip_varint(uint64_t fuzz_pilot, uint8_t* bytes, uint8_t* bytes_max, int do_fuzz);
+void default_frame_fuzzer(uint64_t fuzz_pilot, uint8_t* bytes, uint8_t* bytes_max);
 
 /*
  * Basic fuzz test just tries to flip some bits in random packets
@@ -369,7 +373,6 @@ void datagram_frame_fuzzer(fuzzer_ctx_t* ctx, fuzzer_icid_ctx_t* icid_ctx, uint6
 
     uint8_t type_byte = frame_start[0];
     uint8_t* payload_start = frame_start + 1;
-    int specific_length_fuzz_applied = 0;
 
     if (payload_start > frame_max) {
          frame_start[0] ^= (uint8_t)(fuzz_pilot & 0xFF);
@@ -389,16 +392,11 @@ void datagram_frame_fuzzer(fuzzer_ctx_t* ctx, fuzzer_icid_ctx_t* icid_ctx, uint6
 
             if (choice < 2) {
                 uint64_t large_value = (choice == 0) ? 65536 : 0x3FFFFFFFFFFFFFFF;
-                if(encode_and_overwrite_varint(length_start, length_end, frame_max, large_value)) {
-                    specific_length_fuzz_applied = 1;
-                }
+                encode_and_overwrite_varint(length_start, length_end, frame_max, large_value);
             } else if (choice == 2) {
-                if(encode_and_overwrite_varint(length_start, length_end, frame_max, 0)) {
-                    specific_length_fuzz_applied = 1;
-                }
+                encode_and_overwrite_varint(length_start, length_end, frame_max, 0);
             } else if (choice < 5) {
                 fuzz_in_place_or_skip_varint(fuzz_pilot, length_start, frame_max, 1);
-                specific_length_fuzz_applied = 1;
             }
 
             if (data_actual_start < frame_max) {
@@ -472,7 +470,7 @@ void padding_frame_fuzzer(picoquic_cnx_t* cnx, fuzzer_icid_ctx_t* icid_ctx, uint
     if (l == 0) return;
 
     /* HANDSHAKE_DONE tracking */
-    if (icid_ctx != NULL && cnx != NULL && !cnx->is_client && bytes[0] == picoquic_frame_type_handshake_done) {
+    if (icid_ctx != NULL && cnx != NULL && !picoquic_is_client(cnx) && bytes[0] == picoquic_frame_type_handshake_done) {
         icid_ctx->handshake_done_sent_by_server = 1;
     }
 
@@ -643,7 +641,6 @@ void new_token_frame_fuzzer(uint64_t fuzz_pilot, uint8_t* frame_start, uint8_t* 
 void new_connection_id_frame_fuzzer_logic(uint64_t fuzz_pilot, uint8_t* frame_start, uint8_t* frame_max, fuzzer_icid_ctx_t* icid_ctx)
 {
     uint8_t* p = frame_start;
-    uint64_t frame_type;
     int specific_fuzz_applied = 0;
 
     p = (uint8_t*)picoquic_frames_varint_skip(p, frame_max);
@@ -850,18 +847,18 @@ static int encode_and_overwrite_varint(uint8_t* field_start, uint8_t* field_end,
 
     size_t original_varint_len = field_end - field_start;
     uint8_t temp_buffer[16];
-    uint8_t* temp_encode_end = picoquic_varint_encode(temp_buffer, sizeof(temp_buffer), new_value);
+    size_t encoded_len = picoquic_varint_encode(temp_buffer, sizeof(temp_buffer), new_value);
 
-    if (temp_encode_end == temp_buffer) {
+    if (encoded_len == 0) {
         if (new_value == 0) {
             temp_buffer[0] = 0;
-            temp_encode_end = temp_buffer + 1;
+            encoded_len = 1;
         } else {
             return 0;
         }
     }
 
-    size_t new_varint_len = temp_encode_end - temp_buffer;
+    size_t new_varint_len = encoded_len;
 
     if (new_varint_len <= original_varint_len) {
         memcpy(field_start, temp_buffer, new_varint_len);
@@ -923,7 +920,7 @@ void path_abandon_frame_fuzzer(uint64_t fuzz_pilot, uint8_t* frame_start, uint8_
                 if (error_choice == 0) {
                     new_error_code_val = 0;
                 } else if (error_choice == 1) {
-                    new_error_code_val = PICOQUIC_TRANSPORT_FRAME_ENCODING_ERROR;
+                    new_error_code_val = PICOQUIC_TRANSPORT_FRAME_FORMAT_ERROR;
                 } else {
                     new_error_code_val = 0x3FFFFFFFFFFFFFFF;
                 }
@@ -951,7 +948,6 @@ void path_abandon_frame_fuzzer(uint64_t fuzz_pilot, uint8_t* frame_start, uint8_
 void crypto_frame_fuzzer_logic(uint64_t fuzz_pilot, uint8_t* frame_start, uint8_t* frame_max, fuzzer_ctx_t* ctx, fuzzer_icid_ctx_t* icid_ctx)
 {
     uint8_t* p = frame_start;
-    uint64_t frame_type;
     int specific_fuzz_applied = 0;
 
     p = (uint8_t*)picoquic_frames_varint_skip(p, frame_max);
@@ -1145,7 +1141,7 @@ void max_data_fuzzer(uint64_t fuzz_pilot, uint8_t* frame_start, uint8_t* frame_m
                 size_t original_varint_len = original_varint_end - original_varint_start;
 
                 if (fuzzed_varint_len <= original_varint_len) {
-                    picoquic_varint_encode(original_varint_start, frame_max, fuzzed_val); /* Corrected function name */
+                    picoquic_varint_encode(original_varint_start, (size_t)(frame_max - original_varint_start), fuzzed_val);
                     if (fuzzed_varint_len < original_varint_len) {
                         size_t padding_len = original_varint_len - fuzzed_varint_len;
                         if (original_varint_start + fuzzed_varint_len + padding_len <= frame_max) {
@@ -1165,7 +1161,7 @@ void max_data_fuzzer(uint64_t fuzz_pilot, uint8_t* frame_start, uint8_t* frame_m
 int frame_header_fuzzer(picoquic_cnx_t* cnx, fuzzer_icid_ctx_t* icid_ctx, uint64_t fuzz_pilot,
     uint8_t* bytes, size_t bytes_max, size_t length, size_t header_length)
 {
-    fuzzer_ctx_t* ctx = (icid_ctx != NULL && icid_ctx->icid_node.tree != NULL) ? (fuzzer_ctx_t*)icid_ctx->icid_node.tree->parent_payload : NULL;
+    fuzzer_ctx_t* ctx = (icid_ctx != NULL && icid_ctx->icid_node.parent_payload != NULL) ? (fuzzer_ctx_t*)icid_ctx->icid_node.parent_payload : NULL;
     uint8_t* frame_head[FUZZER_MAX_NB_FRAMES];
     uint8_t* frame_next[FUZZER_MAX_NB_FRAMES];
     uint8_t* last_byte = bytes + bytes_max;
@@ -1197,7 +1193,7 @@ int frame_header_fuzzer(picoquic_cnx_t* cnx, fuzzer_icid_ctx_t* icid_ctx, uint64
         fuzz_pilot >>= 5;
 
         /* HANDSHAKE_DONE tracking moved here */
-        if (cnx != NULL && !cnx->is_client && icid_ctx != NULL && *frame_byte == picoquic_frame_type_handshake_done) {
+        if (cnx != NULL && !picoquic_is_client(cnx) && icid_ctx != NULL && *frame_byte == picoquic_frame_type_handshake_done) {
             icid_ctx->handshake_done_sent_by_server = 1;
         }
 
@@ -1750,14 +1746,14 @@ uint32_t fuzi_q_fuzzer(void* fuzz_ctx_param, picoquic_cnx_t* cnx,
                     final_pad = current_pos;
                     if (ping_count > 0) was_fuzzed++;
                 }
-            } else if (main_strategy_choice == 4 && cnx != NULL && cnx->is_client &&
+            } else if (main_strategy_choice == 4 && cnx != NULL && picoquic_is_client(cnx) &&
                        fuzzer_get_cnx_state(cnx) < fuzzer_cnx_state_ready && header_length + 1 <= bytes_max) {
                 /* Client sends HANDSHAKE_DONE */
                 sub_fuzzer_pilot = fuzz_pilot;
                 bytes[header_length] = picoquic_frame_type_handshake_done;
                 final_pad = header_length + 1;
                 was_fuzzed++;
-            } else if (main_strategy_choice == 5 && cnx != NULL && !cnx->is_client &&
+            } else if (main_strategy_choice == 5 && cnx != NULL && !picoquic_is_client(cnx) &&
                        icid_ctx->handshake_done_sent_by_server == 1) {
                 /* Server sends CRYPTO after HANDSHAKE_DONE */
                 sub_fuzzer_pilot = fuzz_pilot;
