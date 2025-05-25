@@ -19,6 +19,8 @@
 * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
+#define PICOQUIC_STATELESS_RESET_TOKEN_SIZE 16
+
 #include <picoquic.h>
 #include <picoquic_utils.h>
 #include <picoquic_internal.h>
@@ -31,10 +33,6 @@
 
 // Forward declarations for picoquic functions/macros if not found by compiler
 // These are added as a workaround for potential build environment/include issues.
-
-#ifndef PICOQUIC_STATELESS_RESET_TOKEN_SIZE
-#define PICOQUIC_STATELESS_RESET_TOKEN_SIZE 16
-#endif
 
 // extern void picoquic_val32be_to_bytes(uint32_t val32, uint8_t* bytes);
 // extern uint32_t picoquic_val32be(const uint8_t* bytes);
