@@ -819,16 +819,6 @@ static uint8_t test_ack_gap_causes_negative_next_largest[] = {
 };
 
 /* ACK Range Length variations (ACK Range Count >= 1) */
-static uint8_t test_ack_range_len_zero_gap_zero[] = { /* Same as test_ack_gap_zero_len_zero */
-    0x02, /* Type: ACK */
-    0x14, /* Largest Acknowledged: 20 */
-    0x00, /* ACK Delay: 0 */
-    0x01, /* ACK Range Count: 1 */
-    0x00, /* First ACK Range: 0 */
-    0x00, /* Gap: 0 */
-    0x00  /* ACK Range Length: 0 */
-};
-
 static uint8_t test_ack_range_len_large[] = {
     0x02,       /* Type: ACK */
     0x85, 0xDC, /* Largest Acknowledged: 1500 */
