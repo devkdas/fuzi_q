@@ -191,6 +191,13 @@ static uint8_t test_frame_type_ping[] = {
     picoquic_frame_type_ping
 };
 
+/* Test Case: PING frame type encoded non-minimally.
+ * Frame Type: PING (normally 0x01) encoded as a 2-byte varint (0x4001).
+ */
+static uint8_t test_frame_ping_long_encoding[] = {
+    0x40, 0x01
+};
+
 static uint8_t test_frame_type_blocked[] = {
     picoquic_frame_type_data_blocked,
     0x80, 0x01, 0, 0
@@ -239,6 +246,26 @@ static uint8_t test_frame_streams_blocked_uni_zero[] = {
     picoquic_frame_type_streams_blocked_unidir, 0x00
 };
 
+/* Test Case 1: STREAMS_BLOCKED (bidirectional) indicating a limit that isn't actually blocking.
+ * Type: STREAMS_BLOCKED (bidirectional, 0x16)
+ * Maximum Streams: 5
+ * Scenario: Peer's actual limit is higher (e.g., 10).
+ */
+static uint8_t test_frame_streams_blocked_not_actually_blocked[] = {
+    picoquic_frame_type_streams_blocked_bidir, /* 0x16 */
+    0x05 /* Maximum Streams: 5 */
+};
+
+/* Test Case 2: STREAMS_BLOCKED (unidirectional) indicating a limit higher than the peer's actual limit.
+ * Type: STREAMS_BLOCKED (unidirectional, 0x17)
+ * Maximum Streams: 100
+ * Scenario: Peer's actual limit is lower (e.g., 10).
+ */
+static uint8_t test_frame_streams_blocked_limit_too_high[] = {
+    picoquic_frame_type_streams_blocked_unidir, /* 0x17 */
+    0x64 /* Maximum Streams: 100 */
+};
+
 static uint8_t test_frame_type_new_connection_id[] = {
     picoquic_frame_type_new_connection_id,
     7,
@@ -267,6 +294,28 @@ static uint8_t test_frame_stop_sending_min_vals[] = {
 
 static uint8_t test_frame_stop_sending_app_error_specific[] = {
     picoquic_frame_type_stop_sending, 0x01, 0x41, 0x00
+};
+
+/* Test Case 1: STOP_SENDING for a stream already reset by the peer.
+ * Type: STOP_SENDING (0x05)
+ * Stream ID: 4
+ * Application Protocol Error Code: 0x01 (generic app error)
+ */
+static uint8_t test_frame_stop_sending_for_peer_reset_stream[] = {
+    picoquic_frame_type_stop_sending, /* 0x05 */
+    0x04, /* Stream ID: 4 */
+    0x01  /* Application Protocol Error Code: 0x01 */
+};
+
+/* Test Case 2: STOP_SENDING with a very large error code.
+ * Type: STOP_SENDING (0x05)
+ * Stream ID: 8
+ * Application Protocol Error Code: 0x3FFFFFFFFFFFFFFF (max 8-byte varint)
+ */
+static uint8_t test_frame_stop_sending_large_error_code[] = {
+    picoquic_frame_type_stop_sending, /* 0x05 */
+    0x08, /* Stream ID: 8 */
+    0xBF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF /* Error Code: 0x3FFFFFFFFFFFFFFF */
 };
 
 static uint8_t test_frame_type_path_challenge[] = {
@@ -645,6 +694,15 @@ static uint8_t test_frame_retire_cid_seq_high[] = {
     picoquic_frame_type_retire_connection_id, 0x0A
 };
 
+/* Test Case: RETIRE_CONNECTION_ID that refers to the CID currently in use.
+ * Type: RETIRE_CONNECTION_ID (0x19)
+ * Sequence Number: 0 (example, implies packet's DCID has sequence 0)
+ */
+static uint8_t test_frame_retire_cid_current_in_use[] = {
+    picoquic_frame_type_retire_connection_id, /* 0x19 */
+    0x00 /* Sequence Number: 0 */
+};
+
 static uint8_t test_frame_type_datagram[] = {
     picoquic_frame_type_datagram,
     0xA0, 0xA1, 0xA2, 0xA3, 0xA4, 0xA5, 0xA6, 0xA7,
@@ -929,6 +987,24 @@ static uint8_t test_frame_new_cid_length_too_long_for_rfc[] = {
     0xE8, 0xE9, 0xEA, 0xEB, 0xEC, 0xED, 0xEE, 0xEF  /* Stateless Reset Token (last 8 bytes) */
 };
 
+/* Test Case: NEW_CONNECTION_ID that would exceed active_connection_id_limit.
+ * Type: NEW_CONNECTION_ID (0x18)
+ * Sequence Number: 5
+ * Retire Prior To: 0
+ * Length: 8
+ * Connection ID: 8x 0xAA
+ * Stateless Reset Token: 16x 0xBB
+ */
+static uint8_t test_frame_new_cid_exceed_limit_no_retire[] = {
+    picoquic_frame_type_new_connection_id, /* 0x18 */
+    0x05, /* Sequence Number */
+    0x00, /* Retire Prior To */
+    8,    /* Length */
+    0xAA, 0xAA, 0xAA, 0xAA, 0xAA, 0xAA, 0xAA, 0xAA, /* Connection ID */
+    0xBB, 0xBB, 0xBB, 0xBB, 0xBB, 0xBB, 0xBB, 0xBB, /* Stateless Reset Token (first 8) */
+    0xBB, 0xBB, 0xBB, 0xBB, 0xBB, 0xBB, 0xBB, 0xBB  /* Stateless Reset Token (last 8) */
+};
+
 static uint8_t test_frame_stream_hang[] = {
     0x01, 0x00, 0x0D, 0xFF, 0xFF, 0xFF, 0x01, 0x00,
     0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
@@ -1170,6 +1246,26 @@ static uint8_t test_frame_max_streams_unidir_extremely_large[] = {
     0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF
 };
 
+/* Test Case for MAX_DATA in a post-close scenario.
+ * Type: MAX_DATA (0x10)
+ * Maximum Data: 200000 (Varint encoded as 0x80, 0x03, 0x0D, 0x40)
+ */
+static uint8_t test_frame_max_data_after_close_scenario[] = {
+    picoquic_frame_type_max_data,
+    0x80, 0x03, 0x0D, 0x40 /* 200000 */
+};
+
+/* Test Case for MAX_STREAM_DATA on a reset stream.
+ * Type: MAX_STREAM_DATA (0x11)
+ * Stream ID: 4
+ * Maximum Stream Data: 10000 (Varint encoded as 0x80, 0x00, 0x27, 0x10)
+ */
+static uint8_t test_frame_max_stream_data_for_reset_stream_scenario[] = {
+    picoquic_frame_type_max_stream_data,
+    0x04,       /* Stream ID: 4 */
+    0x80, 0x00, 0x27, 0x10 /* 10000 */
+};
+
 /* New CONNECTION_CLOSE and APPLICATION_CLOSE frame test cases */
 
 /* Test Case 1: test_frame_connection_close_reason_len_too_large */
@@ -1254,6 +1350,35 @@ static uint8_t test_frame_application_close_reason_len_longer[] = {
     0x41, 0x01, /* Error Code: 0x0101 */
     0x1E,       /* Reason Phrase Length: 30 */
     's', 'h', 'o', 'r', 't'
+};
+
+/* Test Case 1: CONNECTION_CLOSE (transport error) with an invalid inner Frame Type
+ * for the packet type it might be placed in (e.g. STREAM frame in Initial).
+ * Type: CONNECTION_CLOSE (transport error, 0x1c)
+ * Error Code: 0x0a (PROTOCOL_VIOLATION)
+ * Frame Type: 0x08 (STREAM frame type)
+ * Reason Phrase Length: 4
+ * Reason Phrase: "test"
+ */
+static uint8_t test_frame_connection_close_invalid_inner_frame_type[] = {
+    picoquic_frame_type_connection_close, /* 0x1c */
+    0x0a,       /* Error Code: PROTOCOL_VIOLATION */
+    0x08,       /* Frame Type: STREAM (example of an invalid type in certain contexts) */
+    0x04,       /* Reason Phrase Length: 4 */
+    't', 'e', 's', 't'
+};
+
+/* Test Case 2: CONNECTION_CLOSE (application error) with a non-UTF-8 reason phrase.
+ * Type: CONNECTION_CLOSE (application error, 0x1d)
+ * Error Code: 0x0101 (application error, varint 0x4101)
+ * Reason Phrase Length: 4
+ * Reason Phrase: { 0xC3, 0x28, 0xA0, 0xA1 } (invalid UTF-8)
+ */
+static uint8_t test_frame_connection_close_reason_non_utf8[] = {
+    picoquic_frame_type_application_close, /* 0x1d */
+    0x41, 0x01, /* Error Code: 0x0101 */
+    0x04,       /* Reason Phrase Length: 4 */
+    0xC3, 0x28, 0xA0, 0xA1 /* Invalid UTF-8 sequence */
 };
 
 /* New NEW_CONNECTION_ID frame test cases */
@@ -1713,6 +1838,19 @@ fuzi_q_frames_t fuzi_q_frame_list[] = {
     FUZI_Q_ITEM("datagram_len_shorter_than_data", test_frame_datagram_len_shorter_than_data),
     FUZI_Q_ITEM("datagram_len_longer_than_data", test_frame_datagram_len_longer_than_data),
     FUZI_Q_ITEM("datagram_zero_len_with_data", test_frame_datagram_zero_len_with_data),
+
+    /* User added test frames from current plan (steps 1-6) */
+    FUZI_Q_ITEM("max_data_after_close_scenario", test_frame_max_data_after_close_scenario),
+    FUZI_Q_ITEM("max_stream_data_for_reset_stream_scenario", test_frame_max_stream_data_for_reset_stream_scenario),
+    FUZI_Q_ITEM("streams_blocked_not_actually_blocked", test_frame_streams_blocked_not_actually_blocked),
+    FUZI_Q_ITEM("streams_blocked_limit_too_high", test_frame_streams_blocked_limit_too_high),
+    FUZI_Q_ITEM("stop_sending_for_peer_reset_stream", test_frame_stop_sending_for_peer_reset_stream),
+    FUZI_Q_ITEM("stop_sending_large_error_code", test_frame_stop_sending_large_error_code),
+    FUZI_Q_ITEM("retire_cid_current_in_use", test_frame_retire_cid_current_in_use),
+    FUZI_Q_ITEM("new_cid_exceed_limit_no_retire", test_frame_new_cid_exceed_limit_no_retire),
+    FUZI_Q_ITEM("connection_close_invalid_inner_frame_type", test_frame_connection_close_invalid_inner_frame_type),
+    FUZI_Q_ITEM("connection_close_reason_non_utf8", test_frame_connection_close_reason_non_utf8),
+    FUZI_Q_ITEM("ping_long_encoding", test_frame_ping_long_encoding),
 
     /* User added NEW_CONNECTION_ID frame test items (specific names) */
     FUZI_Q_ITEM("new_cid_retire_prior_to_seq_num_mismatch", test_frame_new_cid_retire_prior_to_seq_num_mismatch),
