@@ -394,6 +394,138 @@ static uint8_t test_frame_ack_many_small_ranges[] = {
     0x00, 0x00  /* Gap 0, Range 0 (acks 31) */
 };
 
+/* Test Case 1: Overlapping ACK Ranges.
+ * Type: ACK (0x02)
+ * Largest Acknowledged: 20 (0x14)
+ * ACK Delay: 10 (0x0A)
+ * ACK Range Count: 2 (0x02)
+ * First ACK Range: 5 (0x05) (acks packets 15-20)
+ * Second ACK Range:
+ *   Gap: 1 (0x01) (previous smallest was 15. next largest acked by this range is 15 - 1 - 2 = 12)
+ *   ACK Range Length: 4 (0x04) (acks packets 12 - 4 = 8 to 12). This range (8-12) overlaps with (15-20) due to how ranges are calculated.
+ *   The test is to see if the parser correctly handles or flags this condition if it's considered invalid.
+ *   Note: The example in the description seems to have a direct overlap logic,
+ *   but QUIC ACK range processing means a gap reduces the next range's numbers.
+ *   Let's define a case where the *resulting* packet numbers from two ranges would overlap if not processed carefully or if gaps lead to unexpected results.
+ *   Largest Ack: 20. First Range: 5 (acks 15-20). Smallest_prev = 15.
+ *   Gap: 1. Next_Largest_Acked_By_Range = Smallest_prev - Gap - 2 = 15 - 1 - 2 = 12.
+ *   RangeLength: 7 (acks 12-7 = 5 to 12). Packets 5-12 and 15-20. No direct number overlap.
+ *
+ *   To create an overlap based on the problem description's intent (e.g. range 1 acks X to Y, range 2 acks W to Z, and they overlap):
+ *   Largest Ack: 20 (0x14)
+ *   ACK Delay: 10 (0x0A)
+ *   ACK Range Count: 2 (0x02)
+ *   First ACK Range: 5 (0x05) -> acks pkts (20-5) to 20 = 15 to 20. Smallest in this range is 15.
+ *   Gap for 2nd range: 2 (0x02) -> next largest pkt in 2nd range = 15 - 2 - 2 = 11.
+ *   ACK Range Length for 2nd range: 3 (0x03) -> acks pkts (11-3) to 11 = 8 to 11. No overlap.
+ *
+ *   Let's try to make the second range ACK numbers ALREADY covered by the first range.
+ *   Largest Ack: 20. First Range: 5 (acks 15-20). Smallest in this range is 15.
+ *   To make the next range ack something like 16,17:
+ *   Next_Largest_Acked_By_Range = 17. Smallest_prev - Gap - 2 = 17.
+ *   15 - Gap - 2 = 17  => 13 - Gap = 17 => Gap = -4. Not possible.
+ *
+ *   The definition of "overlapping" here might mean that the *sum* of (Gap + Range Length) for a subsequent block
+ *   somehow encroaches into the space defined by a prior block, or that a block defines a range already covered.
+ *   The standard processing implies ranges are ordered. The "First ACK Range" is for the highest packet numbers.
+ *   Subsequent ranges are for lower packet numbers.
+ *   A true overlap where e.g. range 1 covers 15-20 and range 2 covers 18-22 is not possible with the gap logic.
+ *   Let's assume "overlapping" means a range that re-acknowledges a packet number that would have been
+ *   covered by a previous (higher value) range if the ranges were strictly sequential and non-overlapping.
+ *   This seems more like a test of complex gap arithmetic.
+ *   The provided example `{ 0x02, 20, 10, 2, 5, 1, 4 };`
+ *   Largest Ack = 20. Delay = 10. Range Count = 2.
+ *   Range 1: Len = 5. Acks 15, 16, 17, 18, 20. Smallest = 15.
+ *   Range 2: Gap = 1. Next Largest = 15 - 1 - 2 = 12. Len = 4. Acks 8, 9, 10, 11, 12.
+ *   These ranges (15-20 and 8-12) are not overlapping.
+ *
+ *   Given the problem statement, the user likely intends a scenario that might be invalidly constructed.
+ *   Let's stick to the user's example values directly, assuming it represents an edge case they want to test,
+ *   even if it doesn't create a direct numerical overlap in the final acknowledged set due to standard processing.
+ *   The term "overlapping" might be used loosely to mean "a complex interaction of ranges".
+ */
+static uint8_t test_frame_ack_overlapping_ranges[] = {
+    0x02, /* Type: ACK */
+    20,   /* Largest Acknowledged */
+    10,   /* ACK Delay */
+    2,    /* ACK Range Count */
+    5,    /* First ACK Range Length (acks 15-20) */
+    1,    /* Gap (next range starts relative to 15) */
+    4     /* Second ACK Range Length (next largest is 15-1-2=12, acks 8-12) */
+};
+
+/* Test Case 2: ACK ranges that would imply ascending order or invalid gap.
+ * Type: ACK (0x02)
+ * Largest Acknowledged: 5
+ * ACK Delay: 0
+ * ACK Range Count: 2 (to have a "next" range)
+ * First ACK Range: 2 (acks packets 3-5). Smallest in this range is 3.
+ * Second ACK Range:
+ *   Gap: 10 (This is the key part. Next largest ack in this range would be 3 - 10 - 2 = -9, which is invalid)
+ *   ACK Range Length: 0 (minimal valid length for a range)
+ */
+static uint8_t test_frame_ack_ascending_ranges_invalid_gap[] = {
+    0x02, /* Type: ACK */
+    5,    /* Largest Acknowledged */
+    0,    /* ACK Delay */
+    2,    /* ACK Range Count */
+    2,    /* First ACK Range (acks 3-5, smallest is 3) */
+    10,   /* Gap (implies next largest is 3-10-2 = -9) */
+    0     /* ACK Range Length for the second range */
+};
+
+
+/* Test Case 3: Invalid ACK Range Count (too large for the actual data provided).
+ * Type: ACK (0x02)
+ * Largest Acknowledged: 100 (0x64)
+ * ACK Delay: 20 (0x14)
+ * ACK Range Count: 200 (0xC8, varint encoded as 0x40, 0xC8 is wrong, it's 0x80 00 00 C8 for 4 bytes, or 0x40 C8 for 2 bytes if < 16383)
+ *   Let's use 200, which is 0xC8. If it's a 1-byte varint, it's > 63, so it needs 2 bytes: 0x40 | (0xC8>>8) , 0xC8&0xFF -> 0x40, 0xC8.
+ *   No, 200 is 11001000 in binary. It fits in 1 byte with 0 prefix: 0xc8.
+ *   If Range Count is 200 (0xc8), it will be encoded as two bytes: 0x40 followed by 0xc8 is not correct.
+ *   A varint for 200 is simply 0xC8 if it was <64.
+ *   For 200: bits are 11001000. Two-byte encoding: 0x80 | (value >> 8), value & 0xFF.
+ *   No, that's for values > 2^14.
+ *   For 200: first byte is 0b01... (for 2-byte), so 0x40 + (200>>8) = 0x40. Second byte is 200&0xFF = 0xC8.
+ *   So, 0x40, 0xC8 is correct for 200. The problem states 0x40, 0xc8 for 200.
+ *   Actually, 200 in varint is: 0x80+128=200 -> 0x80+0x48 -> 0xC8. No, 200 = 128 + 72. So 0x80 | 0x48, 0x48.
+ *   Let's re-check varint for 200 (0xC8):
+ *   Since 200 > 63 and < 16383, it's a 2-byte varint.
+ *   First byte: 0x40 | (200 >> 8) = 0x40 | 0 = 0x40.
+ *   Second byte: 200 & 0xFF = 0xC8.
+ *   So, 0x40, 0xC8 is correct for 200.
+ * First ACK Range: 0 (0x00)
+ * Provide only a few actual ranges, far less than 200.
+ * The frame itself will be short, but the count implies many more.
+ */
+static uint8_t test_frame_ack_invalid_range_count[] = {
+    0x02,       /* Type: ACK */
+    100,        /* Largest Acknowledged */
+    20,         /* ACK Delay */
+    0x40, 0xC8, /* ACK Range Count: 200 (varint) */
+    0,          /* First ACK Range Length */
+    0,0,        /* Minimal Gap & Range */
+    0,0,        /* Minimal Gap & Range */
+    0,0         /* Minimal Gap & Range */
+    /* Total frame length here is 1 + 1 + 1 + 2 + 1 + 2 + 2 + 2 = 12 bytes */
+    /* but range count says 200 ranges. */
+};
+
+/* Test Case 4: Largest Acknowledged is smaller than the packet number implied by First ACK Range.
+ * Type: ACK (0x02)
+ * Largest Acknowledged: 5 (0x05)
+ * ACK Delay: 0 (0x00)
+ * ACK Range Count: 1 (0x01)
+ * First ACK Range: 10 (0x0A) (implies packets (5-10) to 5, so -5 to 5. This is invalid.)
+ */
+static uint8_t test_frame_ack_largest_smaller_than_range[] = {
+    0x02, /* Type: ACK */
+    5,    /* Largest Acknowledged */
+    0,    /* ACK Delay */
+    1,    /* ACK Range Count */
+    10    /* First ACK Range (length 10, implies acking below 0 if LargestAck is 5) */
+};
+
 static uint8_t test_frame_type_stream_range_min[] = {
     picoquic_frame_type_stream_range_min,
     1,
@@ -424,6 +556,49 @@ static uint8_t test_frame_stream_off_len_empty_fin[] = {
     0x40, 0x40, /* Offset: 64 (Varint encoded) */
     0x00        /* Length: 0 (Varint encoded) */
     /* No Stream Data */
+};
+
+/* Test Case 1: STREAM frame with FIN set and explicit length larger than data.
+ * Type: 0x0B (FIN=1, OFF=0, LEN=1)
+ * Stream ID: 0x04
+ * Length: 2000 (Varint encoded as 0x47, 0xD0)
+ * Stream Data: "test" (4 bytes)
+ */
+static uint8_t test_frame_stream_fin_too_long[] = {
+    0x0B,       /* Type: FIN=1, LEN=1 */
+    0x04,       /* Stream ID: 4 */
+    0x47, 0xD0, /* Length: 2000 */
+    't', 'e', 's', 't'
+};
+
+/* Test Case 2: First part of overlapping STREAM data.
+ * Type: 0x0E (FIN=0, OFF=1, LEN=1)
+ * Stream ID: 0x08
+ * Offset: 10
+ * Length: 5
+ * Stream Data: "first"
+ */
+static uint8_t test_frame_stream_overlapping_data_part1[] = {
+    0x0E,       /* Type: OFF=1, LEN=1 */
+    0x08,       /* Stream ID: 8 */
+    10,         /* Offset */
+    5,          /* Length */
+    'f', 'i', 'r', 's', 't'
+};
+
+/* Test Case 3: Second part of overlapping STREAM data.
+ * Type: 0x0E (FIN=0, OFF=1, LEN=1)
+ * Stream ID: 0x08 (same as part1)
+ * Offset: 12 (overlaps with offset 10, length 5 from part1)
+ * Length: 5
+ * Stream Data: "SECON"
+ */
+static uint8_t test_frame_stream_overlapping_data_part2[] = {
+    0x0E,       /* Type: OFF=1, LEN=1 */
+    0x08,       /* Stream ID: 8 */
+    12,         /* Offset */
+    5,          /* Length */
+    'S', 'E', 'C', 'O', 'N'
 };
 
 static uint8_t test_frame_type_crypto_hs[] = {
@@ -698,6 +873,60 @@ static uint8_t test_frame_new_cid_seq_much_lower[] = {
     0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, /* Connection ID */
     0xA0, 0xA1, 0xA2, 0xA3, 0xA4, 0xA5, 0xA6, 0xA7, /* Stateless Reset Token */
     0xA8, 0xA9, 0xAA, 0xAB, 0xAC, 0xAD, 0xAE, 0xAF
+};
+
+/* Test Case 1: NEW_CONNECTION_ID frame with Retire Prior To > Sequence Number.
+ * Type: NEW_CONNECTION_ID (0x18)
+ * Sequence Number: 5
+ * Retire Prior To: 10 (invalid as it's > Sequence Number)
+ * Length: 8
+ * Connection ID: 0x01...0x08
+ * Stateless Reset Token: 0xA0...0xAF (16 bytes)
+ */
+static uint8_t test_frame_new_cid_retire_prior_to_seq_num_mismatch[] = {
+    picoquic_frame_type_new_connection_id,
+    5,    /* Sequence Number */
+    10,   /* Retire Prior To */
+    8,    /* Length */
+    0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, /* Connection ID */
+    0xA0, 0xA1, 0xA2, 0xA3, 0xA4, 0xA5, 0xA6, 0xA7, /* Stateless Reset Token (first 8 bytes) */
+    0xA8, 0xA9, 0xAA, 0xAB, 0xAC, 0xAD, 0xAE, 0xAF  /* Stateless Reset Token (last 8 bytes) */
+};
+
+/* Test Case 2: NEW_CONNECTION_ID frame with invalid Connection ID Length (0).
+ * Type: NEW_CONNECTION_ID (0x18)
+ * Sequence Number: 6
+ * Retire Prior To: 1
+ * Length: 0 (invalid)
+ * Connection ID: (empty)
+ * Stateless Reset Token: 0xB0...0xBF (16 bytes)
+ */
+static uint8_t test_frame_new_cid_invalid_length[] = {
+    picoquic_frame_type_new_connection_id,
+    6,    /* Sequence Number */
+    1,    /* Retire Prior To */
+    0,    /* Length */
+    /* No Connection ID */
+    0xB0, 0xB1, 0xB2, 0xB3, 0xB4, 0xB5, 0xB6, 0xB7, /* Stateless Reset Token (first 8 bytes) */
+    0xB8, 0xB9, 0xBA, 0xBB, 0xBC, 0xBD, 0xBE, 0xBF  /* Stateless Reset Token (last 8 bytes) */
+};
+
+/* Test Case 3: NEW_CONNECTION_ID frame with Connection ID Length > 20.
+ * Type: NEW_CONNECTION_ID (0x18)
+ * Sequence Number: 7
+ * Retire Prior To: 2
+ * Length: 21 (invalid for RFC 9000, max is 20)
+ * Connection ID: 0xC0...0xD4 (21 bytes)
+ * Stateless Reset Token: 0xE0...0xEF (16 bytes)
+ */
+static uint8_t test_frame_new_cid_length_too_long_for_rfc[] = {
+    picoquic_frame_type_new_connection_id,
+    7,    /* Sequence Number */
+    2,    /* Retire Prior To */
+    21,   /* Length */
+    0xC0, 0xC1, 0xC2, 0xC3, 0xC4, 0xC5, 0xC6, 0xC7, 0xC8, 0xC9, 0xCA, 0xCB, 0xCC, 0xCD, 0xCE, 0xCF, 0xD0, 0xD1, 0xD2, 0xD3, 0xD4, /* Connection ID (21 bytes) */
+    0xE0, 0xE1, 0xE2, 0xE3, 0xE4, 0xE5, 0xE6, 0xE7, /* Stateless Reset Token (first 8 bytes) */
+    0xE8, 0xE9, 0xEA, 0xEB, 0xEC, 0xED, 0xEE, 0xEF  /* Stateless Reset Token (last 8 bytes) */
 };
 
 static uint8_t test_frame_stream_hang[] = {
@@ -1234,6 +1463,28 @@ static uint8_t test_frame_stop_sending_non_minimal_error_code[] = {
     0x40, 0x00  /* Non-minimal encoding of error code 0 */
 };
 
+/* Test Case 1 (Varint): MAX_STREAMS (bidirectional) with non-minimal varint for stream count.
+ * Type: MAX_STREAMS (bidirectional, 0x12)
+ * Maximum Streams: Value 10 (normally 0x0A) encoded as a 2-byte varint (0x40, 0x0A).
+ */
+static uint8_t test_frame_max_streams_non_minimal_varint[] = {
+    picoquic_frame_type_max_streams_bidir, /* 0x12 */
+    0x40, 0x0A  /* Non-minimal encoding of 10 */
+};
+
+/* Test Case 2 (Varint): CRYPTO frame with a non-minimal large varint for offset.
+ * Type: CRYPTO (0x06)
+ * Offset: Value 1 encoded as an 8-byte varint (0xC000000000000001).
+ * Length: 5
+ * Crypto Data: "hello"
+ */
+static uint8_t test_frame_crypto_offset_non_minimal_large_varint[] = {
+    picoquic_frame_type_crypto_hs, /* 0x06 */
+    0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, /* Non-minimal 8-byte encoding of 1 */
+    0x05,       /* Length: 5 */
+    'h', 'e', 'l', 'l', 'o'
+};
+
 /* New static test cases for less common frame variations */
 
 /* Test Case 1: test_frame_retire_cid_seq_much_higher */
@@ -1444,15 +1695,32 @@ fuzi_q_frames_t fuzi_q_frame_list[] = {
     FUZI_Q_ITEM("crypto_len_shorter_than_data", test_frame_crypto_len_shorter_than_data),
     FUZI_Q_ITEM("crypto_len_longer_than_data", test_frame_crypto_len_longer_than_data),
     FUZI_Q_ITEM("crypto_max_offset_max_len", test_frame_crypto_max_offset_max_len),
+    /* User added STREAM frame test items */
+    FUZI_Q_ITEM("stream_fin_too_long", test_frame_stream_fin_too_long),
+    FUZI_Q_ITEM("stream_overlapping_data_part1", test_frame_stream_overlapping_data_part1),
+    FUZI_Q_ITEM("stream_overlapping_data_part2", test_frame_stream_overlapping_data_part2),
     /* New fuzzy varint test items */
     FUZI_Q_ITEM("max_data_non_minimal_varint", test_frame_max_data_non_minimal_varint),
     FUZI_Q_ITEM("reset_stream_invalid_9_byte_varint", test_frame_reset_stream_invalid_9_byte_varint),
     FUZI_Q_ITEM("stop_sending_non_minimal_error_code", test_frame_stop_sending_non_minimal_error_code),
+    /* User added ACK frame test items */
+    FUZI_Q_ITEM("ack_overlapping_ranges", test_frame_ack_overlapping_ranges),
+    FUZI_Q_ITEM("ack_ascending_ranges_invalid_gap", test_frame_ack_ascending_ranges_invalid_gap),
+    FUZI_Q_ITEM("ack_invalid_range_count", test_frame_ack_invalid_range_count),
+    FUZI_Q_ITEM("ack_largest_smaller_than_range", test_frame_ack_largest_smaller_than_range),
     /* New static test cases for less common frame variations */
     FUZI_Q_ITEM("retire_cid_seq_much_higher", test_frame_retire_cid_seq_much_higher),
     FUZI_Q_ITEM("datagram_len_shorter_than_data", test_frame_datagram_len_shorter_than_data),
     FUZI_Q_ITEM("datagram_len_longer_than_data", test_frame_datagram_len_longer_than_data),
     FUZI_Q_ITEM("datagram_zero_len_with_data", test_frame_datagram_zero_len_with_data),
+
+    /* User added NEW_CONNECTION_ID frame test items (specific names) */
+    FUZI_Q_ITEM("new_cid_retire_prior_to_seq_num_mismatch", test_frame_new_cid_retire_prior_to_seq_num_mismatch),
+    FUZI_Q_ITEM("new_cid_invalid_length", test_frame_new_cid_invalid_length),
+    FUZI_Q_ITEM("new_cid_length_too_long_for_rfc", test_frame_new_cid_length_too_long_for_rfc),
+    /* User added Varint encoding frame test items */
+    FUZI_Q_ITEM("max_streams_non_minimal_varint", test_frame_max_streams_non_minimal_varint),
+    FUZI_Q_ITEM("crypto_offset_non_minimal_large_varint", test_frame_crypto_offset_non_minimal_large_varint),
 
     /* New test frames based on RFC 9000 review */
     FUZI_Q_ITEM("stream_off_len_empty_fin", test_frame_stream_off_len_empty_fin),
