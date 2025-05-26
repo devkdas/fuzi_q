@@ -88,6 +88,88 @@ static uint8_t test_frame_reset_stream_app_error_specific[] = {
     picoquic_frame_type_reset_stream, 0x02, 0x41, 0x00, 0x42, 0x00
 };
 
+/* New RESET_STREAM frame test cases */
+/* Base Case */
+static uint8_t test_reset_stream_base[] = {
+    picoquic_frame_type_reset_stream, /* 0x04 */
+    0x04,       /* Stream ID: 4 */
+    0x41, 0x01, /* Application Protocol Error Code: 257 (0x101) */
+    0x64        /* Final Size: 100 */
+};
+
+/* Stream ID Variations (ErrorCode=257, FinalSize=100) */
+static uint8_t test_reset_stream_id_zero[] = {
+    picoquic_frame_type_reset_stream, /* 0x04 */
+    0x00,       /* Stream ID: 0 */
+    0x41, 0x01, /* Application Protocol Error Code: 257 */
+    0x64        /* Final Size: 100 */
+};
+
+static uint8_t test_reset_stream_id_large[] = {
+    picoquic_frame_type_reset_stream, /* 0x04 */
+    0x7F, 0xFF, /* Stream ID: 16383 (0x3FFF) */
+    0x41, 0x01, /* Application Protocol Error Code: 257 */
+    0x64        /* Final Size: 100 */
+};
+
+static uint8_t test_reset_stream_id_max_62bit[] = {
+    picoquic_frame_type_reset_stream, /* 0x04 */
+    0xBF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, /* Stream ID: 2^62-1 */
+    0x41, 0x01, /* Application Protocol Error Code: 257 */
+    0x64        /* Final Size: 100 */
+};
+
+/* Application Protocol Error Code Variations (StreamID=4, FinalSize=100) */
+static uint8_t test_reset_stream_err_zero[] = {
+    picoquic_frame_type_reset_stream, /* 0x04 */
+    0x04,       /* Stream ID: 4 */
+    0x00,       /* Application Protocol Error Code: 0 */
+    0x64        /* Final Size: 100 */
+};
+
+static uint8_t test_reset_stream_err_transport_range_like[] = {
+    picoquic_frame_type_reset_stream, /* 0x04 */
+    0x04,       /* Stream ID: 4 */
+    0x0A,       /* Application Protocol Error Code: 0x0A (like PROTOCOL_VIOLATION) */
+    0x64        /* Final Size: 100 */
+};
+
+static uint8_t test_reset_stream_err_max_62bit[] = {
+    picoquic_frame_type_reset_stream, /* 0x04 */
+    0x04,       /* Stream ID: 4 */
+    0xBF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, /* Application Protocol Error Code: 2^62-1 */
+    0x64        /* Final Size: 100 */
+};
+
+/* Final Size Variations (StreamID=4, ErrorCode=257) */
+static uint8_t test_reset_stream_final_size_zero[] = {
+    picoquic_frame_type_reset_stream, /* 0x04 */
+    0x04,       /* Stream ID: 4 */
+    0x41, 0x01, /* Application Protocol Error Code: 257 */
+    0x00        /* Final Size: 0 */
+};
+
+static uint8_t test_reset_stream_final_size_one[] = {
+    picoquic_frame_type_reset_stream, /* 0x04 */
+    0x04,       /* Stream ID: 4 */
+    0x41, 0x01, /* Application Protocol Error Code: 257 */
+    0x01        /* Final Size: 1 */
+};
+
+static uint8_t test_reset_stream_final_size_scenario_small[] = {
+    picoquic_frame_type_reset_stream, /* 0x04 */
+    0x04,       /* Stream ID: 4 */
+    0x41, 0x01, /* Application Protocol Error Code: 257 */
+    0x32        /* Final Size: 50 */
+};
+
+static uint8_t test_reset_stream_final_size_max_62bit[] = {
+    picoquic_frame_type_reset_stream, /* 0x04 */
+    0x04,       /* Stream ID: 4 */
+    0x41, 0x01, /* Application Protocol Error Code: 257 */
+    0xBF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF /* Final Size: 2^62-1 */
+};
+
 static uint8_t test_type_connection_close[] = {
     picoquic_frame_type_connection_close,
     0x80, 0x00, 0xCF, 0xFF, 0,
@@ -316,6 +398,64 @@ static uint8_t test_frame_stop_sending_large_error_code[] = {
     picoquic_frame_type_stop_sending, /* 0x05 */
     0x08, /* Stream ID: 8 */
     0xBF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF /* Error Code: 0x3FFFFFFFFFFFFFFF */
+};
+
+/* New STOP_SENDING frame test cases */
+/* Base Case */
+static uint8_t test_stop_sending_base[] = {
+    picoquic_frame_type_stop_sending, /* 0x05 */
+    0x04,       /* Stream ID: 4 */
+    0x41, 0x01  /* Application Protocol Error Code: 257 (0x101) */
+};
+
+/* Stream ID Variations (ErrorCode=257) */
+static uint8_t test_stop_sending_id_zero[] = {
+    picoquic_frame_type_stop_sending, /* 0x05 */
+    0x00,       /* Stream ID: 0 */
+    0x41, 0x01  /* Application Protocol Error Code: 257 */
+};
+
+static uint8_t test_stop_sending_id_large[] = {
+    picoquic_frame_type_stop_sending, /* 0x05 */
+    0x7F, 0xFF, /* Stream ID: 16383 (0x3FFF) */
+    0x41, 0x01  /* Application Protocol Error Code: 257 */
+};
+
+static uint8_t test_stop_sending_id_max_62bit[] = {
+    picoquic_frame_type_stop_sending, /* 0x05 */
+    0xBF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, /* Stream ID: 2^62-1 */
+    0x41, 0x01  /* Application Protocol Error Code: 257 */
+};
+
+static uint8_t test_stop_sending_id_recv_only_scenario[] = {
+    picoquic_frame_type_stop_sending, /* 0x05 */
+    0x02,       /* Stream ID: 2 (client-initiated uni) */
+    0x41, 0x01  /* Application Protocol Error Code: 257 */
+};
+
+static uint8_t test_stop_sending_id_uncreated_sender_scenario[] = {
+    picoquic_frame_type_stop_sending, /* 0x05 */
+    0x0C,       /* Stream ID: 12 */
+    0x41, 0x01  /* Application Protocol Error Code: 257 */
+};
+
+/* Application Protocol Error Code Variations (StreamID=4) */
+static uint8_t test_stop_sending_err_zero[] = {
+    picoquic_frame_type_stop_sending, /* 0x05 */
+    0x04,       /* Stream ID: 4 */
+    0x00        /* Application Protocol Error Code: 0 */
+};
+
+static uint8_t test_stop_sending_err_transport_range_like[] = {
+    picoquic_frame_type_stop_sending, /* 0x05 */
+    0x04,       /* Stream ID: 4 */
+    0x0A        /* Application Protocol Error Code: 0x0A (like PROTOCOL_VIOLATION) */
+};
+
+static uint8_t test_stop_sending_err_max_62bit[] = {
+    picoquic_frame_type_stop_sending, /* 0x05 */
+    0x04,       /* Stream ID: 4 */
+    0xBF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF /* Application Protocol Error Code: 2^62-1 */
 };
 
 static uint8_t test_frame_type_path_challenge[] = {
@@ -575,6 +715,175 @@ static uint8_t test_frame_ack_largest_smaller_than_range[] = {
     10    /* First ACK Range (length 10, implies acking below 0 if LargestAck is 5) */
 };
 
+/* ACK Delay variations */
+static uint8_t test_ack_delay_zero[] = {
+    0x02, /* Type: ACK */
+    0x64, /* Largest Acknowledged: 100 */
+    0x00, /* ACK Delay: 0 */
+    0x01, /* ACK Range Count: 1 */
+    0x00  /* First ACK Range: 0 */
+};
+
+static uint8_t test_ack_delay_effective_max_tp_val[] = {
+    0x02, /* Type: ACK */
+    0x64, /* Largest Acknowledged: 100 */
+    0x87, 0xFF, /* ACK Delay: 2047 (max_ack_delay/8 with default_ack_exponent=3) */
+    0x01, /* ACK Range Count: 1 */
+    0x00  /* First ACK Range: 0 */
+};
+
+static uint8_t test_ack_delay_max_varint_val[] = {
+    0x02, /* Type: ACK */
+    0x64, /* Largest Acknowledged: 100 */
+    0x7F, 0xFF, /* ACK Delay: 16383 (max 2-byte varint) */
+    0x01, /* ACK Range Count: 1 */
+    0x00  /* First ACK Range: 0 */
+};
+
+/* ACK Range Count variations */
+static uint8_t test_ack_range_count_zero[] = {
+    0x02, /* Type: ACK */
+    0x64, /* Largest Acknowledged: 100 */
+    0x0A, /* ACK Delay: 10 */
+    0x00, /* ACK Range Count: 0 */
+    0x00  /* First ACK Range: 0 */
+};
+
+static uint8_t test_ack_range_count_one[] = {
+    0x02, /* Type: ACK */
+    0x64, /* Largest Acknowledged: 100 */
+    0x0A, /* ACK Delay: 10 */
+    0x01, /* ACK Range Count: 1 */
+    0x05, /* First ACK Range: 5 */
+    0x00, /* Gap: 0 */
+    0x00  /* ACK Range Length: 0 */
+};
+
+static uint8_t test_ack_range_count_many[] = {
+    0x02, /* Type: ACK */
+    0x64, /* Largest Acknowledged: 100 */
+    0x0A, /* ACK Delay: 10 */
+    0x3C, /* ACK Range Count: 60 */
+    0x00, /* First ACK Range: 0 */
+    0x00, 0x00, /* Gap 0, Len 0 */
+    0x00, 0x00, /* Gap 0, Len 0 */
+    0x00, 0x00, /* Gap 0, Len 0 */
+    0x00, 0x00, /* Gap 0, Len 0 */
+    0x00, 0x00  /* Gap 0, Len 0 */
+};
+
+/* First ACK Range variations */
+static uint8_t test_ack_first_range_zero[] = {
+    0x02, /* Type: ACK */
+    0x64, /* Largest Acknowledged: 100 */
+    0x0A, /* ACK Delay: 10 */
+    0x01, /* ACK Range Count: 1 */
+    0x00  /* First ACK Range: 0 */
+};
+
+static uint8_t test_ack_first_range_causes_negative_smallest[] = {
+    0x02, /* Type: ACK */
+    0x05, /* Largest Acknowledged: 5 */
+    0x00, /* ACK Delay: 0 */
+    0x01, /* ACK Range Count: 1 */
+    0x0A  /* First ACK Range: 10 */
+};
+
+static uint8_t test_ack_first_range_covers_zero[] = {
+    0x02, /* Type: ACK */
+    0x05, /* Largest Acknowledged: 5 */
+    0x00, /* ACK Delay: 0 */
+    0x01, /* ACK Range Count: 1 */
+    0x05  /* First ACK Range: 5 */
+};
+
+/* Gap variations (ACK Range Count >= 1) */
+static uint8_t test_ack_gap_zero_len_zero[] = {
+    0x02, /* Type: ACK */
+    0x14, /* Largest Acknowledged: 20 */
+    0x00, /* ACK Delay: 0 */
+    0x01, /* ACK Range Count: 1 */
+    0x00, /* First ACK Range: 0 */
+    0x00, /* Gap: 0 */
+    0x00  /* ACK Range Length: 0 */
+};
+
+static uint8_t test_ack_gap_causes_negative_next_largest[] = {
+    0x02, /* Type: ACK */
+    0x14, /* Largest Acknowledged: 20 */
+    0x00, /* ACK Delay: 0 */
+    0x01, /* ACK Range Count: 1 */
+    0x05, /* First ACK Range: 5 (acks 15-20) */
+    0x14, /* Gap: 20 (next largest = 15-20-2 = -7) */
+    0x00  /* ACK Range Length: 0 */
+};
+
+/* ACK Range Length variations (ACK Range Count >= 1) */
+static uint8_t test_ack_range_len_zero_gap_zero[] = { /* Same as test_ack_gap_zero_len_zero */
+    0x02, /* Type: ACK */
+    0x14, /* Largest Acknowledged: 20 */
+    0x00, /* ACK Delay: 0 */
+    0x01, /* ACK Range Count: 1 */
+    0x00, /* First ACK Range: 0 */
+    0x00, /* Gap: 0 */
+    0x00  /* ACK Range Length: 0 */
+};
+
+static uint8_t test_ack_range_len_large[] = {
+    0x02,       /* Type: ACK */
+    0x85, 0xDC, /* Largest Acknowledged: 1500 */
+    0x00,       /* ACK Delay: 0 */
+    0x01,       /* ACK Range Count: 1 */
+    0x00,       /* First ACK Range: 0 */
+    0x00,       /* Gap: 0 */
+    0x83, 0xE8  /* ACK Range Length: 1000 */
+};
+
+/* ECN Count variations (Type 0x03) */
+static uint8_t test_ack_ecn_all_zero[] = {
+    0x03, /* Type: ACK with ECN */
+    0x64, /* Largest Acknowledged: 100 */
+    0x0A, /* ACK Delay: 10 */
+    0x01, /* ACK Range Count: 1 */
+    0x00, /* First ACK Range: 0 */
+    0x00, /* ECT0: 0 */
+    0x00, /* ECT1: 0 */
+    0x00  /* CE: 0 */
+};
+
+static uint8_t test_ack_ecn_one_each[] = {
+    0x03, /* Type: ACK with ECN */
+    0x64, /* Largest Acknowledged: 100 */
+    0x0A, /* ACK Delay: 10 */
+    0x01, /* ACK Range Count: 1 */
+    0x00, /* First ACK Range: 0 */
+    0x01, /* ECT0: 1 */
+    0x01, /* ECT1: 1 */
+    0x01  /* CE: 1 */
+};
+
+static uint8_t test_ack_ecn_large_counts[] = {
+    0x03,       /* Type: ACK with ECN */
+    0x64,       /* Largest Acknowledged: 100 */
+    0x0A,       /* ACK Delay: 10 */
+    0x01,       /* ACK Range Count: 1 */
+    0x00,       /* First ACK Range: 0 */
+    0x7F, 0xFF, /* ECT0: 16383 */
+    0x7F, 0xFF, /* ECT1: 16383 */
+    0x7F, 0xFF  /* CE: 16383 */
+};
+
+static uint8_t test_ack_ecn_sum_exceeds_largest_acked[] = {
+    0x03, /* Type: ACK with ECN */
+    0x0A, /* Largest Acknowledged: 10 */
+    0x00, /* ACK Delay: 0 */
+    0x01, /* ACK Range Count: 1 */
+    0x00, /* First ACK Range: 0 */
+    0x05, /* ECT0: 5 */
+    0x05, /* ECT1: 5 */
+    0x05  /* CE: 5 */
+};
+
 static uint8_t test_frame_type_stream_range_min[] = {
     picoquic_frame_type_stream_range_min,
     1,
@@ -649,6 +958,29 @@ static uint8_t test_frame_stream_overlapping_data_part2[] = {
     5,          /* Length */
     'S', 'E', 'C', 'O', 'N'
 };
+
+/* Part 1: Base test cases for all 8 STREAM types */
+static uint8_t test_stream_0x08_off0_len0_fin0[] = {0x08, 0x04, 'h','e','l','l','o',' ','s','t','r','e','a','m'};
+static uint8_t test_stream_0x09_off0_len0_fin1[] = {0x09, 0x04, 'h','e','l','l','o',' ','s','t','r','e','a','m'};
+static uint8_t test_stream_0x0A_off0_len1_fin0[] = {0x0A, 0x04, 0x0C, 'h','e','l','l','o',' ','s','t','r','e','a','m'};
+static uint8_t test_stream_0x0B_off0_len1_fin1[] = {0x0B, 0x04, 0x0C, 'h','e','l','l','o',' ','s','t','r','e','a','m'};
+static uint8_t test_stream_0x0C_off1_len0_fin0[] = {0x0C, 0x04, 0x0A, 'h','e','l','l','o',' ','s','t','r','e','a','m'};
+static uint8_t test_stream_0x0D_off1_len0_fin1[] = {0x0D, 0x04, 0x0A, 'h','e','l','l','o',' ','s','t','r','e','a','m'};
+static uint8_t test_stream_0x0E_off1_len1_fin0[] = {0x0E, 0x04, 0x0A, 0x0C, 'h','e','l','l','o',' ','s','t','r','e','a','m'};
+static uint8_t test_stream_0x0F_off1_len1_fin1[] = {0x0F, 0x04, 0x0A, 0x0C, 'h','e','l','l','o',' ','s','t','r','e','a','m'};
+
+/* Part 2: Variations for STREAM type 0x0F (all bits set) */
+static uint8_t test_stream_0x0F_id_zero[] = {0x0F, 0x00, 0x0A, 0x05, 'b','a','s','i','c'};
+static uint8_t test_stream_0x0F_id_large[] = {0x0F, 0x7F, 0xFF, 0x0A, 0x05, 'b','a','s','i','c'};
+static uint8_t test_stream_0x0F_id_max_62bit[] = {0x0F, 0xBF, 0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF, 0x0A, 0x05, 'b','a','s','i','c'};
+
+static uint8_t test_stream_0x0F_off_zero[] = {0x0F, 0x04, 0x00, 0x05, 'b','a','s','i','c'};
+static uint8_t test_stream_0x0F_off_max_62bit[] = {0x0F, 0x04, 0xBF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF, 0x05, 'b','a','s','i','c'};
+static uint8_t test_stream_0x0F_off_plus_len_exceeds_max[] = {0x0F, 0x04, 0xBF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFD, 0x05, 'b','a','s','i','c'};
+
+static uint8_t test_stream_0x0F_len_zero[] = {0x0F, 0x04, 0x0A, 0x00};
+static uint8_t test_stream_0x0F_len_one[] = {0x0F, 0x04, 0x0A, 0x01, 'd'};
+static uint8_t test_stream_0x0F_len_exceed_total_with_offset[] = {0x0F, 0x04, 0x0A, 0xBF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFB, 'b','a','s','i','c'};
 
 static uint8_t test_frame_type_crypto_hs[] = {
     picoquic_frame_type_crypto_hs,
