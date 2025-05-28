@@ -31,13 +31,12 @@
 
 #define FUZZER_MAX_NB_FRAMES 32
 
-// Forward declarations for picoquic functions/macros if not found by compiler
-// These are added as a workaround for potential build environment/include issues.
+/* Forward declarations for picoquic functions/macros if not found by compiler */
+/* These are added as a workaround for potential build environment/include issues. */
 
 /* extern void picoquic_val32be_to_bytes(uint32_t val32, uint8_t* bytes); */
 /* extern uint32_t picoquic_val32be(const uint8_t* bytes); */
 /* extern int picoquic_max_bits(uint64_t val); */
-
 
 /*
  * The following functions are generally defined as static inline in picoquic_utils.h or picoquic_internal.h.
@@ -51,9 +50,9 @@
  * picoquic_max_bits IS STATIC INLINE in picoquic_utils.h
  */
 
-// Corrected approach: Provide prototypes for non-static-inline functions if they are missing.
-// For static inline functions like picoquic_max_bits, the include should be sufficient.
-// If picoquic_max_bits is still an error, the problem is likely that picoquic_utils.h is not being processed as expected.
+/* Corrected approach: Provide prototypes for non-static-inline functions if they are missing. */
+/* For static inline functions like picoquic_max_bits, the include should be sufficient. */
+/* If picoquic_max_bits is still an error, the problem is likely that picoquic_utils.h is not being processed as expected. */
 
 static inline void local_picoquic_val32be_to_bytes(uint32_t val32, uint8_t* bytes) {
     bytes[0] = (uint8_t)(val32 >> 24);
@@ -76,9 +75,9 @@ static inline int local_picoquic_varint_encode_length(uint64_t n64) {
 #define picoquic_varint_encode_length local_picoquic_varint_encode_length
 #endif
 
-// For picoquic_max_bits, it's often a static inline. If it's not found,
-// it's a strong indication picoquic_utils.h isn't properly included or is a different version.
-// Let's try to provide a common definition if it's missing.
+/* For picoquic_max_bits, it's often a static inline. If it's not found, */
+/* it's a strong indication picoquic_utils.h isn't properly included or is a different version. */
+/* Let's try to provide a common definition if it's missing. */
 #ifndef picoquic_max_bits
 static inline int local_picoquic_max_bits(uint64_t val) {
     int ret = 0;
@@ -95,9 +94,9 @@ static inline int local_picoquic_max_bits(uint64_t val) {
 #define picoquic_max_bits local_picoquic_max_bits
 #endif
 
-// Use local definitions for val32be functions to avoid potential linkage issues with extern
-// if the functions are indeed available in headers but somehow not seen by the compiler pass.
-// This is safer than extern declarations for functions that might be static inline elsewhere.
+/* Use local definitions for val32be functions to avoid potential linkage issues with extern */
+/* if the functions are indeed available in headers but somehow not seen by the compiler pass. */
+/* This is safer than extern declarations for functions that might be static inline elsewhere. */
 #define picoquic_val32be_to_bytes local_picoquic_val32be_to_bytes
 #define picoquic_val32be local_picoquic_val32be
 
