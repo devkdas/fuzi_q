@@ -54,17 +54,6 @@
 /* For static inline functions like picoquic_max_bits, the include should be sufficient. */
 /* If picoquic_max_bits is still an error, the problem is likely that picoquic_utils.h is not being processed as expected. */
 
-static inline void local_picoquic_val32be_to_bytes(uint32_t val32, uint8_t* bytes) {
-    bytes[0] = (uint8_t)(val32 >> 24);
-    bytes[1] = (uint8_t)(val32 >> 16);
-    bytes[2] = (uint8_t)(val32 >> 8);
-    bytes[3] = (uint8_t)(val32);
-}
-
-static inline uint32_t local_picoquic_val32be(const uint8_t* bytes) {
-    return (((uint32_t)bytes[0]) << 24) | (((uint32_t)bytes[1]) << 16) | (((uint32_t)bytes[2]) << 8) | ((uint32_t)bytes[3]);
-}
-
 #ifndef picoquic_varint_encode_length
 static inline int local_picoquic_varint_encode_length(uint64_t n64) {
     if (n64 < 0x40) return 1;
@@ -97,8 +86,6 @@ static inline int local_picoquic_max_bits(uint64_t val) {
 /* Use local definitions for val32be functions to avoid potential linkage issues with extern */
 /* if the functions are indeed available in headers but somehow not seen by the compiler pass. */
 /* This is safer than extern declarations for functions that might be static inline elsewhere. */
-#define picoquic_val32be_to_bytes local_picoquic_val32be_to_bytes
-#define picoquic_val32be local_picoquic_val32be
 
 static int encode_and_overwrite_varint(uint8_t* field_start, uint8_t* field_end, uint8_t* frame_max, uint64_t new_value);
 uint8_t* fuzz_in_place_or_skip_varint(uint64_t fuzz_pilot, uint8_t* bytes, uint8_t* bytes_max, int do_fuzz);
@@ -918,15 +905,26 @@ static int encode_and_overwrite_varint(uint8_t* field_start, uint8_t* field_end,
 
     size_t original_varint_len = field_end - field_start;
     uint8_t temp_buffer[16];
-    size_t encoded_len = picoquic_varint_encode(temp_buffer, sizeof(temp_buffer), new_value);
+    uint8_t* p_next_byte_in_temp;
+    size_t encoded_len;
+
+    // Use the standard picoquic_frames_varint_encode
+    p_next_byte_in_temp = picoquic_frames_varint_encode(temp_buffer, temp_buffer + sizeof(temp_buffer), new_value);
+
+    if (p_next_byte_in_temp == NULL) {
+        // This indicates an encoding failure by picoquic_frames_varint_encode.
+        // This shouldn't happen with a 16-byte temp_buffer for any valid uint64_t varint.
+        return 0; 
+    }
+
+    encoded_len = p_next_byte_in_temp - temp_buffer;
 
     if (encoded_len == 0) {
-        if (new_value == 0) {
-            temp_buffer[0] = 0;
-            encoded_len = 1;
-        } else {
-            return 0;
-        }
+        // This case implies picoquic_frames_varint_encode returned `temp_buffer` without writing,
+        // or new_value itself implies a zero-length encoding (not standard for varints).
+        // picoquic_frames_varint_encode should correctly produce encoded_len = 1 for new_value = 0.
+        // Thus, encoded_len == 0 here is an actual error or unexpected behavior.
+        return 0;
     }
 
     size_t new_varint_len = encoded_len;
@@ -1457,9 +1455,9 @@ size_t version_negotiation_packet_fuzzer(uint64_t fuzz_pilot, uint8_t* bytes, si
 
             if (version_ptr + 4 <= bytes + original_current_length) {
                 if (choice == 4) {
-                    picoquic_val32be_to_bytes(0x0A0A0A0A, version_ptr);
+                    picoquic_frames_uint32_encode(version_ptr, version_ptr + 4, 0x0A0A0A0A);
                 } else if (choice == 5) {
-                    picoquic_val32be_to_bytes(0x1A1A1A1A, version_ptr);
+                    picoquic_frames_uint32_encode(version_ptr, version_ptr + 4, 0x1A1A1A1A);
                 } else {
                     version_ptr[0] ^= (uint8_t)(fuzz_pilot & 0xFF);
                     version_ptr[1] ^= (uint8_t)((fuzz_pilot >> 8) & 0xFF);
@@ -1506,9 +1504,10 @@ size_t version_negotiation_packet_fuzzer(uint64_t fuzz_pilot, uint8_t* bytes, si
                 uint8_t* ptr1 = version_list_start + (v_idx1 * 4);
                 uint8_t* ptr2 = version_list_start + (v_idx2 * 4);
                 if (ptr1 + 4 <= bytes + original_current_length && ptr2 + 4 <= bytes + original_current_length) {
-                    uint32_t temp_version = picoquic_val32be(ptr1);
+                    uint32_t temp_version;
+                    picoquic_frames_uint32_decode(ptr1, ptr1 + 4, &temp_version);
                     memcpy(ptr1, ptr2, 4);
-                    picoquic_val32be_to_bytes(temp_version, ptr2);
+                    picoquic_frames_uint32_encode(ptr2, ptr2 + 4, temp_version);
                 }
             }
         }
@@ -1697,10 +1696,14 @@ uint32_t fuzi_q_fuzzer(void* fuzz_ctx_param, picoquic_cnx_t* cnx,
     uint32_t fuzzed_length = (uint32_t)length;
 
     /* VN Packet Fuzzing */
-    if (length >= 5 && (bytes[0] & 0x80) != 0 && picoquic_val32be(bytes + 1) == 0x00000000) {
-        if (!icid_ctx->already_fuzzed || ((fuzz_pilot & 0xf) <= 7)) {
-            fuzz_pilot >>=4;
-            uint8_t dcid_len = 0;
+    if (length >= 5 && (bytes[0] & 0x80) != 0) {
+        uint32_t version_val;
+        /* Assuming 'bytes + 5' is a safe upper bound based on 'length >= 5' */
+        picoquic_frames_uint32_decode(bytes + 1, bytes + 5, &version_val);
+        if (version_val == 0x00000000) {
+            if (!icid_ctx->already_fuzzed || ((fuzz_pilot & 0xf) <= 7)) {
+                fuzz_pilot >>=4;
+                uint8_t dcid_len = 0;
             uint8_t scid_len = 0;
             size_t vn_header_len = 1 + 4;
             if (length >= vn_header_len + 1) {
@@ -1726,12 +1729,26 @@ uint32_t fuzi_q_fuzzer(void* fuzz_ctx_param, picoquic_cnx_t* cnx,
             }
         }
         return (uint32_t)length;
+        }
     }
     /* Retry Packet Fuzzing */
-    else if (length >= 23 && (bytes[0] & 0xF0) == 0xF0 && (length < 5 || picoquic_val32be(bytes + 1) != 0x00000000) ) {
-        if (!icid_ctx->already_fuzzed || ((fuzz_pilot & 0xf) <= 7)) {
-            fuzz_pilot >>=4;
-            fuzzed_length = (uint32_t)retry_packet_fuzzer(fuzz_pilot, bytes, length, bytes_max);
+    else if (length >= 23 && (bytes[0] & 0xF0) == 0xF0) {
+        int condition_met = 0;
+        if (length < 5) {
+            condition_met = 1;
+        } else {
+            /* length >= 5, safe to decode version */
+            uint32_t version_val;
+            /* Assuming 'bytes + 5' is a safe upper bound */
+            picoquic_frames_uint32_decode(bytes + 1, bytes + 5, &version_val);
+            if (version_val != 0x00000000) {
+                condition_met = 1;
+            }
+        }
+        if (condition_met) {
+            if (!icid_ctx->already_fuzzed || ((fuzz_pilot & 0xf) <= 7)) {
+                fuzz_pilot >>=4;
+                fuzzed_length = (uint32_t)retry_packet_fuzzer(fuzz_pilot, bytes, length, bytes_max);
             if (icid_ctx->already_fuzzed == 0) {
                 icid_ctx->already_fuzzed = 1;
                 ctx->nb_cnx_tried[icid_ctx->target_state] += 1;
@@ -1739,6 +1756,7 @@ uint32_t fuzi_q_fuzzer(void* fuzz_ctx_param, picoquic_cnx_t* cnx,
             }
             ctx->nb_packets_fuzzed[fuzz_cnx_state] +=1;
             return fuzzed_length;
+            }
         }
         return (uint32_t)length;
     }
