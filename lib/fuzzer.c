@@ -1695,6 +1695,25 @@ uint32_t fuzi_q_fuzzer(void* fuzz_ctx_param, picoquic_cnx_t* cnx,
     fuzzer_cnx_state_enum fuzz_cnx_state = (cnx != NULL) ? fuzzer_get_cnx_state(cnx) : fuzzer_cnx_state_closing;
     uint32_t fuzzed_length = (uint32_t)length;
 
+    // Inside fuzi_q_fuzzer, after icid_ctx and cnx are known to be valid,
+    // and after fuzz_cnx_state is set.
+    // A good place might be before the main fuzzing decision block that starts with:
+    // if (icid_ctx->target_state < fuzzer_cnx_state_max && icid_ctx->target_state >= 0) {
+
+    if (icid_ctx != NULL && cnx != NULL && picoquic_is_client(cnx)) {
+        if (!icid_ctx->client_handshake_confirmed) {
+            // We use picoquic_get_cnx_state(cnx) directly here to get the raw state
+            // as fuzzer_get_cnx_state might map multiple picoquic_state_enum values
+            // to a single fuzzer_cnx_state_enum. We are interested in picoquic_state_ready.
+            if (picoquic_get_cnx_state(cnx) == picoquic_state_ready) {
+                icid_ctx->client_handshake_confirmed = 1;
+                // Optional: Could add a debug log here if desired in future
+                // For example: debug_printf("Client ICID %llx handshake confirmed (state ready)",
+                //     (unsigned long long)picoquic_val64_connection_id(icid_ctx->icid));
+            }
+        }
+    }
+
     /* VN Packet Fuzzing */
     if (length >= 5 && (bytes[0] & 0x80) != 0) {
         uint32_t version_val;

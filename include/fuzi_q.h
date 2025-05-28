@@ -87,6 +87,7 @@ typedef struct st_fuzzer_icid_ctx_t {
     int new_cid_seq_no_available; /* Boolean flag */
     /* For Handshake Completion/Interruption fuzzing */
     int handshake_done_sent_by_server;
+    int client_handshake_confirmed; /* New field for client handshake status */
 } fuzzer_icid_ctx_t;
 
 typedef struct st_fuzzer_ctx_t {
