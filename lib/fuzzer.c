@@ -908,22 +908,22 @@ static int encode_and_overwrite_varint(uint8_t* field_start, uint8_t* field_end,
     uint8_t* p_next_byte_in_temp;
     size_t encoded_len;
 
-    // Use the standard picoquic_frames_varint_encode
+    /* Use the standard picoquic_frames_varint_encode */
     p_next_byte_in_temp = picoquic_frames_varint_encode(temp_buffer, temp_buffer + sizeof(temp_buffer), new_value);
 
     if (p_next_byte_in_temp == NULL) {
-        // This indicates an encoding failure by picoquic_frames_varint_encode.
-        // This shouldn't happen with a 16-byte temp_buffer for any valid uint64_t varint.
+        /* This indicates an encoding failure by picoquic_frames_varint_encode. */
+        /* This shouldn't happen with a 16-byte temp_buffer for any valid uint64_t varint. */
         return 0; 
     }
 
     encoded_len = p_next_byte_in_temp - temp_buffer;
 
     if (encoded_len == 0) {
-        // This case implies picoquic_frames_varint_encode returned `temp_buffer` without writing,
-        // or new_value itself implies a zero-length encoding (not standard for varints).
-        // picoquic_frames_varint_encode should correctly produce encoded_len = 1 for new_value = 0.
-        // Thus, encoded_len == 0 here is an actual error or unexpected behavior.
+        /* This case implies picoquic_frames_varint_encode returned `temp_buffer` without writing, */
+        /* or new_value itself implies a zero-length encoding (not standard for varints). */
+        /* picoquic_frames_varint_encode should correctly produce encoded_len = 1 for new_value = 0. */
+        /* Thus, encoded_len == 0 here is an actual error or unexpected behavior. */
         return 0;
     }
 
@@ -1695,21 +1695,21 @@ uint32_t fuzi_q_fuzzer(void* fuzz_ctx_param, picoquic_cnx_t* cnx,
     fuzzer_cnx_state_enum fuzz_cnx_state = (cnx != NULL) ? fuzzer_get_cnx_state(cnx) : fuzzer_cnx_state_closing;
     uint32_t fuzzed_length = (uint32_t)length;
 
-    // Inside fuzi_q_fuzzer, after icid_ctx and cnx are known to be valid,
-    // and after fuzz_cnx_state is set.
-    // A good place might be before the main fuzzing decision block that starts with:
-    // if (icid_ctx->target_state < fuzzer_cnx_state_max && icid_ctx->target_state >= 0) {
+    /* Inside fuzi_q_fuzzer, after icid_ctx and cnx are known to be valid, */
+    /* and after fuzz_cnx_state is set. */
+    /* A good place might be before the main fuzzing decision block that starts with: */
+    /* if (icid_ctx->target_state < fuzzer_cnx_state_max && icid_ctx->target_state >= 0) { */
 
     if (icid_ctx != NULL && cnx != NULL && picoquic_is_client(cnx)) {
         if (!icid_ctx->client_handshake_confirmed) {
-            // We use picoquic_get_cnx_state(cnx) directly here to get the raw state
-            // as fuzzer_get_cnx_state might map multiple picoquic_state_enum values
-            // to a single fuzzer_cnx_state_enum. We are interested in picoquic_state_ready.
+            /* We use picoquic_get_cnx_state(cnx) directly here to get the raw state */
+            /* as fuzzer_get_cnx_state might map multiple picoquic_state_enum values */
+            /* to a single fuzzer_cnx_state_enum. We are interested in picoquic_state_ready. */
             if (picoquic_get_cnx_state(cnx) == picoquic_state_ready) {
                 icid_ctx->client_handshake_confirmed = 1;
-                // Optional: Could add a debug log here if desired in future
-                // For example: debug_printf("Client ICID %llx handshake confirmed (state ready)",
-                //     (unsigned long long)picoquic_val64_connection_id(icid_ctx->icid));
+                /* Optional: Could add a debug log here if desired in future */
+                /* For example: debug_printf("Client ICID %llx handshake confirmed (state ready)", */
+                /*     (unsigned long long)picoquic_val64_connection_id(icid_ctx->icid)); */
             }
         }
     }
