@@ -34,9 +34,9 @@
 // Forward declarations for picoquic functions/macros if not found by compiler
 // These are added as a workaround for potential build environment/include issues.
 
-// extern void picoquic_val32be_to_bytes(uint32_t val32, uint8_t* bytes);
-// extern uint32_t picoquic_val32be(const uint8_t* bytes);
-// extern int picoquic_max_bits(uint64_t val);
+/* extern void picoquic_val32be_to_bytes(uint32_t val32, uint8_t* bytes); */
+/* extern uint32_t picoquic_val32be(const uint8_t* bytes); */
+/* extern int picoquic_max_bits(uint64_t val); */
 
 /*
  * The following functions are generally defined as static inline in picoquic_utils.h or picoquic_internal.h.
