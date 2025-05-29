@@ -2256,6 +2256,96 @@ static uint8_t test_frame_crypto_zero_len_large_offset[] = {
     0x00        /* Length: 0 */
 };
 
+/* Non-Canonical Field Encodings (RFC 9000) */
+/* DATA_BLOCKED Frame Variations (Type 0x14): */
+static uint8_t test_frame_data_blocked_val_non_canon_2byte[] = {picoquic_frame_type_data_blocked, 0x40, 0x64};
+/* STREAM_DATA_BLOCKED Frame Variations (Type 0x15): */
+static uint8_t test_frame_sdb_sid_non_canon_4byte[] = {picoquic_frame_type_stream_data_blocked, 0x80, 0x00, 0x00, 0x01, 0x41, 0x00};
+static uint8_t test_frame_sdb_val_non_canon_8byte[] = {picoquic_frame_type_stream_data_blocked, 0x01, 0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x64};
+/* STREAMS_BLOCKED Frame Variations (Bidirectional - Type 0x16): */
+static uint8_t test_frame_streams_blocked_bidi_non_canon_8byte[] = {picoquic_frame_type_streams_blocked_bidir, 0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x0A};
+/* STREAMS_BLOCKED Frame Variations (Unidirectional - Type 0x17): */
+static uint8_t test_frame_streams_blocked_uni_non_canon_2byte[] = {picoquic_frame_type_streams_blocked_unidir, 0x40, 0x64};
+/* NEW_CONNECTION_ID Frame Variations (Type 0x18): */
+static uint8_t test_frame_ncid_seq_non_canon_2byte[] = {picoquic_frame_type_new_connection_id, 0x40, 0x01, 0x00, 0x08, 0xAA,0xAA,0xAA,0xAA,0xAA,0xAA,0xAA,0xAA, 0xBB,0xBB,0xBB,0xBB,0xBB,0xBB,0xBB,0xBB,0xBB,0xBB,0xBB,0xBB,0xBB,0xBB,0xBB,0xBB};
+static uint8_t test_frame_ncid_ret_non_canon_4byte[] = {picoquic_frame_type_new_connection_id, 0x01, 0x80, 0x00, 0x00, 0x00, 0x08, 0xAA,0xAA,0xAA,0xAA,0xAA,0xAA,0xAA,0xAA, 0xBB,0xBB,0xBB,0xBB,0xBB,0xBB,0xBB,0xBB,0xBB,0xBB,0xBB,0xBB,0xBB,0xBB,0xBB,0xBB};
+/* RETIRE_CONNECTION_ID Frame Variations (Type 0x19): */
+static uint8_t test_frame_retire_cid_seq_non_canon_4byte[] = {picoquic_frame_type_retire_connection_id, 0x80, 0x00, 0x00, 0x01};
+/* CONNECTION_CLOSE Frame Variations (Transport Error - Type 0x1c): */
+static uint8_t test_frame_conn_close_ec_non_canon[] = {picoquic_frame_type_connection_close, 0x40, 0x01, 0x00, 0x00};
+/* test_frame_conn_close_ft_non_canon is already defined as {0x1c, 0x00, 0x40, 0x08, 0x00} */
+static uint8_t test_frame_conn_close_rlen_non_canon[] = {picoquic_frame_type_connection_close, 0x00, 0x00, 0x40, 0x04, 't', 'e', 's', 't'};
+/* CONNECTION_CLOSE Frame Variations (Application Error - Type 0x1d): */
+static uint8_t test_frame_conn_close_app_ec_non_canon[] = {picoquic_frame_type_application_close, 0x80, 0x00, 0x01, 0x01, 0x00};
+static uint8_t test_frame_conn_close_app_rlen_non_canon_2byte[] = {picoquic_frame_type_application_close, 0x00, 0x40, 0x05, 't', 'e', 's', 't', '!'};
+
+/* CRYPTO Frame Variations (Type 0x06) */
+static uint8_t test_frame_crypto_offset_non_canon_4byte[] = {picoquic_frame_type_crypto_hs, 0x80, 0x00, 0x00, 0x0A, 0x04, 't', 'e', 's', 't'};
+static uint8_t test_frame_crypto_len_non_canon_4byte[] = {picoquic_frame_type_crypto_hs, 0x0A, 0x80, 0x00, 0x00, 0x04, 't', 'e', 's', 't'};
+/* NEW_TOKEN Frame Variations (Type 0x07) */
+static uint8_t test_frame_new_token_len_non_canon_4byte[] = {picoquic_frame_type_new_token, 0x80, 0x00, 0x00, 0x08, '1', '2', '3', '4', '5', '6', '7', '8'};
+/* MAX_DATA Frame Variations (Type 0x10) */
+static uint8_t test_frame_max_data_non_canon_8byte[] = {picoquic_frame_type_max_data, 0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x04, 0x00};
+/* MAX_STREAM_DATA Frame Variations (Type 0x11) */
+static uint8_t test_frame_max_stream_data_sid_non_canon_2byte[] = {picoquic_frame_type_max_stream_data, 0x40, 0x01, 0x44, 0x00};
+static uint8_t test_frame_max_stream_data_val_non_canon_4byte[] = {picoquic_frame_type_max_stream_data, 0x01, 0x80, 0x00, 0x01, 0x00};
+/* MAX_STREAMS Frame Variations (Bidirectional - Type 0x12) */
+static uint8_t test_frame_max_streams_bidi_non_canon_2byte[] = {picoquic_frame_type_max_streams_bidir, 0x40, 0x0A};
+static uint8_t test_frame_max_streams_bidi_non_canon_8byte[] = {picoquic_frame_type_max_streams_bidir, 0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x05};
+/* MAX_STREAMS Frame Variations (Unidirectional - Type 0x13) */
+static uint8_t test_frame_max_streams_uni_non_canon_4byte[] = {picoquic_frame_type_max_streams_unidir, 0x80, 0x00, 0x00, 0x64};
+
+/* ACK, RESET_STREAM, STOP_SENDING Frame Variations (RFC 9000) */
+/* ACK Frame Variations (Type 0x03 for ECN) */
+static uint8_t test_frame_ack_ecn_ect0_large[] = {0x03, 0x0A, 0x00, 0x01, 0x00, 0x3F, 0x00, 0x00};
+static uint8_t test_frame_ack_ecn_ect1_large[] = {0x03, 0x0A, 0x00, 0x01, 0x00, 0x00, 0x7F, 0xFF, 0x00};
+static uint8_t test_frame_ack_ecn_ce_large[] = {0x03, 0x0A, 0x00, 0x01, 0x00, 0x00, 0x00, 0xBF, 0xFF, 0xFF, 0xFF};
+static uint8_t test_frame_ack_ecn_all_large[] = {0x03, 0x0A, 0x00, 0x01, 0x00, 0x3F, 0x3F, 0x3F};
+static uint8_t test_frame_ack_delay_non_canon[] = {picoquic_frame_type_ack, 0x05, 0x40, 0x0A, 0x01, 0x00};
+static uint8_t test_frame_ack_range_count_non_canon[] = {picoquic_frame_type_ack, 0x05, 0x00, 0x40, 0x01, 0x00};
+static uint8_t test_frame_ack_first_ack_range_non_canon[] = {picoquic_frame_type_ack, 0x05, 0x00, 0x01, 0x40, 0x00};
+static uint8_t test_frame_ack_gap_non_canon[] = {picoquic_frame_type_ack, 0x14, 0x00, 0x02, 0x01, 0x40, 0x01, 0x01};
+
+/* RESET_STREAM Frame Variations (Type 0x04) */
+static uint8_t test_frame_reset_stream_app_err_non_canon[] = {picoquic_frame_type_reset_stream, 0x01, 0x80, 0x00, 0x01, 0x01, 0x64};
+static uint8_t test_frame_reset_stream_final_size_non_canon_8byte[] = {picoquic_frame_type_reset_stream, 0x01, 0x00, 0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x03, 0xE8};
+
+/* STOP_SENDING Frame Variations (Type 0x05) */
+static uint8_t test_frame_stop_sending_app_err_non_canon[] = {picoquic_frame_type_stop_sending, 0x01, 0x80, 0x00, 0x01, 0x01};
+
+/* STREAM Frame Variations (RFC 9000, Section 19.8) */
+/* Type 0x08 (OFF=0, LEN=0, FIN=0) */
+static uint8_t test_stream_0x08_minimal[] = {0x08, 0x01};
+static uint8_t test_stream_0x08_sid_non_canon[] = {0x08, 0x40, 0x01, 'h', 'i'};
+static uint8_t test_stream_0x08_data_long[] = {0x08, 0x02, 'l', 'o', 'n', 'g', 's', 't', 'r', 'e', 'a', 'm', 'd', 'a', 't', 'a'};
+/* Type 0x09 (OFF=0, LEN=0, FIN=1) */
+static uint8_t test_stream_0x09_minimal[] = {0x09, 0x01};
+static uint8_t test_stream_0x09_sid_non_canon[] = {0x09, 0x40, 0x01, 'f', 'i', 'n'};
+/* Type 0x0A (OFF=0, LEN=1, FIN=0) */
+static uint8_t test_stream_0x0A_len_zero_no_data[] = {0x0A, 0x01, 0x00};
+static uint8_t test_stream_0x0A_len_zero_with_data[] = {0x0A, 0x02, 0x00, 'e', 'x', 't', 'r', 'a'};
+static uint8_t test_stream_0x0A_len_small[] = {0x0A, 0x03, 0x01, 'd'};
+static uint8_t test_stream_0x0A_len_large[] = {0x0A, 0x04, 0x40, 0xC8, 's', 'o', 'm', 'e', 'd', 'a', 't', 'a'};
+static uint8_t test_stream_0x0A_sid_non_canon[] = {0x0A, 0x40, 0x01, 0x04, 't', 'e', 's', 't'};
+static uint8_t test_stream_0x0A_len_non_canon[] = {0x0A, 0x02, 0x40, 0x04, 't', 'e', 's', 't'};
+/* Type 0x0B (OFF=0, LEN=1, FIN=1) */
+static uint8_t test_stream_0x0B_len_zero_no_data_fin[] = {0x0B, 0x01, 0x00};
+static uint8_t test_stream_0x0B_len_non_canon_fin[] = {0x0B, 0x02, 0x40, 0x03, 'e', 'n', 'd'};
+/* Type 0x0C (OFF=1, LEN=0, FIN=0) */
+static uint8_t test_stream_0x0C_offset_zero[] = {0x0C, 0x01, 0x00, 'd', 'a', 't', 'a'};
+static uint8_t test_stream_0x0C_offset_large[] = {0x0C, 0x02, 0x40, 0xC8, 'd', 'a', 't', 'a'};
+static uint8_t test_stream_0x0C_sid_non_canon[] = {0x0C, 0x40, 0x01, 0x0A, 'o', 'f', 'f'};
+static uint8_t test_stream_0x0C_offset_non_canon[] = {0x0C, 0x02, 0x40, 0x0A, 'o', 'f', 'f'};
+/* Type 0x0D (OFF=1, LEN=0, FIN=1) */
+static uint8_t test_stream_0x0D_offset_zero_fin[] = {0x0D, 0x01, 0x00, 'l', 'a', 's', 't'};
+static uint8_t test_stream_0x0D_offset_non_canon_fin[] = {0x0D, 0x02, 0x40, 0x05, 'f', 'i', 'n', 'a', 'l'};
+/* Type 0x0E (OFF=1, LEN=1, FIN=0) */
+static uint8_t test_stream_0x0E_all_fields_present[] = {0x0E, 0x01, 0x0A, 0x04, 'd', 'a', 't', 'a'};
+static uint8_t test_stream_0x0E_all_non_canon[] = {0x0E, 0x40, 0x01, 0x40, 0x0A, 0x40, 0x04, 't', 'e', 's', 't'};
+/* Type 0x0F (OFF=1, LEN=1, FIN=1) */
+static uint8_t test_stream_0x0F_all_fields_fin[] = {0x0F, 0x01, 0x0A, 0x07, 't', 'h', 'e', ' ', 'e', 'n', 'd'};
+static uint8_t test_stream_0x0F_all_non_canon_fin[] = {0x0F, 0x40, 0x01, 0x40, 0x0A, 0x40, 0x04, 'd', 'o', 'n', 'e'};
+
 /* Application Protocol Payloads (HTTP/3, DoQ) */
 /* HTTP/3 Frame Payloads */
 static uint8_t test_h3_frame_data_payload[] = {0x00, 0x04, 0x74, 0x65, 0x73, 0x74}; /* Type 0x00 (DATA), Length 4, "test" */
@@ -2266,6 +2356,24 @@ static uint8_t test_h3_frame_goaway_payload[] = {0x07, 0x01, 0x00}; /* Type 0x07
 static uint8_t test_h3_frame_max_push_id_payload[] = {0x0D, 0x01, 0x0A}; /* Type 0x0D (MAX_PUSH_ID), Length 1, ID 10 */
 static uint8_t test_h3_frame_cancel_push_payload[] = {0x03, 0x01, 0x03}; /* Type 0x03 (CANCEL_PUSH), Length 1, ID 3 */
 static uint8_t test_h3_frame_push_promise_payload_simple[] = {0x05, 0x02, 0x01, 0x99}; /* Type 0x05 (PUSH_PROMISE), Len 2, PushID 1, QPACK :method: GET */
+/* H3_DATA Frame Variations */
+static uint8_t test_h3_frame_data_empty[] = {0x00, 0x00};
+static uint8_t test_h3_frame_data_len_non_canon[] = {0x00, 0x40, 0x04, 't', 'e', 's', 't'};
+/* H3_SETTINGS Frame Variations */
+static uint8_t test_h3_settings_max_field_section_size_zero[] = {0x04, 0x02, 0x06, 0x00};
+static uint8_t test_h3_settings_max_field_section_size_large[] = {0x04, 0x03, 0x06, 0x7F, 0xFF};
+static uint8_t test_h3_settings_multiple[] = {0x04, 0x06, 0x06, 0x44, 0x00, 0x21, 0x41, 0x00};
+static uint8_t test_h3_settings_id_non_canon[] = {0x04, 0x03, 0x40, 0x06, 0x00};
+static uint8_t test_h3_settings_val_non_canon[] = {0x04, 0x03, 0x06, 0x40, 0x0A};
+/* H3_GOAWAY Frame Variations */
+static uint8_t test_h3_goaway_max_id[] = {0x07, 0x01, 0x3F};
+static uint8_t test_h3_goaway_id_non_canon[] = {0x07, 0x02, 0x40, 0x00};
+/* H3_MAX_PUSH_ID Frame Variations */
+static uint8_t test_h3_max_push_id_zero[] = {0x0D, 0x01, 0x00};
+static uint8_t test_h3_max_push_id_non_canon[] = {0x0D, 0x02, 0x40, 0x0A};
+/* H3_CANCEL_PUSH Frame Variations */
+static uint8_t test_h3_cancel_push_max_id[] = {0x03, 0x02, 0x7F, 0xFF};
+static uint8_t test_h3_cancel_push_id_non_canon[] = {0x03, 0x02, 0x40, 0x03};
 
 /* DoQ Message Payload */
 static uint8_t test_doq_dns_query_payload[] = {
@@ -3206,8 +3314,84 @@ static uint8_t test_frame_hsd_type_non_canon[] = {
     FUZI_Q_ITEM("h3_max_push_id", test_h3_frame_max_push_id_payload),
     FUZI_Q_ITEM("h3_cancel_push", test_h3_frame_cancel_push_payload),
     FUZI_Q_ITEM("h3_push_promise_simple", test_h3_frame_push_promise_payload_simple),
+    /* Additional H3 Frame Payload Variations */
+    FUZI_Q_ITEM("h3_data_empty", test_h3_frame_data_empty),
+    FUZI_Q_ITEM("h3_data_len_non_canon", test_h3_frame_data_len_non_canon),
+    FUZI_Q_ITEM("h3_settings_max_field_section_size_zero", test_h3_settings_max_field_section_size_zero),
+    FUZI_Q_ITEM("h3_settings_max_field_section_size_large", test_h3_settings_max_field_section_size_large),
+    FUZI_Q_ITEM("h3_settings_multiple", test_h3_settings_multiple),
+    FUZI_Q_ITEM("h3_settings_id_non_canon", test_h3_settings_id_non_canon),
+    FUZI_Q_ITEM("h3_settings_val_non_canon", test_h3_settings_val_non_canon),
+    FUZI_Q_ITEM("h3_goaway_max_id", test_h3_goaway_max_id),
+    FUZI_Q_ITEM("h3_goaway_id_non_canon", test_h3_goaway_id_non_canon),
+    FUZI_Q_ITEM("h3_max_push_id_zero", test_h3_max_push_id_zero),
+    FUZI_Q_ITEM("h3_max_push_id_non_canon", test_h3_max_push_id_non_canon),
+    FUZI_Q_ITEM("h3_cancel_push_max_id", test_h3_cancel_push_max_id),
+    FUZI_Q_ITEM("h3_cancel_push_id_non_canon", test_h3_cancel_push_id_non_canon),
     /* DoQ Payload */
-    FUZI_Q_ITEM("doq_dns_query_payload", test_doq_dns_query_payload)
+    FUZI_Q_ITEM("doq_dns_query_payload", test_doq_dns_query_payload),
+    /* STREAM Frame Variations (RFC 9000, Section 19.8) */
+    FUZI_Q_ITEM("stream_0x08_minimal", test_stream_0x08_minimal),
+    FUZI_Q_ITEM("stream_0x08_sid_non_canon", test_stream_0x08_sid_non_canon),
+    FUZI_Q_ITEM("stream_0x08_data_long", test_stream_0x08_data_long),
+    FUZI_Q_ITEM("stream_0x09_minimal", test_stream_0x09_minimal),
+    FUZI_Q_ITEM("stream_0x09_sid_non_canon", test_stream_0x09_sid_non_canon),
+    FUZI_Q_ITEM("stream_0x0A_len_zero_no_data", test_stream_0x0A_len_zero_no_data),
+    FUZI_Q_ITEM("stream_0x0A_len_zero_with_data", test_stream_0x0A_len_zero_with_data),
+    FUZI_Q_ITEM("stream_0x0A_len_small", test_stream_0x0A_len_small),
+    FUZI_Q_ITEM("stream_0x0A_len_large", test_stream_0x0A_len_large),
+    FUZI_Q_ITEM("stream_0x0A_sid_non_canon", test_stream_0x0A_sid_non_canon),
+    FUZI_Q_ITEM("stream_0x0A_len_non_canon", test_stream_0x0A_len_non_canon),
+    FUZI_Q_ITEM("stream_0x0B_len_zero_no_data_fin", test_stream_0x0B_len_zero_no_data_fin),
+    FUZI_Q_ITEM("stream_0x0B_len_non_canon_fin", test_stream_0x0B_len_non_canon_fin),
+    FUZI_Q_ITEM("stream_0x0C_offset_zero", test_stream_0x0C_offset_zero),
+    FUZI_Q_ITEM("stream_0x0C_offset_large", test_stream_0x0C_offset_large),
+    FUZI_Q_ITEM("stream_0x0C_sid_non_canon", test_stream_0x0C_sid_non_canon),
+    FUZI_Q_ITEM("stream_0x0C_offset_non_canon", test_stream_0x0C_offset_non_canon),
+    FUZI_Q_ITEM("stream_0x0D_offset_zero_fin", test_stream_0x0D_offset_zero_fin),
+    FUZI_Q_ITEM("stream_0x0D_offset_non_canon_fin", test_stream_0x0D_offset_non_canon_fin),
+    FUZI_Q_ITEM("stream_0x0E_all_fields_present", test_stream_0x0E_all_fields_present),
+    FUZI_Q_ITEM("stream_0x0E_all_non_canon", test_stream_0x0E_all_non_canon),
+    FUZI_Q_ITEM("stream_0x0F_all_fields_fin", test_stream_0x0F_all_fields_fin),
+    FUZI_Q_ITEM("stream_0x0F_all_non_canon_fin", test_stream_0x0F_all_non_canon_fin),
+    /* ACK, RESET_STREAM, STOP_SENDING Frame Variations (RFC 9000) */
+    FUZI_Q_ITEM("ack_ecn_ect0_large", test_frame_ack_ecn_ect0_large),
+    FUZI_Q_ITEM("ack_ecn_ect1_large", test_frame_ack_ecn_ect1_large),
+    FUZI_Q_ITEM("ack_ecn_ce_large", test_frame_ack_ecn_ce_large),
+    FUZI_Q_ITEM("ack_ecn_all_large", test_frame_ack_ecn_all_large),
+    FUZI_Q_ITEM("ack_delay_non_canon", test_frame_ack_delay_non_canon),
+    FUZI_Q_ITEM("ack_range_count_non_canon", test_frame_ack_range_count_non_canon),
+    FUZI_Q_ITEM("ack_first_ack_range_non_canon", test_frame_ack_first_ack_range_non_canon),
+    FUZI_Q_ITEM("ack_gap_non_canon", test_frame_ack_gap_non_canon),
+    FUZI_Q_ITEM("reset_stream_app_err_non_canon", test_frame_reset_stream_app_err_non_canon),
+    FUZI_Q_ITEM("reset_stream_final_size_non_canon_8byte", test_frame_reset_stream_final_size_non_canon_8byte),
+    FUZI_Q_ITEM("stop_sending_app_err_non_canon", test_frame_stop_sending_app_err_non_canon),
+    /* Non-Canonical Field Encodings (RFC 9000) */
+    FUZI_Q_ITEM("crypto_offset_non_canon_4byte", test_frame_crypto_offset_non_canon_4byte),
+    FUZI_Q_ITEM("crypto_len_non_canon_4byte", test_frame_crypto_len_non_canon_4byte),
+    FUZI_Q_ITEM("new_token_len_non_canon_4byte", test_frame_new_token_len_non_canon_4byte),
+    FUZI_Q_ITEM("max_data_non_canon_8byte", test_frame_max_data_non_canon_8byte),
+    FUZI_Q_ITEM("max_stream_data_sid_non_canon_2byte", test_frame_max_stream_data_sid_non_canon_2byte),
+    FUZI_Q_ITEM("max_stream_data_val_non_canon_4byte", test_frame_max_stream_data_val_non_canon_4byte),
+    FUZI_Q_ITEM("max_streams_bidi_non_canon_2byte", test_frame_max_streams_bidi_non_canon_2byte),
+    FUZI_Q_ITEM("max_streams_bidi_non_canon_8byte", test_frame_max_streams_bidi_non_canon_8byte),
+    FUZI_Q_ITEM("max_streams_uni_non_canon_4byte", test_frame_max_streams_uni_non_canon_4byte),
+    /* DATA_BLOCKED, STREAM_DATA_BLOCKED, STREAMS_BLOCKED (non-canonical) */
+    FUZI_Q_ITEM("data_blocked_val_non_canon_2byte", test_frame_data_blocked_val_non_canon_2byte),
+    FUZI_Q_ITEM("sdb_sid_non_canon_4byte", test_frame_sdb_sid_non_canon_4byte),
+    FUZI_Q_ITEM("sdb_val_non_canon_8byte", test_frame_sdb_val_non_canon_8byte),
+    FUZI_Q_ITEM("streams_blocked_bidi_non_canon_8byte", test_frame_streams_blocked_bidi_non_canon_8byte),
+    FUZI_Q_ITEM("streams_blocked_uni_non_canon_2byte", test_frame_streams_blocked_uni_non_canon_2byte),
+    /* NEW_CONNECTION_ID (non-canonical) */
+    FUZI_Q_ITEM("ncid_seq_non_canon_2byte", test_frame_ncid_seq_non_canon_2byte),
+    FUZI_Q_ITEM("ncid_ret_non_canon_4byte", test_frame_ncid_ret_non_canon_4byte),
+    /* RETIRE_CONNECTION_ID (non-canonical) */
+    FUZI_Q_ITEM("retire_cid_seq_non_canon_4byte", test_frame_retire_cid_seq_non_canon_4byte),
+    /* CONNECTION_CLOSE (non-canonical) */
+    FUZI_Q_ITEM("conn_close_ec_non_canon", test_frame_conn_close_ec_non_canon),
+    FUZI_Q_ITEM("conn_close_rlen_non_canon", test_frame_conn_close_rlen_non_canon),
+    FUZI_Q_ITEM("conn_close_app_ec_non_canon", test_frame_conn_close_app_ec_non_canon),
+    FUZI_Q_ITEM("conn_close_app_rlen_non_canon_2byte", test_frame_conn_close_app_rlen_non_canon_2byte)
 };
 
 size_t nb_fuzi_q_frame_list = sizeof(fuzi_q_frame_list) / sizeof(fuzi_q_frames_t);
