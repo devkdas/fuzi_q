@@ -2256,6 +2256,35 @@ static uint8_t test_frame_crypto_zero_len_large_offset[] = {
     0x00        /* Length: 0 */
 };
 
+/* Application Protocol Payloads (HTTP/3, DoQ) */
+/* HTTP/3 Frame Payloads */
+static uint8_t test_h3_frame_data_payload[] = {0x00, 0x04, 0x74, 0x65, 0x73, 0x74}; /* Type 0x00 (DATA), Length 4, "test" */
+static uint8_t test_h3_frame_headers_payload_simple[] = {0x01, 0x01, 0x99}; /* Type 0x01 (HEADERS), Length 1, QPACK :method: GET */
+static uint8_t test_h3_frame_settings_payload_empty[] = {0x04, 0x00}; /* Type 0x04 (SETTINGS), Length 0 */
+static uint8_t test_h3_frame_settings_payload_one_setting[] = {0x04, 0x03, 0x06, 0x44, 0x00}; /* Type 0x04 (SETTINGS), Len 3, ID 0x06, Val 1024 (varint 0x4400) */
+static uint8_t test_h3_frame_goaway_payload[] = {0x07, 0x01, 0x00}; /* Type 0x07 (GOAWAY), Length 1, ID 0 */
+static uint8_t test_h3_frame_max_push_id_payload[] = {0x0D, 0x01, 0x0A}; /* Type 0x0D (MAX_PUSH_ID), Length 1, ID 10 */
+static uint8_t test_h3_frame_cancel_push_payload[] = {0x03, 0x01, 0x03}; /* Type 0x03 (CANCEL_PUSH), Length 1, ID 3 */
+static uint8_t test_h3_frame_push_promise_payload_simple[] = {0x05, 0x02, 0x01, 0x99}; /* Type 0x05 (PUSH_PROMISE), Len 2, PushID 1, QPACK :method: GET */
+
+/* DoQ Message Payload */
+static uint8_t test_doq_dns_query_payload[] = {
+    0x00, 0x1d, /* Length prefix for DNS message (29 bytes) */
+    /* Start of DNS query */
+    0x00, 0x00, /* Transaction ID */
+    0x01, 0x00, /* Flags: Standard query, Recursion Desired */
+    0x00, 0x01, /* Questions: 1 */
+    0x00, 0x00, /* Answer RRs: 0 */
+    0x00, 0x00, /* Authority RRs: 0 */
+    0x00, 0x00, /* Additional RRs: 0 */
+    /* Query: example.com A IN */
+    0x07, 'e', 'x', 'a', 'm', 'p', 'l', 'e', /* example */
+    0x03, 'c', 'o', 'm',                   /* com */
+    0x00,                                  /*   (root) */
+    0x00, 0x01,                            /* Type: A */
+    0x00, 0x01                             /* Class: IN */
+};
+
 /* Test Case: NEW_TOKEN frame with an empty token. */
 /* Expected: Client treats as FRAME_ENCODING_ERROR (RFC 19.7). */
 static uint8_t test_frame_new_token_empty_token[] = {
@@ -3167,7 +3196,18 @@ static uint8_t test_frame_hsd_type_non_canon[] = {
     /* Newly added DATAGRAM test frames (Task D20231121_101010) */
     FUZI_Q_ITEM("datagram_with_len_empty", test_frame_datagram_with_len_empty),
     FUZI_Q_ITEM("datagram_len_non_canon", test_frame_datagram_len_non_canon),
-    FUZI_Q_ITEM("datagram_very_large", test_frame_datagram_very_large)
+    FUZI_Q_ITEM("datagram_very_large", test_frame_datagram_very_large),
+    /* HTTP/3 Frame Payloads */
+    FUZI_Q_ITEM("h3_data_payload", test_h3_frame_data_payload),
+    FUZI_Q_ITEM("h3_headers_simple", test_h3_frame_headers_payload_simple),
+    FUZI_Q_ITEM("h3_settings_empty", test_h3_frame_settings_payload_empty),
+    FUZI_Q_ITEM("h3_settings_one", test_h3_frame_settings_payload_one_setting),
+    FUZI_Q_ITEM("h3_goaway", test_h3_frame_goaway_payload),
+    FUZI_Q_ITEM("h3_max_push_id", test_h3_frame_max_push_id_payload),
+    FUZI_Q_ITEM("h3_cancel_push", test_h3_frame_cancel_push_payload),
+    FUZI_Q_ITEM("h3_push_promise_simple", test_h3_frame_push_promise_payload_simple),
+    /* DoQ Payload */
+    FUZI_Q_ITEM("doq_dns_query_payload", test_doq_dns_query_payload)
 };
 
 size_t nb_fuzi_q_frame_list = sizeof(fuzi_q_frame_list) / sizeof(fuzi_q_frames_t);
