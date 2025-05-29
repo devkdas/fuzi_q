@@ -2596,6 +2596,94 @@ static uint8_t test_frame_data_blocked_non_canon4[] = {
     0x80, 0x00, 0x00, 0x0A            /* Maximum Data: 10 (4-byte varint) */
 };
 
+/* Test Case: STREAM_DATA_BLOCKED with Stream ID non-canonically encoded (value 1 as 2 bytes). */
+/* Expected: Peer should process normally. (RFC 16) */
+static uint8_t test_frame_sdb_sid_non_canon[] = {
+    picoquic_frame_type_stream_data_blocked, /* Type 0x15 */
+    0x40, 0x01,                              /* Stream ID: 1 (2-byte varint) */
+    0x41, 0x00                               /* Maximum Stream Data: 256 */
+};
+
+/* Test Case: STREAM_DATA_BLOCKED with Maximum Stream Data non-canonically encoded (value 10 as 2 bytes). */
+/* Expected: Peer should process normally. (RFC 16) */
+static uint8_t test_frame_sdb_val_non_canon[] = {
+    picoquic_frame_type_stream_data_blocked, /* Type 0x15 */
+    0x01,                                    /* Stream ID: 1 */
+    0x40, 0x0A                               /* Maximum Stream Data: 10 (2-byte varint) */
+};
+
+/* Test Case: STREAM_DATA_BLOCKED with Stream ID 0. */
+/* Expected: Peer should process normally for bidirectional stream 0. (RFC 19.13) */
+static uint8_t test_frame_sdb_sid_zero[] = {
+    picoquic_frame_type_stream_data_blocked, /* Type 0x15 */
+    0x00,                                    /* Stream ID: 0 */
+    0x41, 0x00                               /* Maximum Stream Data: 256 */
+};
+
+/* Test Case: STREAMS_BLOCKED (Bidirectional) with Maximum Streams = 2^60 (valid max). */
+/* Expected: Peer should process normally. (RFC 19.14) */
+static uint8_t test_frame_streams_blocked_bidi_at_limit[] = {
+    picoquic_frame_type_streams_blocked_bidir, /* Type 0x16 */
+    0xC0, 0x00, 0x00, 0x00, 0x10, 0x00, 0x00, 0x00 /* Max Streams: 2^60 */
+};
+
+/* Test Case: STREAMS_BLOCKED (Unidirectional) with Maximum Streams = 2^60 (valid max). */
+/* Expected: Peer should process normally. (RFC 19.14) */
+static uint8_t test_frame_streams_blocked_uni_at_limit[] = {
+    picoquic_frame_type_streams_blocked_unidir, /* Type 0x17 */
+    0xC0, 0x00, 0x00, 0x00, 0x10, 0x00, 0x00, 0x00 /* Max Streams: 2^60 */
+};
+
+/* Test Case: STREAMS_BLOCKED (Bidirectional) with Max Streams non-canonically encoded (value 10 as 2 bytes). */
+/* Expected: Peer should process normally. (RFC 16) */
+static uint8_t test_frame_streams_blocked_bidi_non_canon2[] = {
+    picoquic_frame_type_streams_blocked_bidir, /* Type 0x16 */
+    0x40, 0x0A                                 /* Maximum Streams: 10 (2-byte varint) */
+};
+
+/* Test Case: STREAMS_BLOCKED (Unidirectional) with Max Streams non-canonically encoded (value 10 as 4 bytes). */
+/* Expected: Peer should process normally. (RFC 16) */
+static uint8_t test_frame_streams_blocked_uni_non_canon4[] = {
+    picoquic_frame_type_streams_blocked_unidir, /* Type 0x17 */
+    0x80, 0x00, 0x00, 0x0A                     /* Maximum Streams: 10 (4-byte varint) */
+};
+
+/* Test Case: NEW_CONNECTION_ID with Sequence Number non-canonically encoded (value 1 as 2 bytes). */
+/* Expected: Peer should process normally. (RFC 16) */
+static uint8_t test_frame_ncid_seq_non_canon[] = {
+    picoquic_frame_type_new_connection_id, /* Type 0x18 */
+    0x40, 0x01,                            /* Sequence Number: 1 (2-byte varint) */
+    0x00,                                  /* Retire Prior To: 0 */
+    0x08,                                  /* Length: 8 */
+    0x01,0x02,0x03,0x04,0x05,0x06,0x07,0x08, /* Connection ID */
+    0xA0,0xA1,0xA2,0xA3,0xA4,0xA5,0xA6,0xA7, /* Stateless Reset Token */
+    0xA8,0xA9,0xAA,0xAB,0xAC,0xAD,0xAE,0xAF
+};
+
+/* Test Case: NEW_CONNECTION_ID with Retire Prior To non-canonically encoded (value 0 as 2 bytes). */
+/* Expected: Peer should process normally. (RFC 16) */
+static uint8_t test_frame_ncid_ret_non_canon[] = {
+    picoquic_frame_type_new_connection_id, /* Type 0x18 */
+    0x01,                                  /* Sequence Number: 1 */
+    0x40, 0x00,                            /* Retire Prior To: 0 (2-byte varint) */
+    0x08,                                  /* Length: 8 */
+    0x01,0x02,0x03,0x04,0x05,0x06,0x07,0x08, /* Connection ID */
+    0xA0,0xA1,0xA2,0xA3,0xA4,0xA5,0xA6,0xA7, /* Stateless Reset Token */
+    0xA8,0xA9,0xAA,0xAB,0xAC,0xAD,0xAE,0xAF
+};
+
+/* Test Case: NEW_CONNECTION_ID with minimum Connection ID Length (1). */
+/* Expected: Peer should process normally. (RFC 19.15) */
+static uint8_t test_frame_ncid_cid_len_min[] = {
+    picoquic_frame_type_new_connection_id, /* Type 0x18 */
+    0x02,                                  /* Sequence Number: 2 */
+    0x00,                                  /* Retire Prior To: 0 */
+    0x01,                                  /* Length: 1 */
+    0xBB,                                  /* Connection ID (1 byte) */
+    0xA0,0xA1,0xA2,0xA3,0xA4,0xA5,0xA6,0xA7, /* Stateless Reset Token */
+    0xA8,0xA9,0xAA,0xAB,0xAC,0xAD,0xAE,0xAF
+};
+
 #define FUZI_Q_ITEM(n, x) \
     {                        \
         n, x, sizeof(x),     \
@@ -2977,7 +3065,22 @@ fuzi_q_frames_t fuzi_q_frame_list[] = {
     FUZI_Q_ITEM("max_streams_bidi_small_non_canon8", test_frame_max_streams_bidi_small_non_canon8),
     /* DATA_BLOCKED Non-Canonical Varints */
     FUZI_Q_ITEM("data_blocked_non_canon2", test_frame_data_blocked_non_canon2),
-    FUZI_Q_ITEM("data_blocked_non_canon4", test_frame_data_blocked_non_canon4)
+    FUZI_Q_ITEM("data_blocked_non_canon4", test_frame_data_blocked_non_canon4),
+
+    /* --- Adding More Variations (Systematic Review Part 3 - SDB, SB, NCID) --- */
+    /* STREAM_DATA_BLOCKED Variations */
+    FUZI_Q_ITEM("sdb_sid_non_canon", test_frame_sdb_sid_non_canon),
+    FUZI_Q_ITEM("sdb_val_non_canon", test_frame_sdb_val_non_canon),
+    FUZI_Q_ITEM("sdb_sid_zero", test_frame_sdb_sid_zero),
+    /* STREAMS_BLOCKED Variations */
+    FUZI_Q_ITEM("streams_blocked_bidi_at_limit", test_frame_streams_blocked_bidi_at_limit),
+    FUZI_Q_ITEM("streams_blocked_uni_at_limit", test_frame_streams_blocked_uni_at_limit),
+    FUZI_Q_ITEM("streams_blocked_bidi_non_canon2", test_frame_streams_blocked_bidi_non_canon2),
+    FUZI_Q_ITEM("streams_blocked_uni_non_canon4", test_frame_streams_blocked_uni_non_canon4),
+    /* NEW_CONNECTION_ID Variations */
+    FUZI_Q_ITEM("ncid_seq_non_canon", test_frame_ncid_seq_non_canon),
+    FUZI_Q_ITEM("ncid_ret_non_canon", test_frame_ncid_ret_non_canon),
+    FUZI_Q_ITEM("ncid_cid_len_min", test_frame_ncid_cid_len_min)
 };
 
 size_t nb_fuzi_q_frame_list = sizeof(fuzi_q_frame_list) / sizeof(fuzi_q_frames_t);
