@@ -2236,6 +2236,81 @@ static uint8_t test_frame_crypto_zero_len_large_offset[] = {
     0x00        /* Length: 0 */
 };
 
+/* Test Case: NEW_TOKEN frame with an empty token. */
+/* Expected: Client treats as FRAME_ENCODING_ERROR (RFC 19.7). */
+static uint8_t test_frame_new_token_empty_token[] = {
+    picoquic_frame_type_new_token, /* Type 0x07 */
+    0x00                           /* Token Length: 0 */
+};
+
+/* Test Case: STREAM frame type (0x08) encoded non-minimally as 2 bytes (0x4008). */
+/* Expected: Peer MAY treat as PROTOCOL_VIOLATION (RFC 12.4). */
+static uint8_t test_frame_stream_type_long_encoding[] = {
+    0x40, 0x08, /* Frame Type STREAM (0x08) as 2-byte varint */
+    0x01,       /* Stream ID: 1 */
+    't', 'e', 's', 't'
+};
+
+/* Test Case: ACK frame type (0x02) encoded non-minimally as 2 bytes (0x4002). */
+/* Expected: Peer MAY treat as PROTOCOL_VIOLATION (RFC 12.4). */
+static uint8_t test_frame_ack_type_long_encoding[] = {
+    0x40, 0x02, /* Frame Type ACK (0x02) as 2-byte varint */
+    0x00,       /* Largest Acknowledged: 0 */
+    0x00,       /* ACK Delay: 0 */
+    0x01,       /* ACK Range Count: 1 */
+    0x00        /* First ACK Range: 0 */
+};
+
+/* Test Case: RESET_STREAM frame type (0x04) encoded non-minimally as 2 bytes (0x4004). */
+/* Expected: Peer MAY treat as PROTOCOL_VIOLATION (RFC 12.4). */
+static uint8_t test_frame_reset_stream_type_long_encoding[] = {
+    0x40, 0x04, /* Frame Type RESET_STREAM (0x04) as 2-byte varint */
+    0x01,       /* Stream ID: 1 */
+    0x00,       /* Application Error Code: 0 */
+    0x00        /* Final Size: 0 */
+};
+
+/* Test Case: MAX_STREAMS (bidirectional) with Maximum Streams = 2^60 + 1 (invalid) */
+/* Expected: FRAME_ENCODING_ERROR (RFC 19.11). */
+static uint8_t test_frame_max_streams_bidi_just_over_limit[] = {
+    picoquic_frame_type_max_streams_bidir, /* Type 0x12 */
+    0xC0, 0x00, 0x00, 0x00, 0x10, 0x00, 0x00, 0x01 /* Max Streams: (1ULL<<60) + 1 */
+};
+
+/* Test Case: MAX_STREAMS (unidirectional) with Maximum Streams = 2^60 + 1 (invalid) */
+/* Expected: FRAME_ENCODING_ERROR (RFC 19.11). */
+static uint8_t test_frame_max_streams_uni_just_over_limit[] = {
+    picoquic_frame_type_max_streams_unidir, /* Type 0x13 */
+    0xC0, 0x00, 0x00, 0x00, 0x10, 0x00, 0x00, 0x01 /* Max Streams: (1ULL<<60) + 1 */
+};
+
+/* Test Case: Client sends STOP_SENDING for a server-initiated unidirectional stream (receive-only for client) */
+/* Expected: Server treats as STREAM_STATE_ERROR (RFC 19.5 / Sec 3). */
+/* To be injected when fuzzer acts as client. Stream ID 3 is server-initiated uni. */
+static uint8_t test_client_sends_stop_sending_for_server_uni_stream[] = {
+    picoquic_frame_type_stop_sending, /* Type 0x05 */
+    0x03,                             /* Stream ID: 3 (server-initiated uni) */
+    0x00                              /* Application Error Code: 0 */
+};
+
+/* Test Case: Server sends STOP_SENDING for a client-initiated unidirectional stream (receive-only for server) */
+/* Expected: Client treats as STREAM_STATE_ERROR (RFC 19.5 / Sec 3). */
+/* To be injected when fuzzer acts as server. Stream ID 2 is client-initiated uni. */
+static uint8_t test_server_sends_stop_sending_for_client_uni_stream[] = {
+    picoquic_frame_type_stop_sending, /* Type 0x05 */
+    0x02,                             /* Stream ID: 2 (client-initiated uni) */
+    0x00                              /* Application Error Code: 0 */
+};
+
+/* Test Case: Client sends MAX_STREAM_DATA for a client-initiated unidirectional stream (send-only for client) */
+/* Expected: Server treats as STREAM_STATE_ERROR (RFC 19.10 / Sec 3). */
+/* To be injected when fuzzer acts as client. Stream ID 2 is client-initiated uni. */
+static uint8_t test_client_sends_max_stream_data_for_client_uni_stream[] = {
+    picoquic_frame_type_max_stream_data, /* Type 0x11 */
+    0x02,                                /* Stream ID: 2 */
+    0x41, 0x00                           /* Max Stream Data: 256 */
+};
+
 #define FUZI_Q_ITEM(n, x) \
     {                        \
         n, x, sizeof(x),     \
@@ -2559,7 +2634,17 @@ fuzi_q_frames_t fuzi_q_frame_list[] = {
     FUZI_Q_ITEM("retire_cid_high_seq", test_frame_retire_cid_high_seq),
     /* MAX_STREAMS Variants (Absolute Max) */
     FUZI_Q_ITEM("max_streams_bidi_abs_max", test_frame_max_streams_bidi_abs_max),
-    FUZI_Q_ITEM("max_streams_uni_abs_max", test_frame_max_streams_uni_abs_max)
+    FUZI_Q_ITEM("max_streams_uni_abs_max", test_frame_max_streams_uni_abs_max),
+    // Added new test cases
+    FUZI_Q_ITEM("new_token_empty_token", test_frame_new_token_empty_token),
+    FUZI_Q_ITEM("stream_type_long_encoding", test_frame_stream_type_long_encoding),
+    FUZI_Q_ITEM("ack_type_long_encoding", test_frame_ack_type_long_encoding),
+    FUZI_Q_ITEM("reset_stream_type_long_encoding", test_frame_reset_stream_type_long_encoding),
+    FUZI_Q_ITEM("max_streams_bidi_just_over_limit", test_frame_max_streams_bidi_just_over_limit),
+    FUZI_Q_ITEM("max_streams_uni_just_over_limit", test_frame_max_streams_uni_just_over_limit),
+    FUZI_Q_ITEM("client_sends_stop_sending_for_server_uni_stream", test_client_sends_stop_sending_for_server_uni_stream),
+    FUZI_Q_ITEM("server_sends_stop_sending_for_client_uni_stream", test_server_sends_stop_sending_for_client_uni_stream),
+    FUZI_Q_ITEM("client_sends_max_stream_data_for_client_uni_stream", test_client_sends_max_stream_data_for_client_uni_stream)
 };
 
 size_t nb_fuzi_q_frame_list = sizeof(fuzi_q_frame_list) / sizeof(fuzi_q_frames_t);
