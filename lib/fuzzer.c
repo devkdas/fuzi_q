@@ -431,7 +431,7 @@ void reset_stream_frame_fuzzer(uint64_t fuzz_pilot, uint8_t* bytes, uint8_t* byt
     uint8_t* stream_id_start = current_field;
     uint8_t* app_error_code_start = NULL;
     uint8_t* final_size_start = NULL;
-    uint8_t* final_size_end = NULL; /* Not strictly needed for skip, but good for decode logic if added */
+    /* uint8_t* final_size_end = NULL; // This variable is unused. actual_final_size_end is used instead. */
 
     if (stream_id_start >= bytes_max) {
         default_frame_fuzzer(fuzz_pilot, bytes, bytes_max);
@@ -451,13 +451,7 @@ void reset_stream_frame_fuzzer(uint64_t fuzz_pilot, uint8_t* bytes, uint8_t* byt
     }
     
     /* The end of the final size field is bytes_max for fuzz_in_place_or_skip_varint */
-    /* final_size_end is not strictly required if we only skip, but for consistency: */
-    final_size_end = (uint8_t*)picoquic_frames_varint_skip(final_size_start, bytes_max);
-    /* If final_size_end is NULL, it means the varint was malformed or extended beyond bytes_max. */
-    /* If it's valid, it should point to the end of the varint or bytes_max. */
-    /* For fuzzing the last field, its boundary is bytes_max. */
-
-
+    /* actual_final_size_end is used to determine the true end of the varint for encode_and_overwrite_varint */
     uint8_t* actual_final_size_end = (uint8_t*)picoquic_frames_varint_skip(final_size_start, bytes_max);
     /* If actual_final_size_end is NULL, it implies final_size_start itself was at bytes_max or malformed. */
     /* For encode_and_overwrite_varint, if field_end is NULL or <= field_start, it usually means no fuzz or error. */
