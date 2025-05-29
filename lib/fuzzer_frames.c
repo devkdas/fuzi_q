@@ -291,9 +291,7 @@ static uint8_t test_frame_max_streams_uni_at_limit[] = {
 };
 
 /* MAX_DATA (0x10) - New test cases from plan */
-static uint8_t test_frame_max_data_val_zero[] = {
-    picoquic_frame_type_max_data, 0x00
-};
+/* test_frame_max_data_val_zero is identical to existing test_frame_max_data_zero, so it's removed. */
 static uint8_t test_frame_max_data_val_large[] = {
     picoquic_frame_type_max_data, 0xBF, 0xFF, 0xFF, 0xFF /* Max Data: 1073741823 (0x3FFFFFFF) */
 };
@@ -2269,7 +2267,7 @@ fuzi_q_frames_t fuzi_q_frame_list[] = {
     FUZI_Q_ITEM("conn_close_specific_transport_error", test_frame_conn_close_specific_transport_error),
     FUZI_Q_ITEM("max_data", test_frame_type_max_data),
     FUZI_Q_ITEM("max_data_large", test_frame_type_max_data_large),
-    FUZI_Q_ITEM("max_data_zero", test_frame_max_data_zero), /* This was already requested by new plan as max_data_val_zero */
+    FUZI_Q_ITEM("max_data_zero", test_frame_max_data_zero), 
     FUZI_Q_ITEM("max_data_val_large", test_frame_max_data_val_large), /* New */
     FUZI_Q_ITEM("max_stream_data", test_frame_type_max_stream_data),
     FUZI_Q_ITEM("max_stream_data_zero", test_frame_max_stream_data_zero),
