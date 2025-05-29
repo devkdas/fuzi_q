@@ -170,6 +170,27 @@ static uint8_t test_reset_stream_final_size_max_62bit[] = {
     0xBF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF /* Final Size: 2^62-1 */
 };
 
+/* RESET_STREAM (0x04) - New test cases from plan */
+static uint8_t test_frame_reset_stream_sid_zero[] = {
+    picoquic_frame_type_reset_stream, 0x00, 0x00, 0x00
+};
+/* reset_stream_final_size_zero is covered by test_frame_reset_stream_app_error_specific if StreamID=1, Error=0, FinalSize=0 is needed.
+   The provided test_frame_reset_stream_app_error_specific is {0x04, 0x01, 0x00, 0x01} (StreamID=1, ErrorCode=0, FinalSize=1).
+   Let's create the exact requested one: StreamID=1, ErrorCode=0, FinalSize=0 */
+static uint8_t test_frame_reset_stream_final_size_zero_explicit[] = { /* Renamed to avoid conflict if user meant a different existing one */
+    picoquic_frame_type_reset_stream, 0x01, 0x00, 0x00
+};
+/* reset_stream_app_err_zero is {0x04, 0x01, 0x00, 0x01} (StreamID=1, ErrorCode=0, FinalSize=1) */
+/* This is exactly test_frame_reset_stream_app_error_specific. No need for a new array. */
+
+static uint8_t test_frame_reset_stream_all_large[] = {
+    picoquic_frame_type_reset_stream,
+    0x7F, 0xFF,       /* Stream ID: 16383 (0x3FFF) */
+    0xBF, 0xFF, 0xFF, 0xFF, /* App Error Code: 1073741823 (0x3FFFFFFF) */
+    0xBF, 0xFF, 0xFF, 0xFF  /* Final Size: 1073741823 (0x3FFFFFFF) */
+};
+
+
 static uint8_t test_type_connection_close[] = {
     picoquic_frame_type_connection_close,
     0x80, 0x00, 0xCF, 0xFF, 0,
@@ -268,6 +289,13 @@ static uint8_t test_frame_max_streams_uni_at_limit[] = {
     0x13,       /* Type: MAX_STREAMS (Unidirectional) */
     0xC0, 0x00, 0x00, 0x00, 0x10, 0x00, 0x00, 0x00 /* Max Streams: 2^60 (Varint encoded) */
 };
+
+/* MAX_DATA (0x10) - New test cases from plan */
+/* test_frame_max_data_val_zero is identical to existing test_frame_max_data_zero, so it's removed. */
+static uint8_t test_frame_max_data_val_large[] = {
+    picoquic_frame_type_max_data, 0xBF, 0xFF, 0xFF, 0xFF /* Max Data: 1073741823 (0x3FFFFFFF) */
+};
+
 
 static uint8_t test_frame_type_ping[] = {
     picoquic_frame_type_ping
@@ -398,6 +426,16 @@ static uint8_t test_frame_stop_sending_large_error_code[] = {
     picoquic_frame_type_stop_sending, /* 0x05 */
     0x08, /* Stream ID: 8 */
     0xBF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF /* Error Code: 0x3FFFFFFFFFFFFFFF */
+};
+
+/* STOP_SENDING (0x05) - New test cases from plan */
+static uint8_t test_frame_stop_sending_sid_err_zero[] = {
+    picoquic_frame_type_stop_sending, 0x00, 0x00
+};
+static uint8_t test_frame_stop_sending_all_large[] = {
+    picoquic_frame_type_stop_sending,
+    0x7F, 0xFF,       /* Stream ID: 16383 (0x3FFF) */
+    0xBF, 0xFF, 0xFF, 0xFF  /* App Error Code: 1073741823 (0x3FFFFFFF) */
 };
 
 /* New STOP_SENDING frame test cases */
@@ -2215,7 +2253,10 @@ fuzi_q_frames_t fuzi_q_frame_list[] = {
     FUZI_Q_ITEM("reset_stream_high_error", test_frame_type_reset_stream_high_error),
     FUZI_Q_ITEM("reset_stream_min_vals", test_frame_reset_stream_min_vals),
     FUZI_Q_ITEM("reset_stream_max_final_size", test_frame_reset_stream_max_final_size),
-    FUZI_Q_ITEM("reset_stream_app_error_specific", test_frame_reset_stream_app_error_specific),
+    FUZI_Q_ITEM("reset_stream_app_error_specific", test_frame_reset_stream_app_error_specific), /* This is {0x04, 0x01, 0x00, 0x01} */
+    FUZI_Q_ITEM("reset_stream_sid_zero", test_frame_reset_stream_sid_zero), /* New */
+    FUZI_Q_ITEM("reset_stream_final_size_zero_explicit", test_frame_reset_stream_final_size_zero_explicit), /* New (StreamID=1, Err=0, FinalSize=0) */
+    FUZI_Q_ITEM("reset_stream_all_large", test_frame_reset_stream_all_large), /* New */
     FUZI_Q_ITEM("connection_close", test_type_connection_close),
     FUZI_Q_ITEM("connection_close_transport_long_reason", test_frame_connection_close_transport_long_reason),
     FUZI_Q_ITEM("application_close", test_type_application_close),
@@ -2226,7 +2267,8 @@ fuzi_q_frames_t fuzi_q_frame_list[] = {
     FUZI_Q_ITEM("conn_close_specific_transport_error", test_frame_conn_close_specific_transport_error),
     FUZI_Q_ITEM("max_data", test_frame_type_max_data),
     FUZI_Q_ITEM("max_data_large", test_frame_type_max_data_large),
-    FUZI_Q_ITEM("max_data_zero", test_frame_max_data_zero),
+    FUZI_Q_ITEM("max_data_zero", test_frame_max_data_zero), 
+    FUZI_Q_ITEM("max_data_val_large", test_frame_max_data_val_large), /* New */
     FUZI_Q_ITEM("max_stream_data", test_frame_type_max_stream_data),
     FUZI_Q_ITEM("max_stream_data_zero", test_frame_max_stream_data_zero),
     FUZI_Q_ITEM("max_streams_bidir", test_frame_type_max_streams_bidir),
@@ -2256,6 +2298,8 @@ fuzi_q_frames_t fuzi_q_frame_list[] = {
     FUZI_Q_ITEM("stop_sending_high_error", test_frame_type_stop_sending_high_error),
     FUZI_Q_ITEM("stop_sending_min_vals", test_frame_stop_sending_min_vals),
     FUZI_Q_ITEM("stop_sending_app_error_specific", test_frame_stop_sending_app_error_specific),
+    FUZI_Q_ITEM("stop_sending_sid_err_zero", test_frame_stop_sending_sid_err_zero), /* New */
+    FUZI_Q_ITEM("stop_sending_all_large", test_frame_stop_sending_all_large), /* New */
     FUZI_Q_ITEM("challenge", test_frame_type_path_challenge),
     FUZI_Q_ITEM("path_challenge_alt_data", test_frame_type_path_challenge_alt_data),
     FUZI_Q_ITEM("response", test_frame_type_path_response),
