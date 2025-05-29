@@ -94,6 +94,8 @@ void reset_stream_frame_fuzzer(uint64_t fuzz_pilot, uint8_t* bytes, uint8_t* byt
 void stop_sending_frame_fuzzer(uint64_t fuzz_pilot, uint8_t* bytes, uint8_t* bytes_max);
 void connection_close_frame_fuzzer(uint64_t fuzz_pilot, uint8_t* bytes, uint8_t* bytes_max);
 void fuzz_random_byte(uint64_t fuzz_pilot, uint8_t* bytes, uint8_t* bytes_max);
+void max_stream_data_frame_fuzzer(uint64_t fuzz_pilot, uint8_t* bytes, uint8_t* bytes_max);
+void max_streams_frame_fuzzer(uint64_t fuzz_pilot, uint8_t* bytes, uint8_t* bytes_max);
 
 /*
  * Fuzz packet header bits (Reserved, Spin, Key Phase)
@@ -178,6 +180,136 @@ static void fuzz_packet_header_bits(uint8_t* header_bytes, size_t header_length,
         if ((strategy % 8) == 5) { /* Strategy for Key Phase Bit */
             header_bytes[0] ^= 0x04; /* Simple flip of Key Phase bit */
         }
+    }
+}
+
+void max_streams_frame_fuzzer(uint64_t fuzz_pilot, uint8_t* bytes, uint8_t* bytes_max)
+{
+    uint8_t* max_streams_field_start = bytes + 1; /* Skip frame type */
+    uint64_t original_max_streams_val; /* Not used by current strategies but good for consistency */
+
+    if (max_streams_field_start >= bytes_max) { /* Not enough space for the varint field */
+        default_frame_fuzzer(fuzz_pilot, bytes, bytes_max);
+        return;
+    }
+
+    uint8_t* max_streams_field_end = (uint8_t*)picoquic_frames_varint_decode(max_streams_field_start, bytes_max, &original_max_streams_val);
+
+    if (!max_streams_field_end || max_streams_field_start == max_streams_field_end) {
+        /* Parsing failed or empty varint, which is invalid for this frame. */
+        /* Fallback to default fuzzer, which might corrupt the type or try to make sense of it. */
+        default_frame_fuzzer(fuzz_pilot, bytes, bytes_max);
+        return;
+    }
+    /* Ensure max_streams_field_end does not exceed bytes_max, though picoquic_frames_varint_decode should handle this. */
+    if (max_streams_field_end > bytes_max) {
+        max_streams_field_end = bytes_max;
+    }
+
+
+    int num_strategies = 6;
+    int choice = fuzz_pilot % num_strategies;
+    fuzz_pilot >>= 3; /* ceil(log2(6)) = 3 bits */
+
+    switch (choice) {
+    case 0: /* Strategy 1: Fuzz Maximum Streams (generic varint fuzz) */
+        /* Since it's the only field, its varint fuzzing can extend up to bytes_max. */
+        fuzz_in_place_or_skip_varint(fuzz_pilot, max_streams_field_start, bytes_max, 1);
+        break;
+    case 1: /* Strategy 2: Set Maximum Streams to 0 */
+        encode_and_overwrite_varint(max_streams_field_start, max_streams_field_end, bytes_max, 0);
+        break;
+    case 2: /* Strategy 3: Set Maximum Streams to 1 */
+        encode_and_overwrite_varint(max_streams_field_start, max_streams_field_end, bytes_max, 1);
+        break;
+    case 3: /* Strategy 4: Set Maximum Streams to a small value */
+        encode_and_overwrite_varint(max_streams_field_start, max_streams_field_end, bytes_max, (fuzz_pilot % 16));
+        break;
+    case 4: /* Strategy 5: Set Maximum Streams to a large valid value (2^60 - 1) */
+        encode_and_overwrite_varint(max_streams_field_start, max_streams_field_end, bytes_max, (1ULL << 60) - 1);
+        break;
+    case 5: /* Strategy 6 (Default/Fallback): Call default_frame_fuzzer */
+    default:
+        default_frame_fuzzer(fuzz_pilot, bytes, bytes_max);
+        break;
+    }
+}
+
+void max_stream_data_frame_fuzzer(uint64_t fuzz_pilot, uint8_t* bytes, uint8_t* bytes_max)
+{
+    uint8_t* p = bytes + 1; /* Skip frame type */
+
+    if (p >= bytes_max) { /* Not enough space for even one field */
+        default_frame_fuzzer(fuzz_pilot, bytes, bytes_max);
+        return;
+    }
+
+    uint8_t* stream_id_start = p;
+    uint8_t* stream_id_end = (uint8_t*)picoquic_frames_varint_skip(stream_id_start, bytes_max);
+    if (!stream_id_end || stream_id_end > bytes_max) { /* Stream ID varint parsing failed or went out of bounds */
+        default_frame_fuzzer(fuzz_pilot, bytes, bytes_max);
+        return;
+    }
+
+    uint8_t* max_stream_data_start = stream_id_end;
+    uint8_t* actual_max_stream_data_end = NULL;
+    if (max_stream_data_start < bytes_max) { // Check if there's space for the second field to start
+        actual_max_stream_data_end = (uint8_t*)picoquic_frames_varint_skip(max_stream_data_start, bytes_max);
+        if (!actual_max_stream_data_end) { // Malformed Max Stream Data varint
+            default_frame_fuzzer(fuzz_pilot, bytes, bytes_max);
+            return;
+        }
+    }
+
+    int num_strategies = 9;
+    int choice = fuzz_pilot % num_strategies;
+    fuzz_pilot >>= 4; /* ceil(log2(9)) = 4 bits */
+
+    switch (choice) {
+    case 0: /* Fuzz Stream ID */
+        fuzz_in_place_or_skip_varint(fuzz_pilot, stream_id_start, stream_id_end, 1);
+        break;
+    case 1: /* Fuzz Maximum Stream Data */
+        if (max_stream_data_start < bytes_max) {
+            fuzz_in_place_or_skip_varint(fuzz_pilot, max_stream_data_start, bytes_max, 1);
+        } else {
+            default_frame_fuzzer(fuzz_pilot, bytes, bytes_max); /* Fallback if field doesn't exist */
+        }
+        break;
+    case 2: /* Set Stream ID to 0 */
+        encode_and_overwrite_varint(stream_id_start, stream_id_end, bytes_max, 0);
+        break;
+    case 3: /* Set Stream ID to 1 */
+        encode_and_overwrite_varint(stream_id_start, stream_id_end, bytes_max, 1);
+        break;
+    case 4: /* Set Stream ID to a large value */
+        encode_and_overwrite_varint(stream_id_start, stream_id_end, bytes_max, 0x3FFFFFFFFFFFFFFFull);
+        break;
+    case 5: /* Set Maximum Stream Data to 0 */
+        if (max_stream_data_start < bytes_max) {
+            encode_and_overwrite_varint(max_stream_data_start, actual_max_stream_data_end ? actual_max_stream_data_end : bytes_max, bytes_max, 0);
+        } else {
+            default_frame_fuzzer(fuzz_pilot, bytes, bytes_max); /* Fallback if field doesn't exist */
+        }
+        break;
+    case 6: /* Set Maximum Stream Data to 1 */
+        if (max_stream_data_start < bytes_max) {
+            encode_and_overwrite_varint(max_stream_data_start, actual_max_stream_data_end ? actual_max_stream_data_end : bytes_max, bytes_max, 1);
+        } else {
+            default_frame_fuzzer(fuzz_pilot, bytes, bytes_max); /* Fallback if field doesn't exist */
+        }
+        break;
+    case 7: /* Set Maximum Stream Data to a large value */
+        if (max_stream_data_start < bytes_max) {
+            encode_and_overwrite_varint(max_stream_data_start, actual_max_stream_data_end ? actual_max_stream_data_end : bytes_max, bytes_max, 0x3FFFFFFFFFFFFFFFull);
+        } else {
+            default_frame_fuzzer(fuzz_pilot, bytes, bytes_max); /* Fallback if field doesn't exist */
+        }
+        break;
+    case 8: /* Default/Fallback */
+    default:
+        default_frame_fuzzer(fuzz_pilot, bytes, bytes_max);
+        break;
     }
 }
 
@@ -1597,52 +1729,63 @@ void default_frame_fuzzer(uint64_t fuzz_pilot, uint8_t* bytes, uint8_t* bytes_ma
 
 void max_data_fuzzer(uint64_t fuzz_pilot, uint8_t* frame_start, uint8_t* frame_max, fuzzer_ctx_t* f_ctx, fuzzer_icid_ctx_t* icid_ctx)
 {
-    uint8_t* original_varint_start = frame_start;
-    uint8_t* p_val = original_varint_start;
-    uint64_t original_max_data;
-    uint8_t* original_varint_end;
-
-    if (p_val < frame_max) {
-        p_val++;
-    } else {
-        default_frame_fuzzer(fuzz_pilot >> 2, frame_start, frame_max);
+{
+    uint8_t* p_val = frame_start + 1; // Skip frame type
+    if (p_val >= frame_max) { // Check if there's space for at least one byte for the varint
+        default_frame_fuzzer(fuzz_pilot, frame_start, frame_max);
         return;
     }
-    original_varint_start = p_val;
 
-    original_varint_end = (uint8_t*)picoquic_frames_varint_decode(p_val, frame_max, &original_max_data);
+    uint8_t* max_data_field_start = p_val;
+    uint64_t original_max_data_val;
+    uint8_t* max_data_field_end = (uint8_t*)picoquic_frames_varint_decode(max_data_field_start, frame_max, &original_max_data_val);
 
-    if (original_varint_end != NULL && original_varint_start < original_varint_end) {
-        if (icid_ctx != NULL) {
-            icid_ctx->last_sent_max_data = original_max_data;
-            icid_ctx->has_sent_max_data = 1;
-        }
-
-        if ((fuzz_pilot & 0x03) == 0) {
-            if (icid_ctx != NULL && icid_ctx->has_sent_max_data && icid_ctx->last_sent_max_data > 0) {
-                uint64_t fuzzed_val = icid_ctx->last_sent_max_data / 2;
-                if (fuzzed_val == icid_ctx->last_sent_max_data && fuzzed_val > 0) {
-                    fuzzed_val--;
-                }
-
-                int fuzzed_varint_len = picoquic_varint_encode_length(fuzzed_val);
-                size_t original_varint_len = original_varint_end - original_varint_start;
-
-                if (fuzzed_varint_len <= original_varint_len) {
-                    picoquic_varint_encode(original_varint_start, (size_t)(frame_max - original_varint_start), fuzzed_val);
-                    if (fuzzed_varint_len < original_varint_len) {
-                        size_t padding_len = original_varint_len - fuzzed_varint_len;
-                        if (original_varint_start + fuzzed_varint_len + padding_len <= frame_max) {
-                           memset(original_varint_start + fuzzed_varint_len, 0, padding_len);
-                        }
-                    }
-                }
-                default_frame_fuzzer(fuzz_pilot >> 2, frame_start, frame_max);
-                return;
-            }
-        }
+    if (max_data_field_end == NULL || max_data_field_start == max_data_field_end) { // Parsing failed or empty varint
+        default_frame_fuzzer(fuzz_pilot, frame_start, frame_max);
+        return;
     }
-    default_frame_fuzzer(fuzz_pilot >> 2, frame_start, frame_max);
+
+    if (icid_ctx != NULL) { // Store original value for context-aware fuzzing
+        icid_ctx->last_sent_max_data = original_max_data_val;
+        icid_ctx->has_sent_max_data = 1;
+    }
+
+    int num_strategies = 6; // 3 new value sets, 1 generic varint fuzz, 1 context-aware, 1 default_frame_fuzzer pass
+    int choice = fuzz_pilot % num_strategies;
+    fuzz_pilot >>= 3; // Consume bits for choice (ceil(log2(6)) = 3)
+
+    switch (choice) {
+    case 0: /* Set Maximum Data to 0 */
+        encode_and_overwrite_varint(max_data_field_start, max_data_field_end, frame_max, 0);
+        break;
+    case 1: /* Set Maximum Data to 1 */
+        encode_and_overwrite_varint(max_data_field_start, max_data_field_end, frame_max, 1);
+        break;
+    case 2: /* Set Maximum Data to large value */
+        encode_and_overwrite_varint(max_data_field_start, max_data_field_end, frame_max, 0x3FFFFFFFFFFFFFFFull);
+        break;
+    case 3: /* Apply generic varint fuzz to Maximum Data field */
+        /* For MAX_DATA, it's the only field, so its extent is up to frame_max from max_data_field_start. */
+        fuzz_in_place_or_skip_varint(fuzz_pilot, max_data_field_start, frame_max, 1);
+        break;
+    case 4: /* Existing context-aware strategy */
+        if (icid_ctx != NULL && icid_ctx->has_sent_max_data && icid_ctx->last_sent_max_data > 0) {
+            uint64_t fuzzed_val = icid_ctx->last_sent_max_data / 2;
+            if (fuzzed_val == icid_ctx->last_sent_max_data && fuzzed_val > 0) { // Ensure value changes if possible
+                fuzzed_val--;
+            }
+            encode_and_overwrite_varint(max_data_field_start, max_data_field_end, frame_max, fuzzed_val);
+            /* This strategy now performs a specific action. No automatic default_frame_fuzzer here. */
+        } else {
+            /* Fallback to default if context not available for this specific strategy */
+            default_frame_fuzzer(fuzz_pilot, frame_start, frame_max);
+        }
+        break;
+    case 5: /* Default frame fuzzer as an explicit strategy path */
+    default: /* Fallback for any unhandled case or if other cases resulted in no action */
+        default_frame_fuzzer(fuzz_pilot, frame_start, frame_max);
+        break;
+    }
 }
 
 /* frame_header_fuzzer: MODIFIED signature */
@@ -1703,11 +1846,11 @@ int frame_header_fuzzer(fuzzer_ctx_t* f_ctx, picoquic_cnx_t* cnx, fuzzer_icid_ct
                 max_data_fuzzer(fuzz_pilot, frame_byte, frame_max, f_ctx, icid_ctx);
                 break;
             case picoquic_frame_type_max_stream_data:
-                varint_frame_fuzzer(fuzz_pilot, frame_byte, frame_max, 3);
+                max_stream_data_frame_fuzzer(fuzz_pilot, frame_byte, frame_max);
                 break;
             case picoquic_frame_type_max_streams_bidir:
             case picoquic_frame_type_max_streams_unidir:
-                varint_frame_fuzzer(fuzz_pilot, frame_byte, frame_max, 2);
+                max_streams_frame_fuzzer(fuzz_pilot, frame_byte, frame_max);
                 break;
             case picoquic_frame_type_data_blocked:
                 varint_frame_fuzzer(fuzz_pilot, frame_byte, frame_max, 2);
