@@ -1976,6 +1976,227 @@ static uint8_t test_frame_datagram_zero_len_with_data[] = {
     'a', 'c', 't', 'u', 'a', 'l', 'd', 'a', 't', 'a', 'g', 'r', 'a', 'm', 'd', 'a', 't', 'a'
 };
 
+/* Non-Canonical Variable-Length Integers */
+static uint8_t test_frame_stream_long_varint_stream_id_2byte[] = {
+    0x08,       /* Type: STREAM */
+    0x40, 0x05, /* Stream ID: 5 (2-byte varint) */
+    't', 'e', 's', 't'
+};
+
+static uint8_t test_frame_stream_long_varint_stream_id_4byte[] = {
+    0x08,       /* Type: STREAM */
+    0x80, 0x00, 0x00, 0x05, /* Stream ID: 5 (4-byte varint) */
+    't', 'e', 's', 't'
+};
+
+static uint8_t test_frame_stream_long_varint_offset_2byte[] = {
+    0x0C,       /* Type: STREAM, OFF bit */
+    0x01,       /* Stream ID: 1 */
+    0x40, 0x0A, /* Offset: 10 (2-byte varint) */
+    't', 'e', 's', 't'
+};
+
+static uint8_t test_frame_stream_long_varint_offset_4byte[] = {
+    0x0C,       /* Type: STREAM, OFF bit */
+    0x01,       /* Stream ID: 1 */
+    0x80, 0x00, 0x00, 0x0A, /* Offset: 10 (4-byte varint) */
+    't', 'e', 's', 't'
+};
+
+static uint8_t test_frame_stream_long_varint_length_2byte[] = {
+    0x0A,       /* Type: STREAM, LEN bit */
+    0x01,       /* Stream ID: 1 */
+    0x40, 0x04, /* Length: 4 (2-byte varint) */
+    't', 'e', 's', 't'
+};
+
+static uint8_t test_frame_stream_long_varint_length_4byte[] = {
+    0x0A,       /* Type: STREAM, LEN bit */
+    0x01,       /* Stream ID: 1 */
+    0x80, 0x00, 0x00, 0x04, /* Length: 4 (4-byte varint) */
+    't', 'e', 's', 't'
+};
+
+static uint8_t test_frame_max_data_long_varint_2byte[] = {
+    picoquic_frame_type_max_data,
+    0x44, 0x00  /* Maximum Data: 1024 (0x400) (2-byte varint) */
+};
+
+static uint8_t test_frame_max_data_long_varint_4byte[] = {
+    picoquic_frame_type_max_data,
+    0x80, 0x00, 0x04, 0x00  /* Maximum Data: 1024 (0x400) (4-byte varint) */
+};
+
+static uint8_t test_frame_ack_long_varint_largest_acked_2byte[] = {
+    picoquic_frame_type_ack,
+    0x40, 0x14, /* Largest Acknowledged: 20 (2-byte varint) */
+    0x00,       /* ACK Delay: 0 */
+    0x01,       /* ACK Range Count: 1 */
+    0x00        /* First ACK Range: 0 */
+};
+
+static uint8_t test_frame_ack_long_varint_largest_acked_4byte[] = {
+    picoquic_frame_type_ack,
+    0x80, 0x00, 0x00, 0x14, /* Largest Acknowledged: 20 (4-byte varint) */
+    0x00,       /* ACK Delay: 0 */
+    0x01,       /* ACK Range Count: 1 */
+    0x00        /* First ACK Range: 0 */
+};
+
+static uint8_t test_frame_crypto_long_varint_offset_2byte[] = {
+    picoquic_frame_type_crypto_hs,
+    0x40, 0x0A, /* Offset: 10 (2-byte varint) */
+    0x04,       /* Length: 4 */
+    't', 'e', 's', 't'
+};
+
+static uint8_t test_frame_crypto_long_varint_offset_4byte[] = {
+    picoquic_frame_type_crypto_hs,
+    0x80, 0x00, 0x00, 0x0A, /* Offset: 10 (4-byte varint) */
+    0x04,       /* Length: 4 */
+    't', 'e', 's', 't'
+};
+
+/* Aggressive Padding / PMTU Probing Mimics */
+static uint8_t test_frame_ping_padded_to_1200[1200] = {0x01}; /* PING + 1199 PADDING */
+static uint8_t test_frame_ping_padded_to_1500[1500] = {0x01}; /* PING + 1499 PADDING */
+
+/* ACK Frame Stress Tests */
+static uint8_t test_frame_ack_very_many_small_ranges[] = {
+    0x02,       /* Type: ACK */
+    0x40, 0xC8, /* Largest Acknowledged: 200 */
+    0x00,       /* ACK Delay: 0 */
+    0x32,       /* ACK Range Count: 50 */
+    0x00,       /* First ACK Range: 0 */
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* 10 ranges */
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* 20 ranges */
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* 30 ranges */
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* 40 ranges */
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00        /* 49 ranges */
+};
+
+static uint8_t test_frame_ack_alternating_large_small_gaps[] = {
+    0x02,       /* Type: ACK */
+    0x64,       /* Largest Acknowledged: 100 */
+    0x00,       /* ACK Delay: 0 */
+    0x04,       /* ACK Range Count: 4 */
+    0x00,       /* First ACK Range: 0 (acks 100) */
+    0x30,       /* Gap: 48 */
+    0x00,       /* ACK Range Length: 0 (acks 50) */
+    0x00,       /* Gap: 0 */
+    0x00,       /* ACK Range Length: 0 (acks 48) */
+    0x14,       /* Gap: 20 */
+    0x00        /* ACK Range Length: 0 (acks 26) */
+};
+
+/* Unusual but Valid Header Flags/Values (Frames) */
+static uint8_t test_frame_stream_id_almost_max[] = {
+    0x08,       /* Type: STREAM */
+    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, /* Stream ID: 2^62-1 */
+    'm', 'a', 'x', 'S'
+};
+
+static uint8_t test_frame_stream_offset_almost_max[] = {
+    0x0C,       /* Type: STREAM, OFF bit */
+    0x01,       /* Stream ID: 1 */
+    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, /* Offset: 2^62-1 */
+    'm', 'a', 'x', 'O'
+};
+
+/* PATH_CHALLENGE / PATH_RESPONSE Variants */
+static uint8_t test_frame_path_challenge_alt_pattern[] = {
+    0x1a, 0xA5,0x5A,0xA5,0x5A,0xA5,0x5A,0xA5,0x5A
+};
+static uint8_t test_frame_path_response_alt_pattern[] = {
+    0x1b, 0x5A,0xA5,0x5A,0xA5,0x5A,0xA5,0x5A,0xA5
+};
+
+/* NEW_TOKEN Frame Variants */
+static uint8_t test_frame_new_token_max_plausible_len[3 + 256] = {
+    0x07, 0x41, 0x00, /* Token Length 256 */
+    /* Followed by 256 bytes of 0xAA */
+};
+static uint8_t test_frame_new_token_min_len[] = {
+    0x07, 0x01, 0xBB
+};
+
+/* CONNECTION_CLOSE Frame Variants */
+static uint8_t test_frame_connection_close_max_reason_len[5 + 1000] = {
+    0x1c, 0x00, 0x00, 0x43, 0xE8, /* Error Code 0, Frame Type 0, Reason Length 1000 */
+    /* Followed by 1000 bytes of 'A' (0x41) */
+};
+static uint8_t test_frame_connection_close_app_max_reason_len[4 + 1000] = {
+    0x1d, 0x00, 0x43, 0xE8, /* Error Code 0, Reason Length 1000 */
+    /* Followed by 1000 bytes of 'B' (0x42) */
+};
+
+/* RETIRE_CONNECTION_ID Variants */
+static uint8_t test_frame_retire_cid_high_seq[] = {
+    0x19, 0x80, 0x3B, 0x9A, 0xCA, 0x00 /* Sequence Number 1,000,000,000 */
+};
+
+/* MAX_STREAMS Variants (Absolute Max) */
+static uint8_t test_frame_max_streams_bidi_abs_max[] = {
+    0x12, 0xC0,0x00,0x00,0x00,0x10,0x00,0x00,0x00 /* Max Streams 2^60 */
+};
+static uint8_t test_frame_max_streams_uni_abs_max[] = {
+    0x13, 0xC0,0x00,0x00,0x00,0x10,0x00,0x00,0x00 /* Max Streams 2^60 */
+};
+
+/* Additional STREAM Frame Variants */
+static uint8_t test_frame_stream_off_len_fin_empty[] = {
+    0x0F,       /* Type: STREAM, OFF, LEN, FIN bits */
+    0x01,       /* Stream ID: 1 */
+    0x64,       /* Offset: 100 (1-byte varint) */
+    0x00        /* Length: 0 */
+};
+
+static uint8_t test_frame_stream_off_no_len_fin[] = {
+    0x0D,       /* Type: STREAM, OFF, FIN bits */
+    0x02,       /* Stream ID: 2 */
+    0x40, 0xC8, /* Offset: 200 (2-byte varint) */
+    'f', 'i', 'n'
+};
+
+static uint8_t test_frame_stream_no_off_len_fin_empty[] = {
+    0x0B,       /* Type: STREAM, LEN, FIN bits */
+    0x03,       /* Stream ID: 3 */
+    0x00        /* Length: 0 */
+};
+
+static uint8_t test_frame_stream_just_fin_at_zero[] = {
+    0x09,       /* Type: STREAM, FIN bit */
+    0x04        /* Stream ID: 4 */
+};
+
+/* Zero-Length Data Frames with Max Varint Encoding for Fields */
+static uint8_t test_frame_data_blocked_max_varint_offset[] = {
+    0x14,       /* Type: DATA_BLOCKED */
+    0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x04, 0x00 /* Max Data: 1024 (8-byte varint) */
+};
+
+static uint8_t test_frame_stream_data_blocked_max_varint_fields[] = {
+    0x15,       /* Type: STREAM_DATA_BLOCKED */
+    0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, /* Stream ID: 1 (8-byte varint) */
+    0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x04, 0x00  /* Max Stream Data: 1024 (8-byte varint) */
+};
+
+static uint8_t test_frame_streams_blocked_bidi_max_varint_limit[] = {
+    0x16,       /* Type: STREAMS_BLOCKED (bidirectional) */
+    0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x0A  /* Max Streams: 10 (8-byte varint) */
+};
+
+static uint8_t test_frame_streams_blocked_uni_max_varint_limit[] = {
+    0x17,       /* Type: STREAMS_BLOCKED (unidirectional) */
+    0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x0A  /* Max Streams: 10 (8-byte varint) */
+};
+
+/* CRYPTO Frame Edge Cases */
+static uint8_t test_frame_crypto_zero_len_large_offset[] = {
+    0x06,       /* Type: CRYPTO */
+    0x80, 0x01, 0x00, 0x00, /* Offset: 65536 (4-byte varint) */
+    0x00        /* Length: 0 */
+};
 
 #define FUZI_Q_ITEM(n, x) \
     {                        \
@@ -2246,7 +2467,55 @@ fuzi_q_frames_t fuzi_q_frame_list[] = {
     FUZI_Q_ITEM("test_stop_sending_id_uncreated_sender_scenario", test_stop_sending_id_uncreated_sender_scenario),
     FUZI_Q_ITEM("test_stop_sending_err_zero", test_stop_sending_err_zero),
     FUZI_Q_ITEM("test_stop_sending_err_transport_range_like", test_stop_sending_err_transport_range_like),
-    FUZI_Q_ITEM("test_stop_sending_err_max_62bit", test_stop_sending_err_max_62bit)
+    FUZI_Q_ITEM("test_stop_sending_err_max_62bit", test_stop_sending_err_max_62bit),
+    /* Non-Canonical Variable-Length Integers */
+    FUZI_Q_ITEM("stream_long_varint_stream_id_2byte", test_frame_stream_long_varint_stream_id_2byte),
+    FUZI_Q_ITEM("stream_long_varint_stream_id_4byte", test_frame_stream_long_varint_stream_id_4byte),
+    FUZI_Q_ITEM("stream_long_varint_offset_2byte", test_frame_stream_long_varint_offset_2byte),
+    FUZI_Q_ITEM("stream_long_varint_offset_4byte", test_frame_stream_long_varint_offset_4byte),
+    FUZI_Q_ITEM("stream_long_varint_length_2byte", test_frame_stream_long_varint_length_2byte),
+    FUZI_Q_ITEM("stream_long_varint_length_4byte", test_frame_stream_long_varint_length_4byte),
+    FUZI_Q_ITEM("max_data_long_varint_2byte", test_frame_max_data_long_varint_2byte),
+    FUZI_Q_ITEM("max_data_long_varint_4byte", test_frame_max_data_long_varint_4byte),
+    FUZI_Q_ITEM("ack_long_varint_largest_acked_2byte", test_frame_ack_long_varint_largest_acked_2byte),
+    FUZI_Q_ITEM("ack_long_varint_largest_acked_4byte", test_frame_ack_long_varint_largest_acked_4byte),
+    FUZI_Q_ITEM("crypto_long_varint_offset_2byte", test_frame_crypto_long_varint_offset_2byte),
+    FUZI_Q_ITEM("crypto_long_varint_offset_4byte", test_frame_crypto_long_varint_offset_4byte),
+    /* Aggressive Padding / PMTU Probing Mimics */
+    FUZI_Q_ITEM("ping_padded_to_1200", test_frame_ping_padded_to_1200),
+    FUZI_Q_ITEM("ping_padded_to_1500", test_frame_ping_padded_to_1500),
+    /* ACK Frame Stress Tests */
+    FUZI_Q_ITEM("ack_very_many_small_ranges", test_frame_ack_very_many_small_ranges),
+    FUZI_Q_ITEM("ack_alternating_large_small_gaps", test_frame_ack_alternating_large_small_gaps),
+    /* Unusual but Valid Header Flags/Values (Frames) */
+    FUZI_Q_ITEM("stream_id_almost_max", test_frame_stream_id_almost_max),
+    FUZI_Q_ITEM("stream_offset_almost_max", test_frame_stream_offset_almost_max),
+    /* Additional STREAM Frame Variants */
+    FUZI_Q_ITEM("stream_off_len_fin_empty", test_frame_stream_off_len_fin_empty),
+    FUZI_Q_ITEM("stream_off_no_len_fin", test_frame_stream_off_no_len_fin),
+    FUZI_Q_ITEM("stream_no_off_len_fin_empty", test_frame_stream_no_off_len_fin_empty),
+    FUZI_Q_ITEM("stream_just_fin_at_zero", test_frame_stream_just_fin_at_zero),
+    /* Zero-Length Data Frames with Max Varint Encoding for Fields */
+    FUZI_Q_ITEM("data_blocked_max_varint_offset", test_frame_data_blocked_max_varint_offset),
+    FUZI_Q_ITEM("stream_data_blocked_max_varint_fields", test_frame_stream_data_blocked_max_varint_fields),
+    FUZI_Q_ITEM("streams_blocked_bidi_max_varint_limit", test_frame_streams_blocked_bidi_max_varint_limit),
+    FUZI_Q_ITEM("streams_blocked_uni_max_varint_limit", test_frame_streams_blocked_uni_max_varint_limit),
+    /* CRYPTO Frame Edge Cases */
+    FUZI_Q_ITEM("crypto_zero_len_large_offset", test_frame_crypto_zero_len_large_offset),
+    /* PATH_CHALLENGE / PATH_RESPONSE Variants */
+    FUZI_Q_ITEM("path_challenge_alt_pattern", test_frame_path_challenge_alt_pattern),
+    FUZI_Q_ITEM("path_response_alt_pattern", test_frame_path_response_alt_pattern),
+    /* NEW_TOKEN Frame Variants */
+    FUZI_Q_ITEM("new_token_max_plausible_len", test_frame_new_token_max_plausible_len),
+    FUZI_Q_ITEM("new_token_min_len", test_frame_new_token_min_len),
+    /* CONNECTION_CLOSE Frame Variants */
+    FUZI_Q_ITEM("connection_close_max_reason_len", test_frame_connection_close_max_reason_len),
+    FUZI_Q_ITEM("connection_close_app_max_reason_len", test_frame_connection_close_app_max_reason_len),
+    /* RETIRE_CONNECTION_ID Variants */
+    FUZI_Q_ITEM("retire_cid_high_seq", test_frame_retire_cid_high_seq),
+    /* MAX_STREAMS Variants (Absolute Max) */
+    FUZI_Q_ITEM("max_streams_bidi_abs_max", test_frame_max_streams_bidi_abs_max),
+    FUZI_Q_ITEM("max_streams_uni_abs_max", test_frame_max_streams_uni_abs_max)
 };
 
 size_t nb_fuzi_q_frame_list = sizeof(fuzi_q_frame_list) / sizeof(fuzi_q_frames_t);
