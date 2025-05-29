@@ -233,9 +233,8 @@ int fuzi_q_set_client_context(fuzi_q_mode_enum fuzz_mode, fuzi_q_ctx_t* fuzi_q_c
         else {
             fuzi_q_fuzzer_init(&fuzi_q_ctx->fuzz_ctx, init_cid, fuzi_q_ctx->quic);
             fuzi_q_ctx->fuzz_ctx.parent = fuzi_q_ctx;
-            if (fuzz_mode != fuzi_q_mode_clean) {
-                picoquic_set_fuzz(fuzi_q_ctx->quic, fuzi_q_fuzzer, &fuzi_q_ctx->fuzz_ctx);
-            }
+            /* Always set fuzzing for client and clean modes */
+            picoquic_set_fuzz(fuzi_q_ctx->quic, fuzi_q_fuzzer, &fuzi_q_ctx->fuzz_ctx);
             picoquic_set_key_log_file_from_env(fuzi_q_ctx->quic);
 
             if (fuzi_q_ctx->config != NULL) {
