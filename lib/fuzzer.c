@@ -214,68 +214,122 @@ void connection_close_frame_fuzzer(uint64_t fuzz_pilot, uint8_t* bytes, uint8_t*
     p = reason_len_end;
     uint8_t* reason_phrase_start = p;
 
-    int choice = fuzz_pilot % 7; /* Increased strategies for more specific field targeting */
-    fuzz_pilot >>= 3; 
+    int choice = fuzz_pilot % 14; /* 7 existing + 7 new = 14 strategies */
+    fuzz_pilot >>= 4; /* ceil(log2(14)) = 4 bits */
+
+    uint64_t remaining_buffer_space = (bytes_max > reason_phrase_start) ? (bytes_max - reason_phrase_start) : 0;
 
     switch (choice) {
-    case 0: /* Fuzz Error Code */
+    case 0: /* Existing: Fuzz Error Code (varint fuzz) */
         fuzz_in_place_or_skip_varint(fuzz_pilot, error_code_start, error_code_end, 1);
         break;
-    case 1: /* Fuzz Offending Frame Type (if 0x1c) */
-        if (frame_type_value == picoquic_frame_type_connection_close && offending_frame_type_start != NULL) {
+    case 1: /* Existing: Fuzz Offending Frame Type (if 0x1c) (varint fuzz) */
+        if (frame_type_value == picoquic_frame_type_connection_close && offending_frame_type_start && offending_frame_type_end > offending_frame_type_start) {
             fuzz_in_place_or_skip_varint(fuzz_pilot, offending_frame_type_start, offending_frame_type_end, 1);
-        } else { /* If not 0x1c or field is somehow null, fuzz error code again or default */
-            fuzz_in_place_or_skip_varint(fuzz_pilot, error_code_start, error_code_end, 1);
+        } else {
+            fuzz_in_place_or_skip_varint(fuzz_pilot, error_code_start, error_code_end, 1); /* Fallback */
         }
         break;
-    case 2: /* Fuzz Reason Phrase Length - set to 0 */
+    case 2: /* Existing: Reason Phrase Length - set to 0 */
         encode_and_overwrite_varint(reason_len_start, reason_len_end, bytes_max, 0);
         break;
-    case 3: /* Fuzz Reason Phrase Length - set to small value (1-4) */
-        encode_and_overwrite_varint(reason_len_start, reason_len_end, bytes_max, (fuzz_pilot % 4) + 1);
+    case 3: /* Existing: Reason Phrase Length - set to small value (fuzz_pilot % 10 + 1) */
+        encode_and_overwrite_varint(reason_len_start, reason_len_end, bytes_max, (fuzz_pilot % 10) + 1);
         break;
-    case 4: /* Fuzz Reason Phrase Length - potentially large or exceeding available space */
+    case 4: /* Existing: Reason Phrase Length - potentially large or exceeding available space */
         {
             uint64_t new_len;
-            size_t remaining_space = (reason_phrase_start <= bytes_max) ? (bytes_max - reason_phrase_start) : 0;
-            if ((fuzz_pilot & 1) == 0) { /* 50% chance of large varint */
-                 new_len = 0x3FFFFFFFFFFFFFFF; /* Max 62-bit varint */
-            } else { /* 50% chance of length related to remaining space */
-                 new_len = (fuzz_pilot >> 1) % (remaining_space + 5); /* +5 to allow exceeding */
+            if ((fuzz_pilot & 1) == 0) { 
+                 new_len = 0x3FFFFFFFFFFFFFFF; 
+            } else { 
+                 new_len = (fuzz_pilot >> 1) % (remaining_buffer_space + 5); 
             }
             encode_and_overwrite_varint(reason_len_start, reason_len_end, bytes_max, new_len);
         }
         break;
-    case 5: /* Fuzz Reason Phrase content */
+    case 5: /* Existing: Fuzz Reason Phrase content (random byte) */
         {
             uint64_t fuzzed_reason_len_val;
-            /* Re-decode reason_len_start in case it was fuzzed by a previous strategy (though unlikely with current choice logic) */
             uint8_t* current_reason_len_end = (uint8_t*)picoquic_frames_varint_decode(reason_len_start, bytes_max, &fuzzed_reason_len_val);
-
             if (current_reason_len_end && reason_phrase_start <= bytes_max) {
                 uint8_t* phrase_data_end_limit = reason_phrase_start + fuzzed_reason_len_val;
                 if (phrase_data_end_limit > bytes_max) {
                     phrase_data_end_limit = bytes_max;
                 }
-
-                if (reason_phrase_start < phrase_data_end_limit) { /* Check if there's actual space to fuzz */
+                if (reason_phrase_start < phrase_data_end_limit) {
                     fuzz_random_byte(fuzz_pilot, reason_phrase_start, phrase_data_end_limit);
                 } else if (fuzzed_reason_len_val > 0 && reason_phrase_start < bytes_max) {
-                    /* If length is positive but calculated end is not greater, means phrase_data_end_limit was capped by bytes_max.
-                       Still, if reason_phrase_start is valid, fuzz at least one byte if possible. */
                     fuzz_random_byte(fuzz_pilot, reason_phrase_start, bytes_max);
                 }
-            } else { /* If length decode fails or phrase start is already past max, default */
+            } else { 
                  default_frame_fuzzer(fuzz_pilot, bytes, bytes_max);
             }
         }
         break;
-    default: /* Fuzz random byte in whole frame payload (after type) */
+    case 6: /* Existing: Default random byte on whole frame payload */
         if (bytes + 1 < bytes_max) {
             fuzz_random_byte(fuzz_pilot, bytes + 1, bytes_max);
-        } else { /* Only type byte or empty, fall back to default which handles single byte */
+        } else { 
             default_frame_fuzzer(fuzz_pilot, bytes, bytes_max);
         }
+        break;
+
+    /* New Strategies */
+    case 7: /* Set Error Code to 0 */
+        encode_and_overwrite_varint(error_code_start, error_code_end, bytes_max, 0);
+        break;
+    case 8: /* Set Error Code to large value */
+        encode_and_overwrite_varint(error_code_start, error_code_end, bytes_max, 0x3FFFFFFFFFFFFFFFull);
+        break;
+    case 9: /* Set Offending Frame Type to 0 (if 0x1c) */
+        if (frame_type_value == picoquic_frame_type_connection_close && offending_frame_type_start && offending_frame_type_end > offending_frame_type_start) {
+            encode_and_overwrite_varint(offending_frame_type_start, offending_frame_type_end, bytes_max, 0);
+        } else {
+            default_frame_fuzzer(fuzz_pilot, bytes, bytes_max); /* Fallback */
+        }
+        break;
+    case 10: /* Set Offending Frame Type to large varint (if 0x1c) */
+        if (frame_type_value == picoquic_frame_type_connection_close && offending_frame_type_start && offending_frame_type_end > offending_frame_type_start) {
+            encode_and_overwrite_varint(offending_frame_type_start, offending_frame_type_end, bytes_max, 0x3FFFFFFFFFFFFFFFull);
+        } else {
+            default_frame_fuzzer(fuzz_pilot, bytes, bytes_max); /* Fallback */
+        }
+        break;
+    case 11: /* Set Reason Phrase Length to exactly match remaining buffer space */
+        if (reason_len_start && reason_len_end > reason_len_start) {
+             encode_and_overwrite_varint(reason_len_start, reason_len_end, bytes_max, remaining_buffer_space);
+        } else { default_frame_fuzzer(fuzz_pilot, bytes, bytes_max); }
+        break;
+    case 12: /* Set Reason Phrase Length to slightly larger than remaining buffer space */
+        if (reason_len_start && reason_len_end > reason_len_start) {
+            encode_and_overwrite_varint(reason_len_start, reason_len_end, bytes_max, remaining_buffer_space + (fuzz_pilot % 5) + 1);
+        } else { default_frame_fuzzer(fuzz_pilot, bytes, bytes_max); }
+        break;
+    case 13: /* Fill Reason Phrase with non-UTF-8 pattern */
+        {
+            uint64_t fuzzed_reason_len_val;
+            uint8_t* current_reason_len_end = (uint8_t*)picoquic_frames_varint_decode(reason_len_start, bytes_max, &fuzzed_reason_len_val);
+            if (current_reason_len_end && fuzzed_reason_len_val > 0 && reason_phrase_start < bytes_max) {
+                size_t actual_fill_len = fuzzed_reason_len_val;
+                if (reason_phrase_start + actual_fill_len > bytes_max) {
+                    actual_fill_len = bytes_max - reason_phrase_start;
+                }
+                for (size_t i = 0; i < actual_fill_len; i++) {
+                    reason_phrase_start[i] = (i % 2 == 0) ? 0xFF : 0xFE;
+                }
+            } else if (!current_reason_len_end) { /* If length decode failed, potentially fuzz whole remaining buffer with pattern */
+                 if (reason_phrase_start < bytes_max) {
+                    for (size_t i = 0; i < (bytes_max - reason_phrase_start); i++) {
+                        reason_phrase_start[i] = (i % 2 == 0) ? 0xFF : 0xFE;
+                    }
+                 }
+            }
+            /* If fuzzed_reason_len_val is 0 or phrase_start >= bytes_max, do nothing for this strategy */
+        }
+        break;
+
+    default: /* Should not be reached */
+        default_frame_fuzzer(fuzz_pilot, bytes, bytes_max);
         break;
     }
 }
@@ -312,38 +366,60 @@ void stop_sending_frame_fuzzer(uint64_t fuzz_pilot, uint8_t* bytes, uint8_t* byt
     }
 
 
-    int choice = fuzz_pilot % 5; /* Number of strategies */
-    fuzz_pilot >>= 3; /* Consume bits for choice */
+    uint8_t* actual_app_error_code_end = NULL;
+    if (app_error_code_start < bytes_max) {
+         actual_app_error_code_end = (uint8_t*)picoquic_frames_varint_skip(app_error_code_start, bytes_max);
+    }
+
+
+    int choice = fuzz_pilot % 8; /* 5 existing + 3 new = 8 strategies */
+    fuzz_pilot >>= 3; /* ceil(log2(8)) = 3 bits */
 
     switch (choice) {
-    case 0: /* Fuzz Stream ID */
+    case 0: /* Existing: Fuzz Stream ID */
         fuzz_in_place_or_skip_varint(fuzz_pilot, stream_id_start, app_error_code_start, 1);
         break;
-    case 1: /* Fuzz App Error Code */
-        if (app_error_code_start < bytes_max) { /* Only fuzz if the field actually exists */
+    case 1: /* Existing: Fuzz App Error Code */
+        if (app_error_code_start < bytes_max) {
             fuzz_in_place_or_skip_varint(fuzz_pilot, app_error_code_start, bytes_max, 1);
-        } else { /* Fallback if no app error code field */
-            fuzz_in_place_or_skip_varint(fuzz_pilot, stream_id_start, app_error_code_start, 1);
+        } else { 
+            default_frame_fuzzer(fuzz_pilot, bytes, bytes_max); /* Fallback if no app error code field */
         }
         break;
-    case 2: /* Fuzz a random byte in the whole frame (excluding type) */
+    case 2: /* Existing: Fuzz a random byte in the whole frame (excluding type) */
         if (bytes + 1 < bytes_max) {
             fuzz_random_byte(fuzz_pilot, bytes + 1, bytes_max);
         } else if (bytes < bytes_max) {
              fuzz_random_byte(fuzz_pilot, bytes, bytes_max);
         }
         break;
-    case 3: /* Set Stream ID to 0 */
+    case 3: /* Existing: Set Stream ID to 0 */
         encode_and_overwrite_varint(stream_id_start, app_error_code_start, bytes_max, 0);
         break;
-    case 4: /* Set App Error Code to 0 (if it exists) */
+    case 4: /* Existing: Set App Error Code to 0 */
         if (app_error_code_start < bytes_max) {
-             encode_and_overwrite_varint(app_error_code_start, app_error_code_end, bytes_max, 0);
-        } else { /* Fallback if no app error code: set stream ID to large value */
-             encode_and_overwrite_varint(stream_id_start, app_error_code_start, bytes_max, 0x3FFF);
+             encode_and_overwrite_varint(app_error_code_start, actual_app_error_code_end ? actual_app_error_code_end : bytes_max, bytes_max, 0);
+        } else { 
+            default_frame_fuzzer(fuzz_pilot, bytes, bytes_max);/* Fallback if no app error code field */
         }
         break;
-    default:
+
+    /* New Strategies */
+    case 5: /* Set Stream ID to large value */
+        encode_and_overwrite_varint(stream_id_start, app_error_code_start, bytes_max, 0x3FFFFFFFFFFFFFFFull);
+        break;
+    case 6: /* Set Stream ID to small odd value (e.g., 1) */
+        encode_and_overwrite_varint(stream_id_start, app_error_code_start, bytes_max, 1);
+        break;
+    case 7: /* Set App Error Code to large value */
+        if (app_error_code_start < bytes_max) {
+            encode_and_overwrite_varint(app_error_code_start, actual_app_error_code_end ? actual_app_error_code_end : bytes_max, bytes_max, 0x3FFFFFFFFFFFFFFFull);
+        } else {
+            default_frame_fuzzer(fuzz_pilot, bytes, bytes_max); /* Fallback if no app error code field */
+        }
+        break;
+
+    default: /* Should not be reached with % 8 */
         default_frame_fuzzer(fuzz_pilot, bytes, bytes_max);
         break;
     }
@@ -382,35 +458,59 @@ void reset_stream_frame_fuzzer(uint64_t fuzz_pilot, uint8_t* bytes, uint8_t* byt
     /* For fuzzing the last field, its boundary is bytes_max. */
 
 
-    int choice = fuzz_pilot % 6; /* Increased strategies */
-    fuzz_pilot >>= 3; /* Consume bits for choice */
+    uint8_t* actual_final_size_end = (uint8_t*)picoquic_frames_varint_skip(final_size_start, bytes_max);
+    /* If actual_final_size_end is NULL, it implies final_size_start itself was at bytes_max or malformed. */
+    /* For encode_and_overwrite_varint, if field_end is NULL or <= field_start, it usually means no fuzz or error. */
+    /* We will use bytes_max as the de-facto end for the last field if actual_final_size_end is problematic. */
+
+    int choice = fuzz_pilot % 12; /* 6 existing + 6 new strategies */
+    fuzz_pilot >>= 4; /* ceil(log2(12)) = 4 bits */
 
     switch (choice) {
-    case 0: /* Fuzz Stream ID */
+    case 0: /* Original: Fuzz Stream ID */
         fuzz_in_place_or_skip_varint(fuzz_pilot, stream_id_start, app_error_code_start, 1);
         break;
-    case 1: /* Fuzz App Error Code */
+    case 1: /* Original: Fuzz App Error Code */
         fuzz_in_place_or_skip_varint(fuzz_pilot, app_error_code_start, final_size_start, 1);
         break;
-    case 2: /* Fuzz Final Size */
+    case 2: /* Original: Fuzz Final Size */
         fuzz_in_place_or_skip_varint(fuzz_pilot, final_size_start, bytes_max, 1);
         break;
-    case 3: /* Fuzz a random byte in the whole frame (excluding type) */
+    case 3: /* Original: Fuzz a random byte in the whole frame (excluding type) */
         if (bytes + 1 < bytes_max) {
             fuzz_random_byte(fuzz_pilot, bytes + 1, bytes_max);
-        } else if (bytes < bytes_max) { /* If only type byte exists, fuzz that (should not happen if parsing passed) */
+        } else if (bytes < bytes_max) {
              fuzz_random_byte(fuzz_pilot, bytes, bytes_max);
         }
         break;
-    case 4: /* Set Stream ID to 0 */
+    case 4: /* Original: Set Stream ID to 0 */
         encode_and_overwrite_varint(stream_id_start, app_error_code_start, bytes_max, 0);
         break;
-    case 5: /* Set Final Size to a large value (attempt) */
-        /* This attempts to write a large value; encode_and_overwrite_varint handles if it fits. */
-        /* If it doesn't fit, it does nothing, which is acceptable for a fuzzing strategy. */
-        encode_and_overwrite_varint(final_size_start, final_size_end != NULL ? final_size_end : bytes_max, bytes_max, 0x3FFFFFFFFFFFFFFF);
+    case 5: /* Original: Set Final Size to a large value */
+        encode_and_overwrite_varint(final_size_start, actual_final_size_end ? actual_final_size_end : bytes_max, bytes_max, 0x3FFFFFFFFFFFFFFFull);
         break;
-    default: /* Fallback to default fuzzer for any unhandled choice, though current modulo covers all */
+    
+    /* New Strategies */
+    case 6: /* Set Stream ID to large value */
+        encode_and_overwrite_varint(stream_id_start, app_error_code_start, bytes_max, 0x3FFFFFFFFFFFFFFFull);
+        break;
+    case 7: /* Set Stream ID to small odd value (e.g., 1) */
+        encode_and_overwrite_varint(stream_id_start, app_error_code_start, bytes_max, 1);
+        break;
+    case 8: /* Set App Error Code to 0 */
+        encode_and_overwrite_varint(app_error_code_start, final_size_start, bytes_max, 0);
+        break;
+    case 9: /* Set App Error Code to large value */
+        encode_and_overwrite_varint(app_error_code_start, final_size_start, bytes_max, 0x3FFFFFFFFFFFFFFFull);
+        break;
+    case 10: /* Set Final Size to 0 */
+        encode_and_overwrite_varint(final_size_start, actual_final_size_end ? actual_final_size_end : bytes_max, bytes_max, 0);
+        break;
+    case 11: /* Set Final Size to 1 */
+        encode_and_overwrite_varint(final_size_start, actual_final_size_end ? actual_final_size_end : bytes_max, bytes_max, 1);
+        break;
+
+    default: /* Should not be reached with % 12 */
         default_frame_fuzzer(fuzz_pilot, bytes, bytes_max);
         break;
     }
