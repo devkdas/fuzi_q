@@ -2343,6 +2343,130 @@ static uint8_t test_frame_retire_cid_to_zero_len_provider[] = {
     0x01                                      /* Sequence Number: 1 (to retire) */
 };
 
+/* Test Case: RESET_STREAM with Stream ID encoded non-canonically (value 1 as 2 bytes). */
+/* Expected: Peer should process normally. (RFC 16) */
+static uint8_t test_frame_reset_stream_sid_non_canon[] = {
+    picoquic_frame_type_reset_stream, /* Type 0x04 */
+    0x40, 0x01,                       /* Stream ID: 1 (2-byte varint) */
+    0x00,                             /* Application Protocol Error Code: 0 */
+    0x00                              /* Final Size: 0 */
+};
+
+/* Test Case: RESET_STREAM with App Error Code encoded non-canonically (value 1 as 2 bytes). */
+/* Expected: Peer should process normally. (RFC 16) */
+static uint8_t test_frame_reset_stream_err_non_canon[] = {
+    picoquic_frame_type_reset_stream, /* Type 0x04 */
+    0x01,                             /* Stream ID: 1 */
+    0x40, 0x01,                       /* Application Protocol Error Code: 1 (2-byte varint) */
+    0x00                              /* Final Size: 0 */
+};
+
+/* Test Case: RESET_STREAM with Final Size encoded non-canonically (value 1 as 2 bytes). */
+/* Expected: Peer should process normally. (RFC 16) */
+static uint8_t test_frame_reset_stream_final_non_canon[] = {
+    picoquic_frame_type_reset_stream, /* Type 0x04 */
+    0x01,                             /* Stream ID: 1 */
+    0x00,                             /* Application Protocol Error Code: 0 */
+    0x40, 0x01                        /* Final Size: 1 (2-byte varint) */
+};
+
+/* Test Case: STOP_SENDING with Stream ID encoded non-canonically (value 1 as 2 bytes). */
+/* Expected: Peer should process normally. (RFC 16) */
+static uint8_t test_frame_stop_sending_sid_non_canon[] = {
+    picoquic_frame_type_stop_sending, /* Type 0x05 */
+    0x40, 0x01,                       /* Stream ID: 1 (2-byte varint) */
+    0x00                              /* Application Protocol Error Code: 0 */
+};
+
+/* Test Case: STOP_SENDING with App Error Code encoded non-canonically (value 1 as 2 bytes). */
+/* Expected: Peer should process normally. (RFC 16) */
+static uint8_t test_frame_stop_sending_err_non_canon[] = {
+    picoquic_frame_type_stop_sending, /* Type 0x05 */
+    0x01,                             /* Stream ID: 1 */
+    0x40, 0x01                        /* Application Protocol Error Code: 1 (2-byte varint) */
+};
+
+/* Test Case: CRYPTO frame with Offset encoded non-canonically (value 10 as 2 bytes). */
+/* Expected: Peer should process normally. (RFC 16) */
+static uint8_t test_frame_crypto_offset_small_non_canon[] = {
+    picoquic_frame_type_crypto_hs, /* Type 0x06 */
+    0x40, 0x0A,                    /* Offset: 10 (2-byte varint) */
+    0x04,                          /* Length: 4 */
+    'd','a','t','a'
+};
+
+/* Test Case: CRYPTO frame with Length encoded non-canonically (value 4 as 2 bytes). */
+/* Expected: Peer should process normally. (RFC 16) */
+static uint8_t test_frame_crypto_len_small_non_canon[] = {
+    picoquic_frame_type_crypto_hs, /* Type 0x06 */
+    0x0A,                          /* Offset: 10 */
+    0x40, 0x04,                    /* Length: 4 (2-byte varint) */
+    'd','a','t','a'
+};
+
+/* Test Case: NEW_TOKEN frame with Token Length encoded non-canonically (value 16 as 2 bytes). */
+/* Expected: Peer should process normally. (RFC 16) */
+static uint8_t test_frame_new_token_len_non_canon[] = {
+    picoquic_frame_type_new_token, /* Type 0x07 */
+    0x40, 0x10,                    /* Token Length: 16 (2-byte varint) */
+    '0','1','2','3','4','5','6','7','8','9','a','b','c','d','e','f' /* Token data */
+};
+
+/* Test Case: PADDING frame (single byte). */
+/* Expected: Peer should process normally. (RFC 19.1) */
+static uint8_t test_frame_padding_single[] = {
+    picoquic_frame_type_padding /* Type 0x00 */
+};
+
+/* Test Case: ACK frame with Range Count = 0 and a non-zero First ACK Range. */
+/* Expected: Peer should process normally. (RFC 19.3) */
+static uint8_t test_frame_ack_range_count_zero_first_range_set[] = {
+    picoquic_frame_type_ack, /* Type 0x02 */
+    0x0A,                    /* Largest Acknowledged: 10 */
+    0x00,                    /* ACK Delay: 0 */
+    0x00,                    /* ACK Range Count: 0 */
+    0x05                     /* First ACK Range: 5 (acks packets 6-10) */
+};
+
+/* Test Case: ACK frame with an ACK Delay that might cause overflow if not handled carefully with ack_delay_exponent. */
+/* Assuming default ack_delay_exponent = 3. Max ACK Delay field val is (2^62-1).
+   A large val like 2^24 (0x01000000) for ACK Delay field, when multiplied by 2^3, is 2^27 microseconds.
+   If ack_delay_exponent was, e.g., 20, then 2^24 * 2^20 = 2^44, still okay for u64 RTT.
+   Let's use a value that is itself large, but not max varint.
+   0x80, 0x01, 0x00, 0x00 -> 65536. Shifted by 3 = 524288 us = ~0.5 sec.
+   Shifted by 20 = 65536 * 2^20 = 2^16 * 2^20 = 2^36 us = ~19 hours. This is large. */
+/* Expected: Peer calculates RTT correctly or clamps delay. (RFC 19.3) */
+static uint8_t test_frame_ack_delay_potentially_large_calc[] = {
+    picoquic_frame_type_ack,       /* Type 0x02 */
+    0x0A,                          /* Largest Acknowledged: 10 */
+    0x80, 0x01, 0x00, 0x00,        /* ACK Delay: 65536 (raw value) */
+    0x01,                          /* ACK Range Count: 1 */
+    0x00                           /* First ACK Range: 0 */
+};
+
+/* Test Case: ACK frame acknowledging packet 0, with First ACK Range = 0. */
+/* Expected: Peer should process normally. (RFC 19.3) */
+static uint8_t test_frame_ack_largest_zero_first_zero[] = {
+    picoquic_frame_type_ack, /* Type 0x02 */
+    0x00,                    /* Largest Acknowledged: 0 */
+    0x00,                    /* ACK Delay: 0 */
+    0x01,                    /* ACK Range Count: 1 */
+    0x00                     /* First ACK Range: 0 (acks packet 0) */
+};
+
+/* Test Case: ACK frame with ECN ECT0 count encoded non-minimally. */
+/* Expected: Peer should process normally. (RFC 16) */
+static uint8_t test_frame_ack_ecn_non_minimal_ect0[] = {
+    picoquic_frame_type_ack_ecn, /* Type 0x03 */
+    0x0A,                        /* Largest Acknowledged: 10 */
+    0x00,                        /* ACK Delay: 0 */
+    0x01,                        /* ACK Range Count: 1 */
+    0x00,                        /* First ACK Range: 0 */
+    0x40, 0x01,                  /* ECT0 Count: 1 (2-byte varint) */
+    0x00,                        /* ECT1 Count: 0 */
+    0x00                         /* ECN-CE Count: 0 */
+};
+
 #define FUZI_Q_ITEM(n, x) \
     {                        \
         n, x, sizeof(x),     \
@@ -2680,7 +2804,28 @@ fuzi_q_frames_t fuzi_q_frame_list[] = {
     /* Newly added medium priority test cases */
     FUZI_Q_ITEM("ack_cross_pns_low_pkns", test_frame_ack_cross_pns_low_pkns),
     FUZI_Q_ITEM("new_cid_to_zero_len_peer", test_frame_new_cid_to_zero_len_peer),
-    FUZI_Q_ITEM("retire_cid_to_zero_len_provider", test_frame_retire_cid_to_zero_len_provider)
+    FUZI_Q_ITEM("retire_cid_to_zero_len_provider", test_frame_retire_cid_to_zero_len_provider),
+
+    /* --- Adding More Variations (Systematic Review Part 1) --- */
+    /* RESET_STREAM Non-Canonical Varints */
+    FUZI_Q_ITEM("reset_stream_sid_non_canon", test_frame_reset_stream_sid_non_canon),
+    FUZI_Q_ITEM("reset_stream_err_non_canon", test_frame_reset_stream_err_non_canon),
+    FUZI_Q_ITEM("reset_stream_final_non_canon", test_frame_reset_stream_final_non_canon),
+    /* STOP_SENDING Non-Canonical Varints */
+    FUZI_Q_ITEM("stop_sending_sid_non_canon", test_frame_stop_sending_sid_non_canon),
+    FUZI_Q_ITEM("stop_sending_err_non_canon", test_frame_stop_sending_err_non_canon),
+    /* CRYPTO Non-Canonical Varints */
+    FUZI_Q_ITEM("crypto_offset_small_non_canon", test_frame_crypto_offset_small_non_canon),
+    FUZI_Q_ITEM("crypto_len_small_non_canon", test_frame_crypto_len_small_non_canon),
+    /* NEW_TOKEN Non-Canonical Varint */
+    FUZI_Q_ITEM("new_token_len_non_canon", test_frame_new_token_len_non_canon),
+    /* PADDING Variation */
+    FUZI_Q_ITEM("padding_single", test_frame_padding_single),
+    /* ACK Variations */
+    FUZI_Q_ITEM("ack_range_count_zero_first_range_set", test_frame_ack_range_count_zero_first_range_set),
+    FUZI_Q_ITEM("ack_delay_potentially_large_calc", test_frame_ack_delay_potentially_large_calc),
+    FUZI_Q_ITEM("ack_largest_zero_first_zero", test_frame_ack_largest_zero_first_zero),
+    FUZI_Q_ITEM("ack_ecn_non_minimal_ect0", test_frame_ack_ecn_non_minimal_ect0)
 };
 
 size_t nb_fuzi_q_frame_list = sizeof(fuzi_q_frame_list) / sizeof(fuzi_q_frames_t);
