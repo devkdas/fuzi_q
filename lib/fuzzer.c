@@ -92,6 +92,93 @@ uint8_t* fuzz_in_place_or_skip_varint(uint64_t fuzz_pilot, uint8_t* bytes, uint8
 void default_frame_fuzzer(uint64_t fuzz_pilot, uint8_t* bytes, uint8_t* bytes_max);
 
 /*
+ * Fuzz packet header bits (Reserved, Spin, Key Phase)
+ */
+static void fuzz_packet_header_bits(uint8_t* header_bytes, size_t header_length, uint64_t fuzz_pilot)
+{
+    if (header_length == 0) {
+        return;
+    }
+
+    uint8_t first_byte = header_bytes[0];
+    int is_long_header = (first_byte & 0x80) != 0;
+    /* Determine specific packet type for finer-grained fuzzing if needed in future */
+    /* uint8_t long_packet_type = (first_byte & 0x30) >> 4; */
+    /* uint8_t short_packet_type = first_byte & 0x7F; */
+
+
+    uint8_t strategy = (uint8_t)(fuzz_pilot % 16); /* Increased strategies for more diverse fuzzing */
+
+    if (is_long_header) {
+        /* Long Headers: Initial, Handshake, 0-RTT */
+        /* Reserved Bits (bits 4-5 of the first byte, mask 0x0c) */
+        /* These bits are cleartext before header protection. */
+        switch (strategy % 4) { /* 4 strategies for long header reserved bits */
+        case 0:
+            header_bytes[0] = (first_byte & 0xF3) | 0x04; /* Set to 0100 */
+            break;
+        case 1:
+            header_bytes[0] = (first_byte & 0xF3) | 0x08; /* Set to 1000 */
+            break;
+        case 2:
+            header_bytes[0] = (first_byte & 0xF3) | 0x0C; /* Set to 1100 */
+            break;
+        case 3:
+            /* No change to reserved bits, or flip one randomly */
+            if ((fuzz_pilot >> 2) & 1) {
+                 header_bytes[0] ^= (1 << (4 + ((fuzz_pilot >> 3) & 1)));
+            }
+            break;
+        }
+        /* Bit 6 (0x04) is also a reserved bit in Long Headers (except VN) */
+        if (((fuzz_pilot >> 4) & 0x03) == 1) { /* 1 in 4 chance */
+             header_bytes[0] ^= 0x04;
+        }
+
+    } else {
+        /* Short Headers (1-RTT) */
+        /* Spin Bit (bit 3 of the first byte, mask 0x20) */
+        if ((strategy % 8) == 0) { /* Strategy for Spin Bit */
+            header_bytes[0] ^= 0x20; /* Simple flip */
+        }
+
+        /* Reserved Bits (bits 4-5 of the first byte, mask 0x18) */
+        /* Bit 4 is 0x10 (value 16), Bit 5 is 0x08 (value 8) */
+        if (((strategy % 8) >= 1 && (strategy % 8) <= 3) || ((strategy % 8) == 4 && ((fuzz_pilot >> 2) & 1))) {
+            uint8_t original_first_byte = header_bytes[0];
+            uint8_t cleared_reserved_bits = original_first_byte & ~0x18; /* Clear bits 4 and 5 */
+
+            switch (strategy % 4) {
+            case 1: /* Strategy 5: Set to 0x08 (01000 for bits 4-5) - bit 5 high, bit 4 low */
+                header_bytes[0] = cleared_reserved_bits | 0x08;
+                break;
+            case 2: /* Strategy 6: Set to 0x10 (10000 for bits 4-5) - bit 4 high, bit 5 low */
+                header_bytes[0] = cleared_reserved_bits | 0x10;
+                break;
+            case 0: /* Strategy 7: Set to 0x18 (11000 for bits 4-5) - bit 4 high, bit 5 high (remapped from case 0 of modulo 4 for strategy 7)*/
+                header_bytes[0] = cleared_reserved_bits | 0x18;
+                break;
+            case 3: /* Random flip of one of the reserved bits (bit 4 or 5) */
+                 /* This case is only entered if ((strategy % 8) == 4 && ((fuzz_pilot >> 2) & 1)) is true */
+                header_bytes[0] = original_first_byte ^ (1 << (4 + ((fuzz_pilot >> 3) & 1))); /* Flip bit 4 or 5 */
+                break;
+            }
+        }
+
+        /* Key Phase Bit (bit 2 of the first byte, mask 0x04 in QUIC v1) */
+        /* This is actually bit 2 (0x04) for short headers in QUIC v1.
+         * The task description says "bit 6 (mask 0x04)". This is contradictory.
+         * QUIC v1 Short Header: 0100KPNN, K=Key Phase (bit 2, mask 0x04).
+         * Assuming it means the actual Key Phase Bit.
+         */
+        if ((strategy % 8) == 5) { /* Strategy for Key Phase Bit */
+            header_bytes[0] ^= 0x04; /* Simple flip of Key Phase bit */
+        }
+    }
+}
+
+
+/*
  * Basic fuzz test just tries to flip some bits in random packets
  */
 
@@ -101,17 +188,16 @@ uint32_t basic_packet_fuzzer(fuzzer_ctx_t* ctx, uint64_t fuzz_pilot,
     uint32_t fuzz_index = 0;
     uint64_t initial_fuzz_pilot = fuzz_pilot; /* Save for independent fuzz actions */
 
-    /* 1. Enhance basic_packet_fuzzer for Short Header Reserved Bits */
-    if (length > 0 && (bytes[0] & 0x80) == 0) { /* is_short_header */
-        if ((initial_fuzz_pilot & 0x07) == 0) { /* 1-in-8 chance */
-            if ((initial_fuzz_pilot >> 3) & 1) {
-                bytes[0] ^= 0x20; /* Flip bit 5 (second reserved bit) */
-            } else {
-                bytes[0] ^= 0x10; /* Flip bit 4 (first reserved bit) */
-            }
-        }
+    /* Fuzz packet header bits with a certain probability */
+    if (length > 0 && (initial_fuzz_pilot & 0xFF) < 32) { /* Roughly 12.5% chance (32/256) */
+        fuzz_packet_header_bits(&bytes[0], header_length, initial_fuzz_pilot >> 8);
+        ctx->nb_header_fuzzed++;
     }
-    /* Continue with original fuzz_pilot for the main fuzzing logic */
+    /* Continue with original fuzz_pilot for the main payload fuzzing logic,
+     * but shift it to ensure different fuzzing actions than header.
+     */
+    fuzz_pilot = initial_fuzz_pilot >> 16;
+
 
     /* Once in 64, fuzz by changing the length */
     if ((fuzz_pilot & 0x3F) == 0xD) {
