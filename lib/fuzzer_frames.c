@@ -2846,6 +2846,46 @@ static uint8_t test_frame_ncid_cid_len_min[] = {
         n, x, sizeof(x),     \
     }
 
+/* Test Case: RETIRE_CONNECTION_ID with Sequence Number encoded non-canonically (value 1 as 2 bytes). */
+/* Expected: Peer should process normally. (RFC 16) */
+static uint8_t test_frame_retire_cid_seq_non_canon[] = {
+    0x19,       /* Type: RETIRE_CONNECTION_ID */
+    0x40, 0x01  /* Sequence Number: 1 (2-byte varint) */
+};
+
+/* Test Case: CONNECTION_CLOSE (transport error) with a reserved error code. */
+/* Error Code 0x100 (QUIC_TLS_HANDSHAKE_FAILED) -> varint 0x4100. Frame Type PADDING (0x00). Empty reason. */
+static uint8_t test_frame_conn_close_reserved_err[] = {
+    picoquic_frame_type_connection_close, /* Type 0x1c */
+    0x41, 0x00, /* Error Code: 0x100 (varint) */
+    0x00,       /* Frame Type: PADDING */
+    0x00        /* Reason Phrase Length: 0 */
+};
+
+/* Test Case: CONNECTION_CLOSE (transport error) with Frame Type encoded non-canonically. */
+/* Error Code 0. Frame Type STREAM (0x08) as 2-byte varint (0x40, 0x08). Empty reason. */
+static uint8_t test_frame_conn_close_ft_non_canon[] = {
+    picoquic_frame_type_connection_close, /* Type 0x1c */
+    0x00,       /* Error Code: 0 */
+    0x40, 0x08, /* Frame Type: STREAM (0x08) as 2-byte varint */
+    0x00        /* Reason Phrase Length: 0 */
+};
+
+/* Test Case: CONNECTION_CLOSE (application error) with Reason Phrase Length non-canonically encoded. */
+/* Error Code 0. Reason Phrase Length 5 as 2-byte varint (0x40, 0x05). Reason "test!". */
+static uint8_t test_frame_conn_close_app_rlen_non_canon[] = {
+    picoquic_frame_type_application_close, /* Type 0x1d */
+    0x00,       /* Error Code: 0 */
+    0x40, 0x05, /* Reason Phrase Length: 5 (2-byte varint) */
+    't', 'e', 's', 't', '!'
+};
+
+/* Test Case: HANDSHAKE_DONE with Frame Type encoded non-canonically. */
+/* Frame Type HANDSHAKE_DONE (0x1e) as 2-byte varint (0x40, 0x1e). */
+static uint8_t test_frame_hsd_type_non_canon[] = {
+    0x40, 0x1e  /* Frame Type: HANDSHAKE_DONE (0x1e) as 2-byte varint */
+};
+
 fuzi_q_frames_t fuzi_q_frame_list[] = {
     FUZI_Q_ITEM("padding", test_frame_type_padding),
     FUZI_Q_ITEM("padding_2_bytes", test_frame_padding_2_bytes),
@@ -3179,46 +3219,6 @@ fuzi_q_frames_t fuzi_q_frame_list[] = {
     FUZI_Q_ITEM("ack_cross_pns_low_pkns", test_frame_ack_cross_pns_low_pkns),
     FUZI_Q_ITEM("new_cid_to_zero_len_peer", test_frame_new_cid_to_zero_len_peer),
     FUZI_Q_ITEM("retire_cid_to_zero_len_provider", test_frame_retire_cid_to_zero_len_provider),
-
-/* Test Case: RETIRE_CONNECTION_ID with Sequence Number encoded non-canonically (value 1 as 2 bytes). */
-/* Expected: Peer should process normally. (RFC 16) */
-static uint8_t test_frame_retire_cid_seq_non_canon[] = {
-    0x19,       /* Type: RETIRE_CONNECTION_ID */
-    0x40, 0x01  /* Sequence Number: 1 (2-byte varint) */
-};
-
-/* Test Case: CONNECTION_CLOSE (transport error) with a reserved error code. */
-/* Error Code 0x100 (QUIC_TLS_HANDSHAKE_FAILED) -> varint 0x4100. Frame Type PADDING (0x00). Empty reason. */
-static uint8_t test_frame_conn_close_reserved_err[] = {
-    picoquic_frame_type_connection_close, /* Type 0x1c */
-    0x41, 0x00, /* Error Code: 0x100 (varint) */
-    0x00,       /* Frame Type: PADDING */
-    0x00        /* Reason Phrase Length: 0 */
-};
-
-/* Test Case: CONNECTION_CLOSE (transport error) with Frame Type encoded non-canonically. */
-/* Error Code 0. Frame Type STREAM (0x08) as 2-byte varint (0x40, 0x08). Empty reason. */
-static uint8_t test_frame_conn_close_ft_non_canon[] = {
-    picoquic_frame_type_connection_close, /* Type 0x1c */
-    0x00,       /* Error Code: 0 */
-    0x40, 0x08, /* Frame Type: STREAM (0x08) as 2-byte varint */
-    0x00        /* Reason Phrase Length: 0 */
-};
-
-/* Test Case: CONNECTION_CLOSE (application error) with Reason Phrase Length non-canonically encoded. */
-/* Error Code 0. Reason Phrase Length 5 as 2-byte varint (0x40, 0x05). Reason "test!". */
-static uint8_t test_frame_conn_close_app_rlen_non_canon[] = {
-    picoquic_frame_type_application_close, /* Type 0x1d */
-    0x00,       /* Error Code: 0 */
-    0x40, 0x05, /* Reason Phrase Length: 5 (2-byte varint) */
-    't', 'e', 's', 't', '!'
-};
-
-/* Test Case: HANDSHAKE_DONE with Frame Type encoded non-canonically. */
-/* Frame Type HANDSHAKE_DONE (0x1e) as 2-byte varint (0x40, 0x1e). */
-static uint8_t test_frame_hsd_type_non_canon[] = {
-    0x40, 0x1e  /* Frame Type: HANDSHAKE_DONE (0x1e) as 2-byte varint */
-};
 
     /* --- Adding More Variations (Systematic Review Part 1) --- */
     /* RESET_STREAM Non-Canonical Varints */
