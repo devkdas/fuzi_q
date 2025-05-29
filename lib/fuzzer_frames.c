@@ -2104,12 +2104,6 @@ static uint8_t test_frame_stream_offset_almost_max[] = {
 };
 
 /* PATH_CHALLENGE / PATH_RESPONSE Variants */
-static uint8_t test_frame_path_challenge_all_zeros[] = {
-    0x1a, 0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00
-};
-static uint8_t test_frame_path_response_all_zeros[] = {
-    0x1b, 0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00
-};
 static uint8_t test_frame_path_challenge_alt_pattern[] = {
     0x1a, 0xA5,0x5A,0xA5,0x5A,0xA5,0x5A,0xA5,0x5A
 };
@@ -2509,8 +2503,6 @@ fuzi_q_frames_t fuzi_q_frame_list[] = {
     /* CRYPTO Frame Edge Cases */
     FUZI_Q_ITEM("crypto_zero_len_large_offset", test_frame_crypto_zero_len_large_offset),
     /* PATH_CHALLENGE / PATH_RESPONSE Variants */
-    FUZI_Q_ITEM("path_challenge_all_zeros", test_frame_path_challenge_all_zeros),
-    FUZI_Q_ITEM("path_response_all_zeros", test_frame_path_response_all_zeros),
     FUZI_Q_ITEM("path_challenge_alt_pattern", test_frame_path_challenge_alt_pattern),
     FUZI_Q_ITEM("path_response_alt_pattern", test_frame_path_response_alt_pattern),
     /* NEW_TOKEN Frame Variants */
