@@ -1729,7 +1729,6 @@ void default_frame_fuzzer(uint64_t fuzz_pilot, uint8_t* bytes, uint8_t* bytes_ma
 
 void max_data_fuzzer(uint64_t fuzz_pilot, uint8_t* frame_start, uint8_t* frame_max, fuzzer_ctx_t* f_ctx, fuzzer_icid_ctx_t* icid_ctx)
 {
-{
     uint8_t* p_val = frame_start + 1; // Skip frame type
     if (p_val >= frame_max) { // Check if there's space for at least one byte for the varint
         default_frame_fuzzer(fuzz_pilot, frame_start, frame_max);
