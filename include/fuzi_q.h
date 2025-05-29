@@ -105,6 +105,7 @@ typedef struct st_fuzzer_ctx_t {
     uint32_t nb_packets;
     uint32_t nb_fuzzed;
     uint32_t nb_fuzzed_length;
+    uint32_t nb_header_fuzzed;
 } fuzzer_ctx_t;
 
 fuzzer_icid_ctx_t* fuzzer_get_icid_ctx(fuzzer_ctx_t* ctx, picoquic_connection_id_t* icid, uint64_t current_time);
