@@ -2103,6 +2103,52 @@ static uint8_t test_frame_stream_offset_almost_max[] = {
     'm', 'a', 'x', 'O'
 };
 
+/* PATH_CHALLENGE / PATH_RESPONSE Variants */
+static uint8_t test_frame_path_challenge_all_zeros[] = {
+    0x1a, 0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00
+};
+static uint8_t test_frame_path_response_all_zeros[] = {
+    0x1b, 0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00
+};
+static uint8_t test_frame_path_challenge_alt_pattern[] = {
+    0x1a, 0xA5,0x5A,0xA5,0x5A,0xA5,0x5A,0xA5,0x5A
+};
+static uint8_t test_frame_path_response_alt_pattern[] = {
+    0x1b, 0x5A,0xA5,0x5A,0xA5,0x5A,0xA5,0x5A,0xA5
+};
+
+/* NEW_TOKEN Frame Variants */
+static uint8_t test_frame_new_token_max_plausible_len[3 + 256] = {
+    0x07, 0x41, 0x00, /* Token Length 256 */
+    /* Followed by 256 bytes of 0xAA */
+};
+static uint8_t test_frame_new_token_min_len[] = {
+    0x07, 0x01, 0xBB
+};
+
+/* CONNECTION_CLOSE Frame Variants */
+static uint8_t test_frame_connection_close_max_reason_len[5 + 1000] = {
+    0x1c, 0x00, 0x00, 0x43, 0xE8, /* Error Code 0, Frame Type 0, Reason Length 1000 */
+    /* Followed by 1000 bytes of 'A' (0x41) */
+};
+static uint8_t test_frame_connection_close_app_max_reason_len[4 + 1000] = {
+    0x1d, 0x00, 0x43, 0xE8, /* Error Code 0, Reason Length 1000 */
+    /* Followed by 1000 bytes of 'B' (0x42) */
+};
+
+/* RETIRE_CONNECTION_ID Variants */
+static uint8_t test_frame_retire_cid_high_seq[] = {
+    0x19, 0x80, 0x3B, 0x9A, 0xCA, 0x00 /* Sequence Number 1,000,000,000 */
+};
+
+/* MAX_STREAMS Variants (Absolute Max) */
+static uint8_t test_frame_max_streams_bidi_abs_max[] = {
+    0x12, 0xC0,0x00,0x00,0x00,0x10,0x00,0x00,0x00 /* Max Streams 2^60 */
+};
+static uint8_t test_frame_max_streams_uni_abs_max[] = {
+    0x13, 0xC0,0x00,0x00,0x00,0x10,0x00,0x00,0x00 /* Max Streams 2^60 */
+};
+
 /* Additional STREAM Frame Variants */
 static uint8_t test_frame_stream_off_len_fin_empty[] = {
     0x0F,       /* Type: STREAM, OFF, LEN, FIN bits */
@@ -2461,7 +2507,23 @@ fuzi_q_frames_t fuzi_q_frame_list[] = {
     FUZI_Q_ITEM("streams_blocked_bidi_max_varint_limit", test_frame_streams_blocked_bidi_max_varint_limit),
     FUZI_Q_ITEM("streams_blocked_uni_max_varint_limit", test_frame_streams_blocked_uni_max_varint_limit),
     /* CRYPTO Frame Edge Cases */
-    FUZI_Q_ITEM("crypto_zero_len_large_offset", test_frame_crypto_zero_len_large_offset)
+    FUZI_Q_ITEM("crypto_zero_len_large_offset", test_frame_crypto_zero_len_large_offset),
+    /* PATH_CHALLENGE / PATH_RESPONSE Variants */
+    FUZI_Q_ITEM("path_challenge_all_zeros", test_frame_path_challenge_all_zeros),
+    FUZI_Q_ITEM("path_response_all_zeros", test_frame_path_response_all_zeros),
+    FUZI_Q_ITEM("path_challenge_alt_pattern", test_frame_path_challenge_alt_pattern),
+    FUZI_Q_ITEM("path_response_alt_pattern", test_frame_path_response_alt_pattern),
+    /* NEW_TOKEN Frame Variants */
+    FUZI_Q_ITEM("new_token_max_plausible_len", test_frame_new_token_max_plausible_len),
+    FUZI_Q_ITEM("new_token_min_len", test_frame_new_token_min_len),
+    /* CONNECTION_CLOSE Frame Variants */
+    FUZI_Q_ITEM("connection_close_max_reason_len", test_frame_connection_close_max_reason_len),
+    FUZI_Q_ITEM("connection_close_app_max_reason_len", test_frame_connection_close_app_max_reason_len),
+    /* RETIRE_CONNECTION_ID Variants */
+    FUZI_Q_ITEM("retire_cid_high_seq", test_frame_retire_cid_high_seq),
+    /* MAX_STREAMS Variants (Absolute Max) */
+    FUZI_Q_ITEM("max_streams_bidi_abs_max", test_frame_max_streams_bidi_abs_max),
+    FUZI_Q_ITEM("max_streams_uni_abs_max", test_frame_max_streams_uni_abs_max)
 };
 
 size_t nb_fuzi_q_frame_list = sizeof(fuzi_q_frame_list) / sizeof(fuzi_q_frames_t);
