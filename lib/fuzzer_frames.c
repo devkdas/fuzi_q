@@ -2467,6 +2467,135 @@ static uint8_t test_frame_ack_ecn_non_minimal_ect0[] = {
     0x00                         /* ECN-CE Count: 0 */
 };
 
+/* Test Case: STREAM from Client on a server-initiated bidirectional Stream ID (e.g., 1). */
+/* Expected: Server treats as STREAM_STATE_ERROR. (RFC 3.2, 19.8) */
+static uint8_t test_stream_client_sends_server_bidi_stream[] = {
+    0x0F,       /* Type: All bits (OFF,LEN,FIN) set for generic data */
+    0x01,       /* Stream ID: 1 (Server-initiated bidi) */
+    0x00,       /* Offset: 0 */
+    0x04,       /* Length: 4 */
+    't','e','s','t'
+};
+
+/* Test Case: STREAM from Client on a server-initiated unidirectional Stream ID (e.g., 3). */
+/* Expected: Server treats as STREAM_STATE_ERROR. (RFC 3.2, 19.8) */
+static uint8_t test_stream_client_sends_server_uni_stream[] = {
+    0x0F,       /* Type: All bits set */
+    0x03,       /* Stream ID: 3 (Server-initiated uni) */
+    0x00,       /* Offset: 0 */
+    0x04,       /* Length: 4 */
+    't','e','s','t'
+};
+
+/* Test Case: STREAM from Server on a client-initiated bidirectional Stream ID (e.g., 0). */
+/* Expected: Client treats as STREAM_STATE_ERROR. (RFC 3.2, 19.8) */
+static uint8_t test_stream_server_sends_client_bidi_stream[] = {
+    0x0F,       /* Type: All bits set */
+    0x00,       /* Stream ID: 0 (Client-initiated bidi) */
+    0x00,       /* Offset: 0 */
+    0x04,       /* Length: 4 */
+    't','e','s','t'
+};
+
+/* Test Case: STREAM from Server on a client-initiated unidirectional Stream ID (e.g., 2). */
+/* Expected: Client treats as STREAM_STATE_ERROR. (RFC 3.2, 19.8) */
+static uint8_t test_stream_server_sends_client_uni_stream[] = {
+    0x0F,       /* Type: All bits set */
+    0x02,       /* Stream ID: 2 (Client-initiated uni) */
+    0x00,       /* Offset: 0 */
+    0x04,       /* Length: 4 */
+    't','e','s','t'
+};
+
+/* Test Case: STREAM with LEN=1, Length field = 0, but data is present. */
+/* Expected: Parser should take Length field; trailing data might be another frame or error. (RFC 19.8) */
+static uint8_t test_stream_explicit_len_zero_with_data[] = {
+    0x0A,       /* Type: OFF=0, LEN=1, FIN=0 */
+    0x01,       /* Stream ID: 1 */
+    0x00,       /* Length: 0 */
+    'd','a','t','a' /* This data should ideally be parsed as a separate frame or cause error */
+};
+
+/* Test Case: STREAM with only FIN bit set (Type 0x09), no data, implicit length, zero offset. */
+/* Expected: Valid empty stream with FIN. (RFC 19.8) */
+static uint8_t test_stream_fin_only_implicit_len_zero_offset[] = {
+    0x09,       /* Type: OFF=0, LEN=0, FIN=1 */
+    0x04        /* Stream ID: 4 */
+    /* Data implicitly to end of packet, which is 0 here if this is the only frame. */
+};
+
+/* Test Case: STREAM with FIN=1, LEN=1, Length field = 0, but trailing data present. */
+/* Expected: Stream ends at offset + 0. Trailing data is next frame or error. (RFC 19.8) */
+static uint8_t test_stream_fin_len_zero_with_trailing_data[] = {
+    0x0B,        /* Type: OFF=0, LEN=1, FIN=1 */
+    0x01,        /* Stream ID: 1 */
+    0x00,        /* Length: 0 */
+    0x01         /* A PING frame as trailing data, for example */
+};
+
+/* Test Case: MAX_DATA with value 10 encoded non-canonically as 8-byte varint. */
+/* Expected: Peer should process normally. (RFC 16) */
+static uint8_t test_frame_max_data_long_varint_8byte_small[] = {
+    picoquic_frame_type_max_data, /* Type 0x10 */
+    0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x0A /* Maximum Data: 10 (8-byte varint) */
+};
+
+/* MAX_STREAM_DATA Variations */
+/* Test Case: MAX_STREAM_DATA with Stream ID 0 and a non-zero Max Data value. */
+/* Expected: Peer should process normally (Stream 0 is a valid bidi stream). (RFC 19.10) */
+static uint8_t test_frame_max_stream_data_id_zero_val_set[] = {
+    picoquic_frame_type_max_stream_data, /* Type 0x11 */
+    0x00,                                /* Stream ID: 0 */
+    0x41, 0x00                           /* Maximum Stream Data: 256 */
+};
+
+/* Test Case: MAX_STREAM_DATA with Stream ID encoded non-canonically (value 1 as 2 bytes). */
+/* Expected: Peer should process normally. (RFC 16) */
+static uint8_t test_frame_max_stream_data_sid_non_canon[] = {
+    picoquic_frame_type_max_stream_data, /* Type 0x11 */
+    0x40, 0x01,                          /* Stream ID: 1 (2-byte varint) */
+    0x41, 0x00                           /* Maximum Stream Data: 256 */
+};
+
+/* Test Case: MAX_STREAM_DATA with Max Stream Data encoded non-canonically (value 10 as 2 bytes). */
+/* Expected: Peer should process normally. (RFC 16) */
+static uint8_t test_frame_max_stream_data_val_non_canon[] = {
+    picoquic_frame_type_max_stream_data, /* Type 0x11 */
+    0x01,                                /* Stream ID: 1 */
+    0x40, 0x0A                           /* Maximum Stream Data: 10 (2-byte varint) */
+};
+
+
+/* MAX_STREAMS Variations */
+/* Test Case: MAX_STREAMS (bidirectional) with Maximum Streams = 2^50 (large valid value). */
+/* Expected: Peer should process normally. (RFC 19.11) */
+static uint8_t test_frame_max_streams_bidi_val_2_pow_50[] = {
+    picoquic_frame_type_max_streams_bidir, /* Type 0x12 */
+    0xC0, 0x00, 0x00, 0x04, 0x00, 0x00, 0x00, 0x00 /* Max Streams: 2^50 */
+};
+
+/* Test Case: MAX_STREAMS (bidirectional) with small value 5 encoded non-canonically as 8-byte varint. */
+/* Expected: Peer should process normally. (RFC 16) */
+static uint8_t test_frame_max_streams_bidi_small_non_canon8[] = {
+    picoquic_frame_type_max_streams_bidir, /* Type 0x12 */
+    0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x05 /* Maximum Streams: 5 (8-byte varint) */
+};
+
+/* DATA_BLOCKED Variations */
+/* Test Case: DATA_BLOCKED with Maximum Data encoded non-canonically (value 10 as 2 bytes). */
+/* Expected: Peer should process normally. (RFC 16) */
+static uint8_t test_frame_data_blocked_non_canon2[] = {
+    picoquic_frame_type_data_blocked, /* Type 0x14 */
+    0x40, 0x0A                        /* Maximum Data: 10 (2-byte varint) */
+};
+
+/* Test Case: DATA_BLOCKED with Maximum Data encoded non-canonically (value 10 as 4 bytes). */
+/* Expected: Peer should process normally. (RFC 16) */
+static uint8_t test_frame_data_blocked_non_canon4[] = {
+    picoquic_frame_type_data_blocked, /* Type 0x14 */
+    0x80, 0x00, 0x00, 0x0A            /* Maximum Data: 10 (4-byte varint) */
+};
+
 #define FUZI_Q_ITEM(n, x) \
     {                        \
         n, x, sizeof(x),     \
@@ -2825,7 +2954,30 @@ fuzi_q_frames_t fuzi_q_frame_list[] = {
     FUZI_Q_ITEM("ack_range_count_zero_first_range_set", test_frame_ack_range_count_zero_first_range_set),
     FUZI_Q_ITEM("ack_delay_potentially_large_calc", test_frame_ack_delay_potentially_large_calc),
     FUZI_Q_ITEM("ack_largest_zero_first_zero", test_frame_ack_largest_zero_first_zero),
-    FUZI_Q_ITEM("ack_ecn_non_minimal_ect0", test_frame_ack_ecn_non_minimal_ect0)
+    FUZI_Q_ITEM("ack_ecn_non_minimal_ect0", test_frame_ack_ecn_non_minimal_ect0),
+
+    /* --- Adding More Variations (Systematic Review Part 2 - STREAM & MAX_DATA) --- */
+    /* STREAM Contextual Violations (require fuzzer logic for role-specific injection) */
+    FUZI_Q_ITEM("stream_client_sends_server_bidi", test_stream_client_sends_server_bidi_stream),
+    FUZI_Q_ITEM("stream_client_sends_server_uni", test_stream_client_sends_server_uni_stream),
+    FUZI_Q_ITEM("stream_server_sends_client_bidi", test_stream_server_sends_client_bidi_stream),
+    FUZI_Q_ITEM("stream_server_sends_client_uni", test_stream_server_sends_client_uni_stream),
+    /* STREAM Edge Cases */
+    FUZI_Q_ITEM("stream_explicit_len_zero_with_data", test_stream_explicit_len_zero_with_data),
+    FUZI_Q_ITEM("stream_fin_only_implicit_len_zero_offset", test_stream_fin_only_implicit_len_zero_offset),
+    FUZI_Q_ITEM("stream_fin_len_zero_with_trailing_data", test_stream_fin_len_zero_with_trailing_data),
+    /* MAX_DATA Non-Canonical Varint */
+    FUZI_Q_ITEM("max_data_long_varint_8byte_small", test_frame_max_data_long_varint_8byte_small),
+    /* MAX_STREAM_DATA Variations */
+    FUZI_Q_ITEM("max_stream_data_id_zero_val_set", test_frame_max_stream_data_id_zero_val_set),
+    FUZI_Q_ITEM("max_stream_data_sid_non_canon", test_frame_max_stream_data_sid_non_canon),
+    FUZI_Q_ITEM("max_stream_data_val_non_canon", test_frame_max_stream_data_val_non_canon),
+    /* MAX_STREAMS Variations */
+    FUZI_Q_ITEM("max_streams_bidi_val_2_pow_50", test_frame_max_streams_bidi_val_2_pow_50),
+    FUZI_Q_ITEM("max_streams_bidi_small_non_canon8", test_frame_max_streams_bidi_small_non_canon8),
+    /* DATA_BLOCKED Non-Canonical Varints */
+    FUZI_Q_ITEM("data_blocked_non_canon2", test_frame_data_blocked_non_canon2),
+    FUZI_Q_ITEM("data_blocked_non_canon4", test_frame_data_blocked_non_canon4)
 };
 
 size_t nb_fuzi_q_frame_list = sizeof(fuzi_q_frame_list) / sizeof(fuzi_q_frames_t);
