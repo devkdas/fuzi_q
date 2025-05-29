@@ -3131,12 +3131,6 @@ static uint8_t test_frame_hsd_type_non_canon[] = {
     FUZI_Q_ITEM("conn_close_app_rlen_non_canon", test_frame_conn_close_app_rlen_non_canon),
     /* HANDSHAKE_DONE Variations */
     FUZI_Q_ITEM("hsd_type_non_canon", test_frame_hsd_type_non_canon),
-    /* Newly added frames for non-canonical encodings (Task D20231116_154018) */
-    FUZI_Q_ITEM("retire_cid_seq_non_canon_new", test_frame_retire_cid_seq_non_canon), /* Name adjusted to avoid conflict if already present elsewhere */
-    FUZI_Q_ITEM("conn_close_reserved_err_new", test_frame_conn_close_reserved_err),
-    FUZI_Q_ITEM("conn_close_ft_non_canon_new", test_frame_conn_close_ft_non_canon),
-    FUZI_Q_ITEM("conn_close_app_rlen_non_canon_new", test_frame_conn_close_app_rlen_non_canon),
-    FUZI_Q_ITEM("hsd_type_non_canon_new", test_frame_hsd_type_non_canon)
 };
 
 size_t nb_fuzi_q_frame_list = sizeof(fuzi_q_frame_list) / sizeof(fuzi_q_frames_t);
