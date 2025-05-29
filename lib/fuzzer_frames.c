@@ -2311,6 +2311,38 @@ static uint8_t test_client_sends_max_stream_data_for_client_uni_stream[] = {
     0x41, 0x00                           /* Max Stream Data: 256 */
 };
 
+/* Test Case: ACK frame in 1-RTT space acknowledging packet numbers typical of Initial/Handshake space. */
+/* Expected: Peer should ignore these ACK ranges as they don't pertain to 1-RTT packets. */
+/* (Indirect test for RFC 19.3, 12.5 PNS isolation for ACKs) */
+static uint8_t test_frame_ack_cross_pns_low_pkns[] = {
+    picoquic_frame_type_ack, /* Type 0x02 */
+    0x02,                   /* Largest Acknowledged: 2 */
+    0x00,                   /* ACK Delay: 0 */
+    0x01,                   /* ACK Range Count: 1 */
+    0x02                    /* First ACK Range: 2 (acks packets 0, 1, 2) */
+};
+
+/* Test Case: NEW_CONNECTION_ID frame. */
+/* Context: To be sent to a peer that is configured to use/expect zero-length CIDs. */
+/* Expected: Peer treats as PROTOCOL_VIOLATION (RFC 19.15). */
+static uint8_t test_frame_new_cid_to_zero_len_peer[] = {
+    picoquic_frame_type_new_connection_id, /* Type 0x18 */
+    0x05,                                  /* Sequence Number: 5 */
+    0x01,                                  /* Retire Prior To: 1 */
+    0x08,                                  /* Length: 8 */
+    0xAA,0xBB,0xCC,0xDD,0xEE,0xFF,0x00,0x11, /* Connection ID */
+    0x11,0x22,0x33,0x44,0x55,0x66,0x77,0x88, /* Stateless Reset Token */
+    0x99,0xAA,0xBB,0xCC,0xDD,0xEE,0xFF,0x00
+};
+
+/* Test Case: RETIRE_CONNECTION_ID frame. */
+/* Context: To be sent to a peer that has provided a zero-length source CID. */
+/* Expected: Peer treats as PROTOCOL_VIOLATION (RFC 19.16). */
+static uint8_t test_frame_retire_cid_to_zero_len_provider[] = {
+    picoquic_frame_type_retire_connection_id, /* Type 0x19 */
+    0x01                                      /* Sequence Number: 1 (to retire) */
+};
+
 #define FUZI_Q_ITEM(n, x) \
     {                        \
         n, x, sizeof(x),     \
@@ -2644,7 +2676,11 @@ fuzi_q_frames_t fuzi_q_frame_list[] = {
     FUZI_Q_ITEM("max_streams_uni_just_over_limit", test_frame_max_streams_uni_just_over_limit),
     FUZI_Q_ITEM("client_sends_stop_sending_for_server_uni_stream", test_client_sends_stop_sending_for_server_uni_stream),
     FUZI_Q_ITEM("server_sends_stop_sending_for_client_uni_stream", test_server_sends_stop_sending_for_client_uni_stream),
-    FUZI_Q_ITEM("client_sends_max_stream_data_for_client_uni_stream", test_client_sends_max_stream_data_for_client_uni_stream)
+    FUZI_Q_ITEM("client_sends_max_stream_data_for_client_uni_stream", test_client_sends_max_stream_data_for_client_uni_stream),
+    /* Newly added medium priority test cases */
+    FUZI_Q_ITEM("ack_cross_pns_low_pkns", test_frame_ack_cross_pns_low_pkns),
+    FUZI_Q_ITEM("new_cid_to_zero_len_peer", test_frame_new_cid_to_zero_len_peer),
+    FUZI_Q_ITEM("retire_cid_to_zero_len_provider", test_frame_retire_cid_to_zero_len_provider)
 };
 
 size_t nb_fuzi_q_frame_list = sizeof(fuzi_q_frame_list) / sizeof(fuzi_q_frames_t);
