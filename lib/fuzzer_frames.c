@@ -3080,7 +3080,17 @@ fuzi_q_frames_t fuzi_q_frame_list[] = {
     /* NEW_CONNECTION_ID Variations */
     FUZI_Q_ITEM("ncid_seq_non_canon", test_frame_ncid_seq_non_canon),
     FUZI_Q_ITEM("ncid_ret_non_canon", test_frame_ncid_ret_non_canon),
-    FUZI_Q_ITEM("ncid_cid_len_min", test_frame_ncid_cid_len_min)
+    FUZI_Q_ITEM("ncid_cid_len_min", test_frame_ncid_cid_len_min),
+
+    /* --- Adding More Variations (Systematic Review Part 4 - RCID, CC, HSD) --- */
+    /* RETIRE_CONNECTION_ID Variations */
+    FUZI_Q_ITEM("retire_cid_seq_non_canon", test_frame_retire_cid_seq_non_canon),
+    /* CONNECTION_CLOSE Variations */
+    FUZI_Q_ITEM("conn_close_reserved_err", test_frame_conn_close_reserved_err),
+    FUZI_Q_ITEM("conn_close_ft_non_canon", test_frame_conn_close_ft_non_canon),
+    FUZI_Q_ITEM("conn_close_app_rlen_non_canon", test_frame_conn_close_app_rlen_non_canon),
+    /* HANDSHAKE_DONE Variations */
+    FUZI_Q_ITEM("hsd_type_non_canon", test_frame_hsd_type_non_canon)
 };
 
 size_t nb_fuzi_q_frame_list = sizeof(fuzi_q_frame_list) / sizeof(fuzi_q_frames_t);
