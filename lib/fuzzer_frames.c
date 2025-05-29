@@ -3131,6 +3131,19 @@ static uint8_t test_frame_hsd_type_non_canon[] = {
     FUZI_Q_ITEM("conn_close_app_rlen_non_canon", test_frame_conn_close_app_rlen_non_canon),
     /* HANDSHAKE_DONE Variations */
     FUZI_Q_ITEM("hsd_type_non_canon", test_frame_hsd_type_non_canon),
+    /* Newly added frames for non-canonical encodings (Task D20231116_154018) */
+    FUZI_Q_ITEM("retire_cid_seq_non_canon_new", test_frame_retire_cid_seq_non_canon), /* Name adjusted to avoid conflict if already present elsewhere */
+    FUZI_Q_ITEM("conn_close_reserved_err_new", test_frame_conn_close_reserved_err),
+    FUZI_Q_ITEM("conn_close_ft_non_canon_new", test_frame_conn_close_ft_non_canon),
+    FUZI_Q_ITEM("conn_close_app_rlen_non_canon_new", test_frame_conn_close_app_rlen_non_canon),
+    FUZI_Q_ITEM("hsd_type_non_canon_new", test_frame_hsd_type_non_canon),
+    /* Newly added test frames (Task D20231116_160216) */
+    FUZI_Q_ITEM("ack_invalid_gap", test_frame_ack_invalid_gap),
+    FUZI_Q_ITEM("stream_len_decl_short_actual_long", test_frame_stream_len_decl_short_actual_long),
+    FUZI_Q_ITEM("stream_len_decl_long_actual_short", test_frame_stream_len_decl_long_actual_short),
+    FUZI_Q_ITEM("ncid_retire_current_dcid", test_frame_ncid_retire_current_dcid),
+    FUZI_Q_ITEM("conn_close_transport_unknown_frame_type", test_frame_conn_close_transport_unknown_frame_type),
+    FUZI_Q_ITEM("stream_type_very_long_encoding", test_frame_stream_type_very_long_encoding)
 };
 
 size_t nb_fuzi_q_frame_list = sizeof(fuzi_q_frame_list) / sizeof(fuzi_q_frames_t);
