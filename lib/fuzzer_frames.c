@@ -2014,6 +2014,26 @@ static uint8_t test_frame_datagram_zero_len_with_data[] = {
     'a', 'c', 't', 'u', 'a', 'l', 'd', 'a', 't', 'a', 'g', 'r', 'a', 'm', 'd', 'a', 't', 'a'
 };
 
+/* DATAGRAM frame with LEN bit set, Length is 0, and no data. */
+static uint8_t test_frame_datagram_with_len_empty[] = {
+    0x31, /* Type: DATAGRAM, LEN=1 */
+    0x00  /* Length: 0 */
+};
+
+/* DATAGRAM frame with LEN bit set, Length is 4 encoded non-canonically as 2 bytes. */
+static uint8_t test_frame_datagram_len_non_canon[] = {
+    0x31,       /* Type: DATAGRAM, LEN=1 */
+    0x40, 0x04, /* Length: 4 (2-byte varint) */
+    0x64, 0x61, 0x74, 0x61 /* Data: "data" */
+};
+
+/* DATAGRAM frame with LEN bit set, moderately large length, and sample data. */
+static uint8_t test_frame_datagram_very_large[] = {
+    0x31,       /* Type: DATAGRAM, LEN=1 */
+    0x40, 0xFA, /* Length: 250 (varint) */
+    'l', 'a', 'r', 'g', 'e', '_', 'd', 'a', 't', 'a', 'g', 'r', 'a', 'm', '_', 't', 'e', 's', 't', '_', 'd', 'a', 't', 'a'
+};
+
 /* Non-Canonical Variable-Length Integers */
 static uint8_t test_frame_stream_long_varint_stream_id_2byte[] = {
     0x08,       /* Type: STREAM */
@@ -3143,7 +3163,11 @@ static uint8_t test_frame_hsd_type_non_canon[] = {
     FUZI_Q_ITEM("stream_len_decl_long_actual_short", test_frame_stream_len_decl_long_actual_short),
     FUZI_Q_ITEM("ncid_retire_current_dcid", test_frame_ncid_retire_current_dcid),
     FUZI_Q_ITEM("conn_close_transport_unknown_frame_type", test_frame_conn_close_transport_unknown_frame_type),
-    FUZI_Q_ITEM("stream_type_very_long_encoding", test_frame_stream_type_very_long_encoding)
+    FUZI_Q_ITEM("stream_type_very_long_encoding", test_frame_stream_type_very_long_encoding),
+    /* Newly added DATAGRAM test frames (Task D20231121_101010) */
+    FUZI_Q_ITEM("datagram_with_len_empty", test_frame_datagram_with_len_empty),
+    FUZI_Q_ITEM("datagram_len_non_canon", test_frame_datagram_len_non_canon),
+    FUZI_Q_ITEM("datagram_very_large", test_frame_datagram_very_large)
 };
 
 size_t nb_fuzi_q_frame_list = sizeof(fuzi_q_frame_list) / sizeof(fuzi_q_frames_t);
