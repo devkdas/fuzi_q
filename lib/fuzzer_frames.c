@@ -34,6 +34,31 @@
 
 static uint8_t test_frame_type_padding[] = { 0, 0, 0 };
 
+static uint8_t test_frame_type_padding_zero_byte[] = { 0x00 };
+
+static uint8_t test_frame_type_padding_large[] = {
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* 10 */
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* 20 */
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* 30 */
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* 40 */
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* 50 */
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* 60 */
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* 70 */
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* 80 */
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* 90 */
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* 100 */
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* 110 */
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* 120 */
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* 130 */
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* 140 */
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* 150 */
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* 160 */
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* 170 */
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* 180 */
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* 190 */
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00  /* 200 */
+};
+
 static uint8_t test_frame_type_padding_5_bytes[] = { 0, 0, 0, 0, 0 };
 
 static uint8_t test_frame_type_padding_7_bytes[] = { 0, 0, 0, 0, 0, 0, 0 };
@@ -190,6 +215,20 @@ static uint8_t test_frame_reset_stream_all_large[] = {
     0xBF, 0xFF, 0xFF, 0xFF  /* Final Size: 1073741823 (0x3FFFFFFF) */
 };
 
+static uint8_t test_frame_reset_stream_error_code_max[] = {
+    picoquic_frame_type_reset_stream,
+    0x01, /* Stream ID */
+    0xBF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, /* Error Code: (1ULL << 62) - 1 */
+    0x00 /* Final Size */
+};
+
+static uint8_t test_frame_reset_stream_final_size_max_new[] = {
+    picoquic_frame_type_reset_stream,
+    0x01, /* Stream ID */
+    0x00, /* Error Code */
+    0xBF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF /* Final Size: (1ULL << 62) - 1 */
+};
+
 
 static uint8_t test_type_connection_close[] = {
     picoquic_frame_type_connection_close,
@@ -239,6 +278,10 @@ static uint8_t test_frame_type_max_data_large[] = {
 
 static uint8_t test_frame_max_data_zero[] = {
     picoquic_frame_type_max_data, 0x00
+};
+
+static uint8_t test_frame_max_data_small_value[] = {
+    picoquic_frame_type_max_data, 0x44, 0x00 /* 1024 */
 };
 
 static uint8_t test_frame_type_max_stream_data[] = {
@@ -3150,6 +3193,8 @@ static uint8_t test_frame_hsd_type_non_canon[] = {
 
 fuzi_q_frames_t fuzi_q_frame_list[] = {
     FUZI_Q_ITEM("padding", test_frame_type_padding),
+    FUZI_Q_ITEM("padding_zero_byte", test_frame_type_padding_zero_byte),
+    FUZI_Q_ITEM("padding_large", test_frame_type_padding_large),
     FUZI_Q_ITEM("padding_2_bytes", test_frame_padding_2_bytes),
     FUZI_Q_ITEM("padding_5_bytes", test_frame_type_padding_5_bytes),
     FUZI_Q_ITEM("padding_7_bytes", test_frame_type_padding_7_bytes),
@@ -3164,6 +3209,8 @@ fuzi_q_frames_t fuzi_q_frame_list[] = {
     FUZI_Q_ITEM("reset_stream_sid_zero", test_frame_reset_stream_sid_zero), /* New */
     FUZI_Q_ITEM("reset_stream_final_size_zero_explicit", test_frame_reset_stream_final_size_zero_explicit), /* New (StreamID=1, Err=0, FinalSize=0) */
     FUZI_Q_ITEM("reset_stream_all_large", test_frame_reset_stream_all_large), /* New */
+    FUZI_Q_ITEM("reset_stream_error_code_max", test_frame_reset_stream_error_code_max),
+    FUZI_Q_ITEM("reset_stream_final_size_max_new", test_frame_reset_stream_final_size_max_new),
     FUZI_Q_ITEM("connection_close", test_type_connection_close),
     FUZI_Q_ITEM("connection_close_transport_long_reason", test_frame_connection_close_transport_long_reason),
     FUZI_Q_ITEM("application_close", test_type_application_close),
@@ -3174,7 +3221,8 @@ fuzi_q_frames_t fuzi_q_frame_list[] = {
     FUZI_Q_ITEM("conn_close_specific_transport_error", test_frame_conn_close_specific_transport_error),
     FUZI_Q_ITEM("max_data", test_frame_type_max_data),
     FUZI_Q_ITEM("max_data_large", test_frame_type_max_data_large),
-    FUZI_Q_ITEM("max_data_zero", test_frame_max_data_zero), 
+    FUZI_Q_ITEM("max_data_zero", test_frame_max_data_zero),
+    FUZI_Q_ITEM("max_data_small_value", test_frame_max_data_small_value),
     FUZI_Q_ITEM("max_data_val_large", test_frame_max_data_val_large), /* New */
     FUZI_Q_ITEM("max_stream_data", test_frame_type_max_stream_data),
     FUZI_Q_ITEM("max_stream_data_zero", test_frame_max_stream_data_zero),
