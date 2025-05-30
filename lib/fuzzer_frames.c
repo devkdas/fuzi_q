@@ -3151,7 +3151,28 @@ static uint8_t test_frame_ncid_ret_non_canon[] = {
     0xA0,0xA1,0xA2,0xA3,0xA4,0xA5,0xA6,0xA7, /* Stateless Reset Token */
     0xA8,0xA9,0xAA,0xAB,0xAC,0xAD,0xAE,0xAF
 };
+/* Specific ACK frame with an invalid gap of 1 */
+/* Largest Ack: 5, Delay:0, RangeCount:1, FirstRangeLen:0 (acks 5), Gap:1 (skips 4), NextRangeLen:0 (acks 3) */
+static uint8_t test_frame_ack_invalid_gap_1_specific_val[] = {0x02, 0x05, 0x00, 0x01, 0x00, 0x01, 0x00};
 
+/* Frame Sequences for test_frame_sequence */
+static uint8_t sequence_stream_ping_padding_val[] = {
+    0x0A, 0x01, 0x05, 'h', 'e', 'l', 'l', 'o', /* STREAM ID 1, len 5, "hello" */
+    0x01,                                     /* PING */
+    0x00, 0x00, 0x00                          /* PADDING x3 */
+};
+static uint8_t sequence_max_data_max_stream_data_val[] = {
+    0x10, 0x44, 0x00,                         /* MAX_DATA 1024 Add commentMore actions */
+    0x11, 0x01, 0x42, 0x00                    /* MAX_STREAM_DATA Stream 1, 512 */
+};
+
+/* Error condition test frames */
+static uint8_t error_stream_client_on_server_uni_val[] = { /* Client sends on server-initiated uni stream (ID 3) */
+    0x09, 0x03, 'd', 'a', 't', 'a'         /* STREAM ID 3, FIN, "data" */
+};
+static uint8_t error_stream_len_shorter_val[] = { /* STREAM frame, LEN bit, Length=2, Data="test" (4 bytes) */
+    0x0A, 0x04, 0x02, 't', 'e', 's', 't'
+};
 /* Test Case: NEW_CONNECTION_ID with minimum Connection ID Length (1). */
 /* Expected: Peer should process normally. (RFC 19.15) */
 static uint8_t test_frame_ncid_cid_len_min[] = {
@@ -3848,6 +3869,8 @@ fuzi_q_frames_t fuzi_q_frame_list[] = {
     FUZI_Q_ITEM("crypto_len_small_non_canon", test_frame_crypto_len_small_non_canon),
     /* NEW_TOKEN Non-Canonical Varint */
     FUZI_Q_ITEM("new_token_len_non_canon", test_frame_new_token_len_non_canon),
+	/* Test frame for invalid ACK gap of 1 */
+    FUZI_Q_ITEM("ack_invalid_gap_1_specific", test_frame_ack_invalid_gap_1_specific_val),
     /* PADDING Variation */
     FUZI_Q_ITEM("padding_single", test_frame_padding_single),
     /* ACK Variations */
@@ -3856,6 +3879,13 @@ fuzi_q_frames_t fuzi_q_frame_list[] = {
     FUZI_Q_ITEM("ack_largest_zero_first_zero", test_frame_ack_largest_zero_first_zero),
     FUZI_Q_ITEM("ack_ecn_non_minimal_ect0", test_frame_ack_ecn_non_minimal_ect0),
 
+    /* Frame sequence test items */
+    FUZI_Q_ITEM("sequence_stream_ping_padding", sequence_stream_ping_padding_val),
+    FUZI_Q_ITEM("sequence_max_data_max_stream_data", sequence_max_data_max_stream_data_val),
+
+    /* Error condition test items Add commentMore actions */
+    FUZI_Q_ITEM("error_stream_client_on_server_uni", error_stream_client_on_server_uni_val),
+    FUZI_Q_ITEM("error_stream_len_shorter", error_stream_len_shorter_val),
     /* --- Adding More Variations (Systematic Review Part 2 - STREAM & MAX_DATA) --- */
     /* STREAM Contextual Violations (require fuzzer logic for role-specific injection) */
     FUZI_Q_ITEM("stream_client_sends_server_bidi", test_stream_client_sends_server_bidi_stream),
