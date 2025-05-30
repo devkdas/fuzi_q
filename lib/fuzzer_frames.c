@@ -972,7 +972,15 @@ static uint8_t test_frame_ack_invalid_gap_1[] = {
     0x14,       /* Gap: 20 */
     0x00        /* ACK Range Length for 2nd range: 0 */
 };
-
+static uint8_t ack_invalid_gap_1_specific[] = {
+    picoquic_frame_type_ack, /* 0x02 */
+    0x14,       /* Largest Acknowledged: 20 */
+    0x00,       /* ACK Delay: 0 */
+    0x02,       /* ACK Range Count: 2 */
+    0x00,       /* First ACK Range: 0 (acks packet 20) Add commentMore actions */
+    0x1E,       /* Gap: 30 */
+    0x00        /* ACK Range Length for 2nd range: 0 */
+};
 static uint8_t test_frame_type_stream_range_min[] = {
     picoquic_frame_type_stream_range_min,
     1,
@@ -3215,6 +3223,17 @@ static uint8_t test_frame_conn_close_ft_non_canon[] = {
     0x00        /* Reason Phrase Length: 0 */
 };
 
+static uint8_t sequence_stream_ping_padding[] = {
+    0x0A, 0x01, 0x04, 't', 'e', 's', 't', /* STREAM frame */
+    0x01,                               /* PING frame */
+    0x00, 0x00, 0x00                    /* PADDING frame (3 bytes) */
+};
+
+static uint8_t sequence_max_data_max_stream_data[] = {
+    0x10, 0x44, 0x00, /* MAX_DATA frame (Type 0x10, Value 1024) */
+    0x11, 0x01, 0x44, 0x00 /* MAX_STREAM_DATA frame (Type 0x11, Stream 1, Value 1024) */
+};
+
 /* Test Case: CONNECTION_CLOSE (application error) with Reason Phrase Length non-canonically encoded. */
 /* Error Code 0. Reason Phrase Length 5 as 2-byte varint (0x40, 0x05). Reason "test!". */
 static uint8_t test_frame_conn_close_app_rlen_non_canon[] = {
@@ -3871,6 +3890,7 @@ fuzi_q_frames_t fuzi_q_frame_list[] = {
     FUZI_Q_ITEM("new_token_len_non_canon", test_frame_new_token_len_non_canon),
 	/* Test frame for invalid ACK gap of 1 */
     FUZI_Q_ITEM("ack_invalid_gap_1_specific", test_frame_ack_invalid_gap_1_specific_val),
+	FUZI_Q_ITEM("ack_invalid_gap_1_specific", ack_invalid_gap_1_specific),
     /* PADDING Variation */
     FUZI_Q_ITEM("padding_single", test_frame_padding_single),
     /* ACK Variations */
@@ -3881,7 +3901,9 @@ fuzi_q_frames_t fuzi_q_frame_list[] = {
 
     /* Frame sequence test items */
     FUZI_Q_ITEM("sequence_stream_ping_padding", sequence_stream_ping_padding_val),
+	FUZI_Q_ITEM("sequence_stream_ping_padding", sequence_stream_ping_padding),
     FUZI_Q_ITEM("sequence_max_data_max_stream_data", sequence_max_data_max_stream_data_val),
+	FUZI_Q_ITEM("sequence_max_data_max_stream_data", sequence_max_data_max_stream_data),
 
     /* Error condition test items Add commentMore actions */
     FUZI_Q_ITEM("error_stream_client_on_server_uni", error_stream_client_on_server_uni_val),
