@@ -268,7 +268,7 @@ static uint8_t test_frame_conn_close_specific_transport_error[] = { 0x1c, 0x07, 
 
 static uint8_t test_frame_connection_close_frame_encoding_error[] = {
     picoquic_frame_type_connection_close,       /* 0x1c */
-    picoquic_transport_frame_encoding_error,    /* 0x07 */
+    0x07,                                       /* FRAME_ENCODING_ERROR */
     0x00,                                       /* Offending Frame Type (e.g., PADDING) */
     0x00                                        /* Reason Phrase Length 0 */
 };
