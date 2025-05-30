@@ -1,2 +1,0 @@
-/usr/bin/ar qc libfuzi_q_tests.a CMakeFiles/fuzi_q_tests.dir/tests/basic_test.c.o CMakeFiles/fuzi_q_tests.dir/tests/context_tests.c.o
-/usr/bin/ranlib libfuzi_q_tests.a
