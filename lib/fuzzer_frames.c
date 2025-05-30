@@ -266,6 +266,13 @@ static uint8_t test_frame_conn_close_app_no_reason[] = { 0x1d, 0x00, 0x00 };
 
 static uint8_t test_frame_conn_close_specific_transport_error[] = { 0x1c, 0x07, 0x15, 0x05, 'B','a','d','F','R' };
 
+static uint8_t test_frame_connection_close_frame_encoding_error[] = {
+    picoquic_frame_type_connection_close,       /* 0x1c */
+    picoquic_transport_frame_encoding_error,    /* 0x07 */
+    0x00,                                       /* Offending Frame Type (e.g., PADDING) */
+    0x00                                        /* Reason Phrase Length 0 */
+};
+
 static uint8_t test_frame_type_max_data[] = {
     picoquic_frame_type_max_data,
     0xC0, 0, 0x01, 0, 0, 0, 0, 0
@@ -953,6 +960,17 @@ static uint8_t test_ack_ecn_sum_exceeds_largest_acked[] = {
     0x05, /* ECT0: 5 */
     0x05, /* ECT1: 5 */
     0x05  /* CE: 5 */
+};
+
+/* ACK frame with invalid Gap (10 - 20 - 2 = -12) */
+static uint8_t test_frame_ack_invalid_gap_1[] = {
+    picoquic_frame_type_ack, /* 0x02 */
+    0x0A,       /* Largest Acknowledged: 10 */
+    0x00,       /* ACK Delay: 0 */
+    0x02,       /* ACK Range Count: 2 */
+    0x00,       /* First ACK Range: 0 (acks packet 10) */
+    0x14,       /* Gap: 20 */
+    0x00        /* ACK Range Length for 2nd range: 0 */
 };
 
 static uint8_t test_frame_type_stream_range_min[] = {
@@ -3892,11 +3910,11 @@ fuzi_q_frames_t fuzi_q_frame_list[] = {
     FUZI_Q_ITEM("conn_close_app_rlen_non_canon_new", test_frame_conn_close_app_rlen_non_canon),
     FUZI_Q_ITEM("hsd_type_non_canon_new", test_frame_hsd_type_non_canon),
     /* Newly added test frames (Task D20231116_160216) */
-    /* FUZI_Q_ITEM("ack_invalid_gap", test_frame_ack_invalid_gap_1), */ /* Definition missing */
+    FUZI_Q_ITEM("ack_invalid_gap_1", test_frame_ack_invalid_gap_1),
     FUZI_Q_ITEM("stream_len_decl_short_actual_long", test_frame_stream_len_shorter_than_data),
     FUZI_Q_ITEM("stream_len_decl_long_actual_short", test_frame_stream_len_longer_than_data),
     FUZI_Q_ITEM("ncid_retire_current_dcid", test_frame_type_retire_connection_id),
-    /* FUZI_Q_ITEM("conn_close_transport_unknown_frame_type", test_frame_connection_close_frame_encoding_error), */ /* Definition missing */
+    FUZI_Q_ITEM("connection_close_frame_encoding_error", test_frame_connection_close_frame_encoding_error),
     FUZI_Q_ITEM("stream_type_very_long_encoding", test_frame_stream_type_long_encoding),
     /* Newly added DATAGRAM test frames (Task D20231121_101010) */
     FUZI_Q_ITEM("datagram_with_len_empty", test_frame_datagram_with_len_empty),
