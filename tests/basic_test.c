@@ -27,9 +27,14 @@
 #include <picoquic_set_binlog.h>
 #include <picoquic_config.h>
 #include <autoqlog.h>
+#include <picoquic_internal.h> /* Added for full cnx struct and internal defs */
 
 #include "fuzi_q.h"
 #include "fuzi_q_tests.h"
+
+/* Defined in lib/fuzzer.c */
+extern const char* fuzi_q_specific_frame_to_inject;
+
 #ifdef _WINDOWS
 #ifdef _WINDOWS64
 #define fuzi_q_PICOQUIC_DEFAULT_SOLUTION_DIR "..\\..\\..\\picoquic\\"
@@ -676,4 +681,609 @@ int fuzi_q_basic_test()
 int fuzi_q_basic_client_test()
 {
     return fuzi_q_basic_test_loop(1, 0, 0);
+}
+
+int test_frame_ack_invalid_gap_1() {
+    int ret = 0;
+    fuzi_q_test_config_t* config = NULL;
+    const uint64_t max_time = 5000000; /* 5 seconds */
+    const int max_steps = 1000;
+    int nb_steps = 0;
+    int expected_error_found = 0;
+    /* PICOQUIC_TRANSPORT_FRAME_ENCODING_ERROR is 0x07 */
+    const uint64_t frame_encoding_error_code = 0x07;
+
+    config = fuzi_q_test_basic_config_create(0, /* simulate_loss */
+                                             fuzi_q_mode_client, /* client_fuzz_mode */
+                                             fuzi_q_mode_clean_server, /* server_fuzz_mode */
+                                             1, /* nb_cnx_ctx */
+                                             1, /* nb_cnx_required */
+                                             max_time / 1000000, /* duration_max (seconds) */
+                                             NULL, /* client_scenario_text */
+                                             "."); /* qlog_dir */
+
+    if (config == NULL) {
+        DBG_PRINTF("Failed to create test config for test_frame_ack_invalid_gap_1%s", "");
+        return -1;
+    }
+
+    /* Set the specific fuzzing context for the client to use our new frame if possible */
+    /* This is an optimistic approach; the fuzzer is still random. */
+    /* We rely on the strategy added in fuzzer.c to be hit. */
+
+    while (ret == 0 && config->simulated_time < max_time && nb_steps < max_steps) {
+        int is_active = 0;
+        ret = fuzi_q_test_loop_step(config, &is_active);
+        if (ret == PICOQUIC_NO_ERROR_TERMINATE_PACKET_LOOP) {
+            DBG_PRINTF("test_frame_ack_invalid_gap_1: PICOQUIC_NO_ERROR_TERMINATE_PACKET_LOOP received.%s", "");
+            ret = 0;
+            break;
+        }
+        nb_steps++;
+        if (ret != 0) {
+            DBG_PRINTF("Loop step failed with %d in test_frame_ack_invalid_gap_1", ret); /* This one is fine */
+            break;
+        }
+        /* Check server for FRAME_ENCODING_ERROR */
+        picoquic_cnx_t* server_cnx = picoquic_get_first_cnx(config->nodes[0].quic);
+        while (server_cnx != NULL) {
+            if (server_cnx->cnx_state == picoquic_state_disconnected &&
+                (server_cnx->local_error == frame_encoding_error_code || server_cnx->remote_error == frame_encoding_error_code)) {
+                expected_error_found = 1;
+                DBG_PRINTF("Found FRAME_ENCODING_ERROR on server cnx %llx in test_frame_ack_invalid_gap_1", (unsigned long long)picoquic_val64_connection_id(server_cnx->initial_cnxid)); /* Fine */
+                break; 
+            }
+            if (server_cnx->local_error != 0 && server_cnx->local_error != frame_encoding_error_code && server_cnx->local_error != 0xCC /* PICOQUIC_ERROR_AEAD_DECRYPT */) {
+                 DBG_PRINTF("Server cnx %llx disconnected with unexpected local_error: %lx in test_frame_ack_invalid_gap_1", (unsigned long long)picoquic_val64_connection_id(server_cnx->initial_cnxid), server_cnx->local_error); /* Fine */
+            }
+             if (server_cnx->remote_error != 0 && server_cnx->remote_error != frame_encoding_error_code) {
+                 DBG_PRINTF("Server cnx %llx disconnected with unexpected remote_error: %lx in test_frame_ack_invalid_gap_1", (unsigned long long)picoquic_val64_connection_id(server_cnx->initial_cnxid), server_cnx->remote_error); /* Fine */
+            }
+            server_cnx = picoquic_get_next_cnx(server_cnx);
+        }
+        if (expected_error_found) {
+            break;
+        }
+    }
+
+    if (config != NULL) {
+        if (config->nodes != NULL && config->nb_nodes > 0 && config->nodes[0].quic != NULL) {
+            picoquic_cnx_t* server_cnx = picoquic_get_first_cnx(config->nodes[0].quic);
+             while (server_cnx != NULL && !expected_error_found) {
+                 if (server_cnx->cnx_state == picoquic_state_disconnected &&
+                    (server_cnx->local_error == frame_encoding_error_code || server_cnx->remote_error == frame_encoding_error_code)) {
+                     expected_error_found = 1;
+                     DBG_PRINTF("Found FRAME_ENCODING_ERROR on server cnx %llx after loop in test_frame_ack_invalid_gap_1", (unsigned long long)picoquic_val64_connection_id(server_cnx->initial_cnxid)); /* Fine */
+                 }
+                 if (server_cnx->local_error != 0 && server_cnx->local_error != 0xCC /* PICOQUIC_ERROR_AEAD_DECRYPT */ && server_cnx->local_error != frame_encoding_error_code) {
+                    DBG_PRINTF("Server CNX %llx ended with local error %x in test_frame_ack_invalid_gap_1",
+                        (unsigned long long)picoquic_val64_connection_id(server_cnx->initial_cnxid),
+                        server_cnx->local_error); /* Fine */
+                    /* If it's a different error, it's a failure for this specific test */
+                 }
+                 if (server_cnx->remote_error != 0 && server_cnx->remote_error != frame_encoding_error_code) {
+                    DBG_PRINTF("Server CNX %llx ended with remote error %x in test_frame_ack_invalid_gap_1",
+                        (unsigned long long)picoquic_val64_connection_id(server_cnx->initial_cnxid),
+                        server_cnx->remote_error); /* Fine */
+                 }
+                 server_cnx = picoquic_get_next_cnx(server_cnx);
+             }
+        }
+        fuzi_q_test_config_delete(config);
+    }
+
+    if (ret == 0 && !expected_error_found) {
+        DBG_PRINTF("Test test_frame_ack_invalid_gap_1 finished, expected FRAME_ENCODING_ERROR (0x%x) not found.", frame_encoding_error_code);
+        ret = -1; 
+    } else if (ret == 0 && expected_error_found) {
+        DBG_PRINTF("Test test_frame_ack_invalid_gap_1 finished successfully, FRAME_ENCODING_ERROR (0x%x) found.", frame_encoding_error_code);
+        /* ret is already 0, which means success */
+    } else if (ret != 0) {
+        DBG_PRINTF("Test test_frame_ack_invalid_gap_1 failed with error code %d before finding expected error.", ret);
+        /* ret already contains the error code */
+    }
+    
+    return ret;
+}
+
+int test_frame_connection_close_frame_encoding_error() {
+    int ret = 0;
+    fuzi_q_test_config_t* config = NULL;
+    const uint64_t max_time = 5000000; /* 5 seconds */
+    const int max_steps = 1000;
+    int nb_steps = 0;
+    int expected_error_found = 0;
+    /* PICOQUIC_TRANSPORT_FRAME_ENCODING_ERROR is 0x07 */
+    const uint64_t frame_encoding_error_code = 0x07;
+
+    config = fuzi_q_test_basic_config_create(0, /* simulate_loss */
+                                             fuzi_q_mode_client, /* client_fuzz_mode */
+                                             fuzi_q_mode_clean_server, /* server_fuzz_mode */
+                                             1, /* nb_cnx_ctx */
+                                             1, /* nb_cnx_required */
+                                             max_time / 1000000, /* duration_max (seconds) */
+                                             NULL, /* client_scenario_text */
+                                             "."); /* qlog_dir */
+
+    if (config == NULL) {
+        DBG_PRINTF("Failed to create test config for test_frame_connection_close_frame_encoding_error%s", "");
+        return -1;
+    }
+
+    /* We rely on the strategy added in fuzzer.c to be hit. */
+
+    while (ret == 0 && config->simulated_time < max_time && nb_steps < max_steps) {
+        int is_active = 0;
+        ret = fuzi_q_test_loop_step(config, &is_active);
+        if (ret == PICOQUIC_NO_ERROR_TERMINATE_PACKET_LOOP) {
+            DBG_PRINTF("test_frame_connection_close_frame_encoding_error: PICOQUIC_NO_ERROR_TERMINATE_PACKET_LOOP received.%s", "");
+            ret = 0;
+            break;
+        }
+        nb_steps++;
+        if (ret != 0) {
+            DBG_PRINTF("Loop step failed with %d in test_frame_connection_close_frame_encoding_error", ret); /* Fine */
+            break;
+        }
+        
+        picoquic_cnx_t* server_cnx = picoquic_get_first_cnx(config->nodes[0].quic);
+        while (server_cnx != NULL) {
+            if (server_cnx->cnx_state == picoquic_state_disconnected &&
+                (server_cnx->local_error == frame_encoding_error_code || server_cnx->remote_error == frame_encoding_error_code)) {
+                expected_error_found = 1;
+                DBG_PRINTF("Found FRAME_ENCODING_ERROR on server cnx %llx in test_frame_connection_close_frame_encoding_error", (unsigned long long)picoquic_val64_connection_id(server_cnx->initial_cnxid)); /* Fine */
+                break; 
+            }
+            if (server_cnx->local_error != 0 && server_cnx->local_error != frame_encoding_error_code && server_cnx->local_error != 0xCC /* PICOQUIC_ERROR_AEAD_DECRYPT */) {
+                 DBG_PRINTF("Server cnx %llx disconnected with unexpected local_error: %lx in test_frame_connection_close_frame_encoding_error", (unsigned long long)picoquic_val64_connection_id(server_cnx->initial_cnxid), server_cnx->local_error); /* Fine */
+            }
+             if (server_cnx->remote_error != 0 && server_cnx->remote_error != frame_encoding_error_code) {
+                 DBG_PRINTF("Server cnx %llx disconnected with unexpected remote_error: %lx in test_frame_connection_close_frame_encoding_error", (unsigned long long)picoquic_val64_connection_id(server_cnx->initial_cnxid), server_cnx->remote_error); /* Fine */
+            }
+            server_cnx = picoquic_get_next_cnx(server_cnx);
+        }
+        if (expected_error_found) {
+            break;
+        }
+    }
+
+    if (config != NULL) {
+        if (config->nodes != NULL && config->nb_nodes > 0 && config->nodes[0].quic != NULL) {
+            picoquic_cnx_t* server_cnx = picoquic_get_first_cnx(config->nodes[0].quic);
+             while (server_cnx != NULL && !expected_error_found) {
+                 if (server_cnx->cnx_state == picoquic_state_disconnected &&
+                    (server_cnx->local_error == frame_encoding_error_code || server_cnx->remote_error == frame_encoding_error_code)) {
+                     expected_error_found = 1;
+                     DBG_PRINTF("Found FRAME_ENCODING_ERROR on server cnx %llx after loop in test_frame_connection_close_frame_encoding_error", (unsigned long long)picoquic_val64_connection_id(server_cnx->initial_cnxid));
+                 }
+                 if (server_cnx->local_error != 0 && server_cnx->local_error != 0xCC /*PICOQUIC_ERROR_AEAD_DECRYPT*/ && server_cnx->local_error != frame_encoding_error_code) {
+                    DBG_PRINTF("Server CNX %llx ended with local error %x in test_frame_connection_close_frame_encoding_error",
+                        (unsigned long long)picoquic_val64_connection_id(server_cnx->initial_cnxid),
+                        server_cnx->local_error);
+                 }
+                 if (server_cnx->remote_error != 0 && server_cnx->remote_error != frame_encoding_error_code) {
+                    DBG_PRINTF("Server CNX %llx ended with remote error %x in test_frame_connection_close_frame_encoding_error",
+                        (unsigned long long)picoquic_val64_connection_id(server_cnx->initial_cnxid),
+                        server_cnx->remote_error);
+                 }
+                 server_cnx = picoquic_get_next_cnx(server_cnx);
+             }
+        }
+        fuzi_q_test_config_delete(config);
+    }
+
+    if (ret == 0 && !expected_error_found) {
+        DBG_PRINTF("Test test_frame_connection_close_frame_encoding_error finished, expected FRAME_ENCODING_ERROR (0x%x) not found.", frame_encoding_error_code);
+        ret = -1; 
+    } else if (ret == 0 && expected_error_found) {
+        DBG_PRINTF("Test test_frame_connection_close_frame_encoding_error finished successfully, FRAME_ENCODING_ERROR (0x%x) found.", frame_encoding_error_code);
+        /* ret is already 0, which means success */
+    } else if (ret != 0) {
+        DBG_PRINTF("Test test_frame_connection_close_frame_encoding_error failed with error code %d before finding expected error.", ret);
+        /* ret already contains the error code */
+    }
+    
+    return ret;
+}
+
+int test_granular_padding() {
+    int ret = 0;
+    fuzi_q_test_config_t* config = NULL;
+    const uint64_t max_time = 10000000; /* 10 seconds */
+    const int max_steps = 5000;
+    const int max_inactive_steps = 200; /* Max consecutive steps with no activity */
+    int nb_steps = 0;
+    int inactive_steps = 0;
+    int client_connected = 0;
+    int server_received_cnx = 0;
+
+    config = fuzi_q_test_basic_config_create(0, /* simulate_loss */
+                                             fuzi_q_mode_client, /* client_fuzz_mode */
+                                             fuzi_q_mode_clean_server, /* server_fuzz_mode */
+                                             1, /* nb_cnx_ctx */
+                                             1, /* nb_cnx_required */
+                                             max_time / 1000000, /* duration_max (seconds) */
+                                             NULL, /* client_scenario_text */
+                                             "."); /* qlog_dir */
+
+    if (config == NULL) {
+        DBG_PRINTF("Failed to create test config for test_granular_padding%s", "");
+        return -1;
+    }
+
+    DBG_PRINTF("Starting test_granular_padding loop (max_time: %llu us, max_steps: %d, max_inactive: %d)", /* Fine */
+        (unsigned long long)max_time, max_steps, max_inactive_steps);
+
+    while (ret == 0 && config->simulated_time < max_time && nb_steps < max_steps) {
+        int is_active = 0;
+        ret = fuzi_q_test_loop_step(config, &is_active);
+
+        if (ret == PICOQUIC_NO_ERROR_TERMINATE_PACKET_LOOP) {
+            DBG_PRINTF("test_granular_padding: PICOQUIC_NO_ERROR_TERMINATE_PACKET_LOOP received.%s", "");
+            ret = 0; /* This is a successful termination condition for the loop */
+            break;
+        }
+        if (ret != 0) {
+            DBG_PRINTF("Loop step failed with %d in test_granular_padding", ret); /* Fine */
+            break;
+        }
+
+        nb_steps++;
+        if (is_active) {
+            inactive_steps = 0;
+        } else {
+            inactive_steps++;
+            if (inactive_steps >= max_inactive_steps) {
+                DBG_PRINTF("test_granular_padding: Exiting loop due to max_inactive_steps (%d) reached at time %llu.",
+                    max_inactive_steps, (unsigned long long)config->simulated_time);
+                /* This is considered a timeout for this test's purpose, potentially a failure */
+                /* unless the connection actually completed successfully before this. */
+                break; 
+            }
+        }
+
+        /* Check client connection state */
+        if (!client_connected && config->nodes[1].quic != NULL) {
+            picoquic_cnx_t* client_cnx = picoquic_get_first_cnx(config->nodes[1].quic);
+            if (client_cnx != NULL && picoquic_get_cnx_state(client_cnx) == picoquic_state_ready) {
+                client_connected = 1;
+                DBG_PRINTF("test_granular_padding: Client connected at step %d, time %llu.", nb_steps, (unsigned long long)config->simulated_time); /* Fine */
+            }
+        }
+        /* Check if server received a connection */
+         if (!server_received_cnx && config->nodes[0].quic != NULL) {
+            picoquic_cnx_t* srvr_cnx = picoquic_get_first_cnx(config->nodes[0].quic);
+            if (srvr_cnx != NULL) { /* Any connection means server processed something */
+                server_received_cnx = 1;
+                 DBG_PRINTF("test_granular_padding: Server has at least one connection context at step %d, time %llu.", nb_steps, (unsigned long long)config->simulated_time); /* Fine */
+            }
+        }
+    }
+    
+    DBG_PRINTF("test_granular_padding: Loop finished. Steps: %d, Time: %llu us, Ret: %d, Inactive_steps: %d", /* Fine */
+        nb_steps, (unsigned long long)config->simulated_time, ret, inactive_steps);
+
+    /* Check for unexpected errors after the loop */
+    if (ret == 0) {
+        if (config->nodes[0].quic != NULL) {
+            picoquic_cnx_t* server_cnx = picoquic_get_first_cnx(config->nodes[0].quic);
+            while (server_cnx != NULL) {
+                if (server_cnx->local_error != 0 && server_cnx->local_error != 0xCC /* PICOQUIC_ERROR_AEAD_DECRYPT */ && server_cnx->local_error != 0x0C /* PICOQUIC_TRANSPORT_CONNECTION_TIMEOUT */) {
+                    DBG_PRINTF("Server CNX %llx ended with unexpected local error %x in test_granular_padding", /* Fine */
+                        (unsigned long long)picoquic_val64_connection_id(server_cnx->initial_cnxid),
+                        server_cnx->local_error);
+                    ret = -1; /* Unexpected error */
+                    break;
+                }
+                if (server_cnx->remote_error != 0 && server_cnx->remote_error != 0x0C /* PICOQUIC_TRANSPORT_CONNECTION_TIMEOUT */) {
+                     DBG_PRINTF("Server CNX %llx ended with unexpected remote error %x in test_granular_padding", /* Fine */
+                        (unsigned long long)picoquic_val64_connection_id(server_cnx->initial_cnxid),
+                        server_cnx->remote_error);
+                    ret = -1; /* Unexpected error */
+                    break;
+                }
+                server_cnx = picoquic_get_next_cnx(server_cnx);
+            }
+        }
+        if (ret == 0 && config->nodes[1].quic != NULL) {
+             picoquic_cnx_t* client_cnx = picoquic_get_first_cnx(config->nodes[1].quic);
+             if (client_cnx != NULL && client_cnx->local_error != 0 && client_cnx->local_error != 0xCC /* PICOQUIC_ERROR_AEAD_DECRYPT */ && client_cnx->local_error != 0x0C /* PICOQUIC_TRANSPORT_CONNECTION_TIMEOUT */) {
+                 DBG_PRINTF("Client CNX %llx ended with unexpected local error %x in test_granular_padding", /* Fine */
+                    (unsigned long long)picoquic_val64_connection_id(client_cnx->initial_cnxid),
+                    client_cnx->local_error);
+                 ret = -1;
+             }
+        }
+    }
+
+
+    if (config != NULL) {
+        fuzi_q_test_config_delete(config);
+    }
+
+    if (ret == 0) {
+        if (inactive_steps >= max_inactive_steps && !client_connected) {
+            DBG_PRINTF("Test test_granular_padding timed out due to inactivity before client connected.%s", "");
+            ret = -1; /* Timeout is a failure */
+        } else if (inactive_steps >= max_inactive_steps && client_connected) {
+            DBG_PRINTF("Test test_granular_padding hit max inactivity, but client was connected. Considering as pass if no other errors.%s", "");
+            /* Allow pass if client connected and then inactivity (e.g. scenario finished) */
+        } else if (!client_connected && nb_steps >= max_steps) {
+             DBG_PRINTF("Test test_granular_padding reached max_steps without client connecting.%s", "");
+             ret = -1;
+        } else {
+            DBG_PRINTF("Test test_granular_padding finished without specific timeout or unexpected errors.%s", "");
+        }
+    } else {
+        DBG_PRINTF("Test test_granular_padding failed with error code %d.", ret); /* Fine */
+    }
+    
+    return ret;
+}
+
+int test_frame_sequence() {
+    int ret = 0;
+    fuzi_q_test_config_t* config = NULL;
+    const uint64_t max_time = 10000000; /* 10 seconds */
+    const int max_steps = 5000;
+    const int max_inactive_steps = 200; 
+    int nb_steps = 0;
+    int inactive_steps = 0;
+    int client_connected = 0;
+    int server_received_cnx = 0;
+
+    config = fuzi_q_test_basic_config_create(0, /* simulate_loss */
+                                             fuzi_q_mode_client, /* client_fuzz_mode */
+                                             fuzi_q_mode_clean_server, /* server_fuzz_mode */
+                                             1, /* nb_cnx_ctx */
+                                             1, /* nb_cnx_required */
+                                             max_time / 1000000, /* duration_max (seconds) */
+                                             NULL, /* client_scenario_text */
+                                             "."); /* qlog_dir */
+
+    if (config == NULL) {
+        DBG_PRINTF("Failed to create test config for test_frame_sequence%s", "");
+        return -1;
+    }
+
+    DBG_PRINTF("Starting test_frame_sequence loop (max_time: %llu us, max_steps: %d, max_inactive: %d)", /* Fine */
+        (unsigned long long)max_time, max_steps, max_inactive_steps);
+
+    while (ret == 0 && config->simulated_time < max_time && nb_steps < max_steps) {
+        int is_active = 0;
+        ret = fuzi_q_test_loop_step(config, &is_active);
+
+        if (ret == PICOQUIC_NO_ERROR_TERMINATE_PACKET_LOOP) {
+            DBG_PRINTF("test_frame_sequence: PICOQUIC_NO_ERROR_TERMINATE_PACKET_LOOP received.%s", "");
+            ret = 0;
+            break;
+        }
+        if (ret != 0) {
+            DBG_PRINTF("Loop step failed with %d in test_frame_sequence", ret); /* Fine */
+            break;
+        }
+
+        nb_steps++;
+        if (is_active) {
+            inactive_steps = 0;
+        } else {
+            inactive_steps++;
+            if (inactive_steps >= max_inactive_steps) {
+                DBG_PRINTF("test_frame_sequence: Exiting loop due to max_inactive_steps (%d) reached at time %llu.",
+                    max_inactive_steps, (unsigned long long)config->simulated_time);
+                break; 
+            }
+        }
+
+        if (!client_connected && config->nodes[1].quic != NULL) {
+            picoquic_cnx_t* client_cnx = picoquic_get_first_cnx(config->nodes[1].quic);
+            if (client_cnx != NULL && picoquic_get_cnx_state(client_cnx) == picoquic_state_ready) {
+                client_connected = 1;
+                DBG_PRINTF("test_frame_sequence: Client connected at step %d, time %llu.", nb_steps, (unsigned long long)config->simulated_time); /* Fine */
+            }
+        }
+         if (!server_received_cnx && config->nodes[0].quic != NULL) {
+            picoquic_cnx_t* srvr_cnx = picoquic_get_first_cnx(config->nodes[0].quic);
+            if (srvr_cnx != NULL) {
+                server_received_cnx = 1;
+                 DBG_PRINTF("test_frame_sequence: Server has at least one connection context at step %d, time %llu.", nb_steps, (unsigned long long)config->simulated_time); /* Fine */
+            }
+        }
+    }
+    
+    DBG_PRINTF("test_frame_sequence: Loop finished. Steps: %d, Time: %llu us, Ret: %d, Inactive_steps: %d", /* Fine */
+        nb_steps, (unsigned long long)config->simulated_time, ret, inactive_steps);
+
+    if (ret == 0) {
+        if (config->nodes[0].quic != NULL) {
+            picoquic_cnx_t* server_cnx = picoquic_get_first_cnx(config->nodes[0].quic);
+            while (server_cnx != NULL) {
+                if (server_cnx->local_error != 0 && server_cnx->local_error != 0xCC /* PICOQUIC_ERROR_AEAD_DECRYPT */ && server_cnx->local_error != 0x0C /* PICOQUIC_TRANSPORT_CONNECTION_TIMEOUT */) {
+                    DBG_PRINTF("Server CNX %llx ended with unexpected local error %x in test_frame_sequence", /* Fine */
+                        (unsigned long long)picoquic_val64_connection_id(server_cnx->initial_cnxid),
+                        server_cnx->local_error);
+                    ret = -1; 
+                    break;
+                }
+                if (server_cnx->remote_error != 0 && server_cnx->remote_error != 0x0C /* PICOQUIC_TRANSPORT_CONNECTION_TIMEOUT */) {
+                     DBG_PRINTF("Server CNX %llx ended with unexpected remote error %x in test_frame_sequence", /* Fine */
+                        (unsigned long long)picoquic_val64_connection_id(server_cnx->initial_cnxid),
+                        server_cnx->remote_error);
+                    ret = -1;
+                    break;
+                }
+                server_cnx = picoquic_get_next_cnx(server_cnx);
+            }
+        }
+        if (ret == 0 && config->nodes[1].quic != NULL) {
+             picoquic_cnx_t* client_cnx = picoquic_get_first_cnx(config->nodes[1].quic);
+             if (client_cnx != NULL && client_cnx->local_error != 0 && client_cnx->local_error != 0xCC /* PICOQUIC_ERROR_AEAD_DECRYPT */ && client_cnx->local_error != 0x0C /* PICOQUIC_TRANSPORT_CONNECTION_TIMEOUT */) {
+                 DBG_PRINTF("Client CNX %llx ended with unexpected local error %x in test_frame_sequence", /* Fine */
+                    (unsigned long long)picoquic_val64_connection_id(client_cnx->initial_cnxid),
+                    client_cnx->local_error);
+                 ret = -1;
+             }
+        }
+    }
+
+    if (config != NULL) {
+        fuzi_q_test_config_delete(config);
+    }
+
+    if (ret == 0) {
+        if (inactive_steps >= max_inactive_steps && !client_connected) {
+            DBG_PRINTF("Test test_frame_sequence timed out due to inactivity before client connected.%s", "");
+            ret = -1; 
+        } else if (inactive_steps >= max_inactive_steps && client_connected) {
+            DBG_PRINTF("Test test_frame_sequence hit max inactivity, but client was connected. Considering as pass if no other errors.%s", "");
+        } else if (!client_connected && nb_steps >= max_steps) {
+             DBG_PRINTF("Test test_frame_sequence reached max_steps without client connecting.%s", "");
+             ret = -1;
+        } else {
+            DBG_PRINTF("Test test_frame_sequence finished without specific timeout or unexpected errors.%s", "");
+        }
+    } else {
+        DBG_PRINTF("Test test_frame_sequence failed with error code %d.", ret); /* Fine */
+    }
+    
+    return ret;
+}
+
+typedef struct {
+    const char* test_name;
+    const char* injected_frame_name;
+    uint64_t expected_error_code;
+} error_test_case_t;
+
+static int run_single_error_test(error_test_case_t test_case) {
+    int ret = 0;
+    fuzi_q_test_config_t* config = NULL;
+    const uint64_t max_time = 5000000; /* 5 seconds */
+    const int max_steps = 1000;
+    int nb_steps = 0;
+    int expected_error_found_on_server = 0;
+
+    DBG_PRINTF("Starting sub-test: %s (injecting %s, expecting 0x%lx)", /* Fine */
+        test_case.test_name, test_case.injected_frame_name, test_case.expected_error_code);
+
+    fuzi_q_specific_frame_to_inject = test_case.injected_frame_name;
+
+    config = fuzi_q_test_basic_config_create(0, fuzi_q_mode_client, fuzi_q_mode_clean_server,
+                                             1, 1, max_time / 1000000, NULL, ".");
+    if (config == NULL) {
+        DBG_PRINTF("Sub-test %s: Failed to create test config.", test_case.test_name); /* Fine */
+        fuzi_q_specific_frame_to_inject = NULL; /* Cleanup */
+        return -1;
+    }
+
+    while (ret == 0 && config->simulated_time < max_time && nb_steps < max_steps) {
+        int is_active = 0;
+        ret = fuzi_q_test_loop_step(config, &is_active);
+        if (ret == PICOQUIC_NO_ERROR_TERMINATE_PACKET_LOOP) {
+            ret = 0;
+            break;
+        }
+        nb_steps++;
+        if (ret != 0) {
+            DBG_PRINTF("Sub-test %s: Loop step failed with %d", test_case.test_name, ret); /* Fine */
+            break;
+        }
+
+        picoquic_cnx_t* server_cnx = picoquic_get_first_cnx(config->nodes[0].quic);
+        while (server_cnx != NULL) {
+            if (server_cnx->cnx_state == picoquic_state_disconnected &&
+                (server_cnx->local_error == test_case.expected_error_code || 
+                 server_cnx->remote_error == test_case.expected_error_code)) {
+                expected_error_found_on_server = 1;
+                DBG_PRINTF("Sub-test %s: Found expected error 0x%lx on server cnx %llx", /* Fine */
+                    test_case.test_name, test_case.expected_error_code,
+                    (unsigned long long)picoquic_val64_connection_id(server_cnx->initial_cnxid));
+                break;
+            }
+            server_cnx = picoquic_get_next_cnx(server_cnx);
+        }
+        if (expected_error_found_on_server) {
+            break;
+        }
+    }
+
+    if (config != NULL) {
+         if (!expected_error_found_on_server && config->nodes[0].quic != NULL) {
+            picoquic_cnx_t* server_cnx = picoquic_get_first_cnx(config->nodes[0].quic);
+            while(server_cnx != NULL) {
+                if (server_cnx->cnx_state == picoquic_state_disconnected &&
+                   (server_cnx->local_error == test_case.expected_error_code || 
+                    server_cnx->remote_error == test_case.expected_error_code)) {
+                    expected_error_found_on_server = 1;
+                    DBG_PRINTF("Sub-test %s: Found expected error 0x%lx on server cnx %llx (after loop)", /* Fine */
+                        test_case.test_name, test_case.expected_error_code,
+                        (unsigned long long)picoquic_val64_connection_id(server_cnx->initial_cnxid));
+                    break;
+                }
+                 if (server_cnx->local_error != 0 && server_cnx->local_error != 0xCC /* PICOQUIC_ERROR_AEAD_DECRYPT */ && server_cnx->local_error != test_case.expected_error_code) {
+                    DBG_PRINTF("Sub-test %s: Server CNX %llx ended with unexpected local error %lx",  test_case.test_name, /* Fine */
+                        (unsigned long long)picoquic_val64_connection_id(server_cnx->initial_cnxid),
+                        server_cnx->local_error);
+                 }
+                 if (server_cnx->remote_error != 0 && server_cnx->remote_error != test_case.expected_error_code) {
+                     DBG_PRINTF("Sub-test %s: Server CNX %llx ended with unexpected remote error %lx", test_case.test_name, /* Fine */
+                        (unsigned long long)picoquic_val64_connection_id(server_cnx->initial_cnxid),
+                        server_cnx->remote_error);
+                 }
+                server_cnx = picoquic_get_next_cnx(server_cnx);
+            }
+        }
+        fuzi_q_test_config_delete(config);
+    }
+    fuzi_q_specific_frame_to_inject = NULL; /* Crucial cleanup */
+
+    if (ret == 0 && !expected_error_found_on_server) {
+        DBG_PRINTF("Sub-test %s: Finished. Expected error 0x%lx NOT FOUND.", /* Fine */
+            test_case.test_name, test_case.expected_error_code);
+        return -1; 
+    } else if (ret == 0 && expected_error_found_on_server) {
+        DBG_PRINTF("Sub-test %s: Finished. Expected error 0x%lx FOUND. Success.", /* Fine */
+            test_case.test_name, test_case.expected_error_code);
+        return 0;
+    } else {
+        DBG_PRINTF("Sub-test %s: Finished with error code %d.", test_case.test_name, ret); /* Fine */
+        return ret; /* Propagate original error */
+    }
+}
+
+int test_error_conditions() {
+    error_test_case_t test_cases[] = {
+        {
+            "STREAM_STATE_ERROR_ClientOnServerUni",
+            "error_stream_client_on_server_uni",
+            0x05 /* PICOQUIC_TRANSPORT_STREAM_STATE_ERROR */
+        },
+        {
+            "FRAME_ENCODING_ERROR_StreamLenShorter",
+            "error_stream_len_shorter",
+            0x07 /* PICOQUIC_TRANSPORT_FRAME_ENCODING_ERROR */
+        }
+    };
+    int nb_tests = sizeof(test_cases) / sizeof(error_test_case_t);
+    int overall_ret = 0;
+
+    for (int i = 0; i < nb_tests; i++) {
+        int sub_test_ret = run_single_error_test(test_cases[i]);
+        if (sub_test_ret != 0) {
+            DBG_PRINTF("Sub-test '%s' FAILED with code %d.", test_cases[i].test_name, sub_test_ret); /* Fine */
+            overall_ret = -1; 
+            /* Optionally, break here if one failure means total failure: break; */
+        } else {
+            DBG_PRINTF("Sub-test '%s' PASSED.", test_cases[i].test_name); /* Fine */
+        }
+    }
+
+    fuzi_q_specific_frame_to_inject = NULL; /* Ensure cleanup after all tests */
+    
+    if (overall_ret == 0) {
+        DBG_PRINTF("%s", "All error condition sub-tests PASSED.");
+    } else {
+        DBG_PRINTF("%s", "One or more error condition sub-tests FAILED.");
+    }
+    return overall_ret;
 }

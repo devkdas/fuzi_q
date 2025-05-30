@@ -1,0 +1,2 @@
+/usr/bin/ar qc libfuzy_q_core.a CMakeFiles/fuzy_q_core.dir/lib/fuzzer.c.o CMakeFiles/fuzy_q_core.dir/lib/fuzzer_frames.c.o CMakeFiles/fuzy_q_core.dir/lib/client.c.o CMakeFiles/fuzy_q_core.dir/lib/server.c.o CMakeFiles/fuzy_q_core.dir/lib/context.c.o
+/usr/bin/ranlib libfuzy_q_core.a

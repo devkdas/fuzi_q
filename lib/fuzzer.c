@@ -31,6 +31,8 @@
 
 #define FUZZER_MAX_NB_FRAMES 32
 
+const char* fuzi_q_specific_frame_to_inject = NULL;
+
 /* Forward declarations for picoquic functions/macros if not found by compiler */
 /* These are added as a workaround for potential build environment/include issues. */
 
@@ -2252,6 +2254,46 @@ uint32_t fuzi_q_fuzzer(void* fuzz_ctx_param, picoquic_cnx_t* cnx,
         return (uint32_t)length;
     }
 
+    int was_fuzzed_by_specific_injector = 0;
+    uint32_t fuzzed_length_by_specific_injector = (uint32_t)length;
+
+    if (fuzi_q_specific_frame_to_inject != NULL) {
+        size_t specific_frame_idx = (size_t)-1;
+        for (size_t i = 0; i < nb_fuzi_q_frame_list; i++) {
+            if (strcmp(fuzi_q_frame_list[i].name, fuzi_q_specific_frame_to_inject) == 0) {
+                specific_frame_idx = i;
+                break;
+            }
+        }
+        if (specific_frame_idx != (size_t)-1) {
+            size_t len = fuzi_q_frame_list[specific_frame_idx].len;
+            if (header_length + len <= bytes_max) {
+                memcpy(&bytes[header_length], fuzi_q_frame_list[specific_frame_idx].val, len);
+                fuzzed_length_by_specific_injector = (uint32_t)(header_length + len);
+                was_fuzzed_by_specific_injector = 1; 
+            }
+        }
+        
+        fuzzer_cnx_state_enum current_fuzz_cnx_state = (cnx != NULL) ? fuzzer_get_cnx_state(cnx) : fuzzer_cnx_state_closing;
+        if (current_fuzz_cnx_state < 0 || current_fuzz_cnx_state >= fuzzer_cnx_state_max) {
+            current_fuzz_cnx_state = fuzzer_cnx_state_closing;
+        }
+
+        if (was_fuzzed_by_specific_injector) {
+             if (icid_ctx->already_fuzzed == 0) {
+                icid_ctx->already_fuzzed = 1;
+                ctx->nb_cnx_tried[icid_ctx->target_state] += 1;
+                ctx->nb_cnx_fuzzed[current_fuzz_cnx_state] += 1;
+             }
+            ctx->nb_packets_fuzzed[current_fuzz_cnx_state] +=1;
+            ctx->nb_fuzzed++;
+            return fuzzed_length_by_specific_injector;
+        } else {
+            /* If specific frame was requested but not injected (e.g. not found, too big), pass through original. */
+            return (uint32_t)length;
+        }
+    }
+
     uint64_t fuzz_pilot = picoquic_test_random(&icid_ctx->random_context);
     fuzzer_cnx_state_enum fuzz_cnx_state = (cnx != NULL) ? fuzzer_get_cnx_state(cnx) : fuzzer_cnx_state_closing;
     uint32_t fuzzed_length = (uint32_t)length;
@@ -2363,8 +2405,8 @@ uint32_t fuzi_q_fuzzer(void* fuzz_ctx_param, picoquic_cnx_t* cnx,
                 icid_ctx->wait_count[fuzz_cnx_state] >= icid_ctx->target_wait)) &&
             (!icid_ctx->already_fuzzed || fuzz_again)) {
 
-            uint64_t main_strategy_choice = fuzz_pilot & 0x0F; /* Now 4 bits for up to 16 strategies */
-            fuzz_pilot >>= 4; /* Consume these 4 bits */
+            uint64_t main_strategy_choice = fuzz_pilot % 10; /* Adjusted for 10 strategies */
+            fuzz_pilot >>= 4; /* Consume bits for strategy choice (ceil(log2(10))=4) */
 
             size_t final_pad = length_non_padded(bytes, length, header_length);
             int fuzz_more = ((fuzz_pilot >> 8) & 1) > 0; /* This bit is now relative to already shifted pilot */
@@ -2442,6 +2484,95 @@ uint32_t fuzi_q_fuzzer(void* fuzz_ctx_param, picoquic_cnx_t* cnx,
                         was_fuzzed++;
                     }
                 }
+            } else if (main_strategy_choice == 6) { /* New strategy: Inject specific invalid ACK */
+                size_t specific_frame_idx = (size_t)-1;
+                for (size_t i = 0; i < nb_fuzi_q_frame_list; i++) {
+                    if (strcmp(fuzi_q_frame_list[i].name, "ack_invalid_gap_1_specific") == 0) {
+                        specific_frame_idx = i;
+                        break;
+                    }
+                }
+                if (specific_frame_idx != (size_t)-1) {
+                    size_t len = fuzi_q_frame_list[specific_frame_idx].len;
+                    if (header_length + len <= bytes_max) {
+                        memcpy(&bytes[header_length], fuzi_q_frame_list[specific_frame_idx].val, len);
+                        final_pad = header_length + len; was_fuzzed++;
+                    }
+                }
+                sub_fuzzer_pilot = fuzz_pilot; /* Use remaining pilot if any further fuzzing happens */
+            } else if (main_strategy_choice == 7) { /* New strategy: Inject specific malformed CONNECTION_CLOSE */
+                size_t specific_frame_idx = (size_t)-1;
+                for (size_t i = 0; i < nb_fuzi_q_frame_list; i++) {
+                    if (strcmp(fuzi_q_frame_list[i].name, "connection_close_reason_len_too_large") == 0) {
+                        specific_frame_idx = i;
+                        break;
+                    }
+                }
+                if (specific_frame_idx != (size_t)-1) {
+                    size_t len = fuzi_q_frame_list[specific_frame_idx].len;
+                    if (header_length + len <= bytes_max) {
+                        memcpy(&bytes[header_length], fuzi_q_frame_list[specific_frame_idx].val, len);
+                        final_pad = header_length + len; was_fuzzed++;
+                    }
+                }
+                sub_fuzzer_pilot = fuzz_pilot; /* Use remaining pilot if any further fuzzing happens */
+            } else if (main_strategy_choice == 8) { /* New strategy: Inject specific PADDING frames + a PING */
+                const char* padding_frame_names[] = {
+                    "padding_5_bytes", "padding_13_bytes", "padding_50_bytes", "padding_mixed_payload"
+                };
+                size_t num_padding_choices = sizeof(padding_frame_names) / sizeof(padding_frame_names[0]);
+                size_t padding_choice_idx = fuzz_pilot % num_padding_choices;
+                fuzz_pilot >>= (num_padding_choices > 1 ? picoquic_max_bits(num_padding_choices -1) : 1);
+
+                size_t specific_padding_idx = (size_t)-1;
+                for (size_t i = 0; i < nb_fuzi_q_frame_list; i++) {
+                    if (strcmp(fuzi_q_frame_list[i].name, padding_frame_names[padding_choice_idx]) == 0) {
+                        specific_padding_idx = i;
+                        break;
+                    }
+                }
+
+                if (specific_padding_idx != (size_t)-1) {
+                    size_t padding_len = fuzi_q_frame_list[specific_padding_idx].len;
+                    size_t ping_len = 1; /* PING frame is 1 byte */
+                    if (header_length + padding_len + ping_len <= bytes_max) {
+                        memcpy(&bytes[header_length], fuzi_q_frame_list[specific_padding_idx].val, padding_len);
+                        bytes[header_length + padding_len] = picoquic_frame_type_ping;
+                        final_pad = header_length + padding_len + ping_len;
+                        was_fuzzed++;
+                    } else if (header_length + padding_len <= bytes_max) { // Only padding if PING doesn't fit
+                        memcpy(&bytes[header_length], fuzi_q_frame_list[specific_padding_idx].val, padding_len);
+                        final_pad = header_length + padding_len;
+                        was_fuzzed++;
+                    }
+                }
+                sub_fuzzer_pilot = fuzz_pilot;
+            } else if (main_strategy_choice == 9) { /* New strategy: Inject predefined frame sequences */
+                const char* sequence_frame_names[] = {
+                    "sequence_stream_ping_padding",
+                    "sequence_max_data_max_stream_data"
+                };
+                size_t num_sequence_choices = sizeof(sequence_frame_names) / sizeof(sequence_frame_names[0]);
+                size_t sequence_choice_idx = fuzz_pilot % num_sequence_choices;
+                fuzz_pilot >>= (num_sequence_choices > 1 ? picoquic_max_bits(num_sequence_choices -1) : 1);
+
+                size_t specific_sequence_idx = (size_t)-1;
+                for (size_t i = 0; i < nb_fuzi_q_frame_list; i++) {
+                    if (strcmp(fuzi_q_frame_list[i].name, sequence_frame_names[sequence_choice_idx]) == 0) {
+                        specific_sequence_idx = i;
+                        break;
+                    }
+                }
+
+                if (specific_sequence_idx != (size_t)-1) {
+                    size_t seq_len = fuzi_q_frame_list[specific_sequence_idx].len;
+                    if (header_length + seq_len <= bytes_max) {
+                        memcpy(&bytes[header_length], fuzi_q_frame_list[specific_sequence_idx].val, seq_len);
+                        final_pad = header_length + seq_len;
+                        was_fuzzed++;
+                    }
+                }
+                sub_fuzzer_pilot = fuzz_pilot;
             } else { /* Other strategies or no specific action taken by main_strategy_choice */
                  sub_fuzzer_pilot = fuzz_pilot; /* Use remaining pilot */
             }

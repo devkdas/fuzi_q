@@ -33,6 +33,11 @@ extern "C" {
     int fuzi_q_basic_test();
     int fuzi_q_basic_client_test();
     int icid_table_test();
+    int test_frame_ack_invalid_gap_1();
+    int test_frame_connection_close_frame_encoding_error();
+    int test_granular_padding();
+    int test_frame_sequence();
+    int test_error_conditions();
 
 #ifdef __cplusplus
 }

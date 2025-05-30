@@ -3148,6 +3148,30 @@ static uint8_t test_frame_hsd_type_non_canon[] = {
     0x40, 0x1e  /* Frame Type: HANDSHAKE_DONE (0x1e) as 2-byte varint */
 };
 
+/* Specific ACK frame with an invalid gap of 1 */
+/* Largest Ack: 5, Delay:0, RangeCount:1, FirstRangeLen:0 (acks 5), Gap:1 (skips 4), NextRangeLen:0 (acks 3) */
+static uint8_t test_frame_ack_invalid_gap_1_specific_val[] = {0x02, 0x05, 0x00, 0x01, 0x00, 0x01, 0x00};
+
+/* Frame Sequences for test_frame_sequence */
+static uint8_t sequence_stream_ping_padding_val[] = {
+    0x0A, 0x01, 0x05, 'h', 'e', 'l', 'l', 'o', /* STREAM ID 1, len 5, "hello" */
+    0x01,                                     /* PING */
+    0x00, 0x00, 0x00                          /* PADDING x3 */
+};
+static uint8_t sequence_max_data_max_stream_data_val[] = {
+    0x10, 0x44, 0x00,                         /* MAX_DATA 1024 */
+    0x11, 0x01, 0x42, 0x00                    /* MAX_STREAM_DATA Stream 1, 512 */
+};
+
+/* Error condition test frames */
+static uint8_t error_stream_client_on_server_uni_val[] = { /* Client sends on server-initiated uni stream (ID 3) */
+    0x09, 0x03, 'd', 'a', 't', 'a'         /* STREAM ID 3, FIN, "data" */
+};
+static uint8_t error_stream_len_shorter_val[] = { /* STREAM frame, LEN bit, Length=2, Data="test" (4 bytes) */
+    0x0A, 0x04, 0x02, 't', 'e', 's', 't'
+};
+
+
 fuzi_q_frames_t fuzi_q_frame_list[] = {
     FUZI_Q_ITEM("padding", test_frame_type_padding),
     FUZI_Q_ITEM("padding_2_bytes", test_frame_padding_2_bytes),
@@ -3843,6 +3867,10 @@ fuzi_q_frames_t fuzi_q_frame_list[] = {
     FUZI_Q_ITEM("conn_close_ft_non_canon_new", test_frame_conn_close_ft_non_canon),
     FUZI_Q_ITEM("conn_close_app_rlen_non_canon_new", test_frame_conn_close_app_rlen_non_canon),
     FUZI_Q_ITEM("hsd_type_non_canon_new", test_frame_hsd_type_non_canon),
+
+    /* Test frame for invalid ACK gap of 1 */
+    FUZI_Q_ITEM("ack_invalid_gap_1_specific", test_frame_ack_invalid_gap_1_specific_val),
+
     /* Newly added test frames (Task D20231116_160216) */
     /* FUZI_Q_ITEM("ack_invalid_gap", test_frame_ack_invalid_gap_1), */ /* Definition missing */
     FUZI_Q_ITEM("stream_len_decl_short_actual_long", test_frame_stream_len_shorter_than_data),
@@ -3850,6 +3878,15 @@ fuzi_q_frames_t fuzi_q_frame_list[] = {
     FUZI_Q_ITEM("ncid_retire_current_dcid", test_frame_type_retire_connection_id),
     /* FUZI_Q_ITEM("conn_close_transport_unknown_frame_type", test_frame_connection_close_frame_encoding_error), */ /* Definition missing */
     FUZI_Q_ITEM("stream_type_very_long_encoding", test_frame_stream_type_long_encoding),
+
+    /* Frame sequence test items */
+    FUZI_Q_ITEM("sequence_stream_ping_padding", sequence_stream_ping_padding_val),
+    FUZI_Q_ITEM("sequence_max_data_max_stream_data", sequence_max_data_max_stream_data_val),
+
+    /* Error condition test items */
+    FUZI_Q_ITEM("error_stream_client_on_server_uni", error_stream_client_on_server_uni_val),
+    FUZI_Q_ITEM("error_stream_len_shorter", error_stream_len_shorter_val),
+
     /* Newly added DATAGRAM test frames (Task D20231121_101010) */
     FUZI_Q_ITEM("datagram_with_len_empty", test_frame_datagram_with_len_empty),
     FUZI_Q_ITEM("datagram_len_non_canon", test_frame_datagram_len_non_canon),

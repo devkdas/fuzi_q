@@ -1,0 +1,7 @@
+/app/build/CMakeFiles/fuzy_q_core.dir
+/app/build/CMakeFiles/fuzi_q_tests.dir
+/app/build/CMakeFiles/fuzi_q.dir
+/app/build/CMakeFiles/fuzi_qt.dir
+/app/build/CMakeFiles/clangformat.dir
+/app/build/CMakeFiles/edit_cache.dir
+/app/build/CMakeFiles/rebuild_cache.dir
