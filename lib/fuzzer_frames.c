@@ -3889,7 +3889,7 @@ fuzi_q_frames_t fuzi_q_frame_list[] = {
     /* NEW_TOKEN Non-Canonical Varint */
     FUZI_Q_ITEM("new_token_len_non_canon", test_frame_new_token_len_non_canon),
 	/* Test frame for invalid ACK gap of 1 */
-    FUZI_Q_ITEM("ack_invalid_gap_1_specific", test_frame_ack_invalid_gap_1_specific_val),
+    FUZI_Q_ITEM("test_frame_ack_invalid_gap_1_specific_val", test_frame_ack_invalid_gap_1_specific_val),
 	FUZI_Q_ITEM("ack_invalid_gap_1_specific", ack_invalid_gap_1_specific),
     /* PADDING Variation */
     FUZI_Q_ITEM("padding_single", test_frame_padding_single),
@@ -3900,9 +3900,9 @@ fuzi_q_frames_t fuzi_q_frame_list[] = {
     FUZI_Q_ITEM("ack_ecn_non_minimal_ect0", test_frame_ack_ecn_non_minimal_ect0),
 
     /* Frame sequence test items */
-    FUZI_Q_ITEM("sequence_stream_ping_padding", sequence_stream_ping_padding_val),
+    FUZI_Q_ITEM("sequence_stream_ping_padding_val", sequence_stream_ping_padding_val),
 	FUZI_Q_ITEM("sequence_stream_ping_padding", sequence_stream_ping_padding),
-    FUZI_Q_ITEM("sequence_max_data_max_stream_data", sequence_max_data_max_stream_data_val),
+    FUZI_Q_ITEM("sequence_max_data_max_stream_data_val", sequence_max_data_max_stream_data_val),
 	FUZI_Q_ITEM("sequence_max_data_max_stream_data", sequence_max_data_max_stream_data),
 
     /* Error condition test items Add commentMore actions */
