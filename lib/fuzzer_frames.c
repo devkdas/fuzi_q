@@ -2115,6 +2115,322 @@ static uint8_t test_frame_crypto_long_varint_offset_4byte[] = {
     't', 'e', 's', 't'
 };
 
+/* STREAM SID: Non-Canonical Varints */
+static uint8_t test_stream_sid_0_nc2[] = {0x08, 0x40, 0x00, 'S','I','D','n','c'};
+static uint8_t test_stream_sid_0_nc4[] = {0x08, 0x80, 0x00, 0x00, 0x00, 'S','I','D','n','c'};
+static uint8_t test_stream_sid_0_nc8[] = {0x08, 0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 'S','I','D','n','c'};
+static uint8_t test_stream_sid_1_nc2[] = {0x08, 0x40, 0x01, 'S','I','D','n','c'};
+static uint8_t test_stream_sid_1_nc4[] = {0x08, 0x80, 0x00, 0x00, 0x01, 'S','I','D','n','c'};
+static uint8_t test_stream_sid_1_nc8[] = {0x08, 0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 'S','I','D','n','c'};
+static uint8_t test_stream_sid_5_nc2[] = {0x08, 0x40, 0x05, 'S','I','D','n','c'};
+static uint8_t test_stream_sid_5_nc4[] = {0x08, 0x80, 0x00, 0x00, 0x05, 'S','I','D','n','c'};
+static uint8_t test_stream_sid_5_nc8[] = {0x08, 0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x05, 'S','I','D','n','c'};
+
+/* STREAM Offset: Non-Canonical Varints */
+static uint8_t test_stream_off_0_nc2[] = {0x0C, 0x01, 0x40, 0x00, 'O','F','F','n','c'};
+static uint8_t test_stream_off_0_nc4[] = {0x0C, 0x01, 0x80, 0x00, 0x00, 0x00, 'O','F','F','n','c'};
+static uint8_t test_stream_off_0_nc8[] = {0x0C, 0x01, 0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 'O','F','F','n','c'};
+static uint8_t test_stream_off_1_nc2[] = {0x0C, 0x01, 0x40, 0x01, 'O','F','F','n','c'};
+static uint8_t test_stream_off_1_nc4[] = {0x0C, 0x01, 0x80, 0x00, 0x00, 0x01, 'O','F','F','n','c'};
+static uint8_t test_stream_off_1_nc8[] = {0x0C, 0x01, 0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 'O','F','F','n','c'};
+static uint8_t test_stream_off_5_nc2[] = {0x0C, 0x01, 0x40, 0x05, 'O','F','F','n','c'};
+static uint8_t test_stream_off_5_nc4[] = {0x0C, 0x01, 0x80, 0x00, 0x00, 0x05, 'O','F','F','n','c'};
+static uint8_t test_stream_off_5_nc8[] = {0x0C, 0x01, 0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x05, 'O','F','F','n','c'};
+
+/* STREAM Length: Non-Canonical Varints */
+static uint8_t test_stream_len_0_nc2[] = {0x0A, 0x01, 0x40, 0x00};
+static uint8_t test_stream_len_0_nc4[] = {0x0A, 0x01, 0x80, 0x00, 0x00, 0x00};
+static uint8_t test_stream_len_0_nc8[] = {0x0A, 0x01, 0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+static uint8_t test_stream_len_1_nc2[] = {0x0A, 0x01, 0x40, 0x01, 'L'};
+static uint8_t test_stream_len_1_nc4[] = {0x0A, 0x01, 0x80, 0x00, 0x00, 0x01, 'L'};
+static uint8_t test_stream_len_1_nc8[] = {0x0A, 0x01, 0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 'L'};
+static uint8_t test_stream_len_4_nc2[] = {0x0A, 0x01, 0x40, 0x04, 'L','E','N','n'};
+static uint8_t test_stream_len_4_nc4[] = {0x0A, 0x01, 0x80, 0x00, 0x00, 0x04, 'L','E','N','n'};
+static uint8_t test_stream_len_4_nc8[] = {0x0A, 0x01, 0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x04, 'L','E','N','n'};
+
+/* ACK Largest Acknowledged: Non-Canonical Varints */
+static uint8_t test_ack_largest_ack_0_nc2[] = {0x02, 0x40, 0x00, 0x00, 0x01, 0x00};
+static uint8_t test_ack_largest_ack_0_nc4[] = {0x02, 0x80, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00};
+static uint8_t test_ack_largest_ack_0_nc8[] = {0x02, 0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00};
+static uint8_t test_ack_largest_ack_1_nc2[] = {0x02, 0x40, 0x01, 0x00, 0x01, 0x00};
+static uint8_t test_ack_largest_ack_1_nc4[] = {0x02, 0x80, 0x00, 0x00, 0x01, 0x00, 0x01, 0x00};
+static uint8_t test_ack_largest_ack_1_nc8[] = {0x02, 0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x01, 0x00};
+static uint8_t test_ack_largest_ack_5_nc2[] = {0x02, 0x40, 0x05, 0x00, 0x01, 0x00};
+static uint8_t test_ack_largest_ack_5_nc4[] = {0x02, 0x80, 0x00, 0x00, 0x05, 0x00, 0x01, 0x00};
+static uint8_t test_ack_largest_ack_5_nc8[] = {0x02, 0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x05, 0x00, 0x01, 0x00};
+
+/* ACK Delay: Non-Canonical Varints */
+static uint8_t test_ack_delay_0_nc2[] = {0x02, 0x0A, 0x40, 0x00, 0x01, 0x00};
+static uint8_t test_ack_delay_0_nc4[] = {0x02, 0x0A, 0x80, 0x00, 0x00, 0x00, 0x01, 0x00};
+static uint8_t test_ack_delay_0_nc8[] = {0x02, 0x0A, 0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00};
+static uint8_t test_ack_delay_1_nc2[] = {0x02, 0x0A, 0x40, 0x01, 0x01, 0x00};
+static uint8_t test_ack_delay_1_nc4[] = {0x02, 0x0A, 0x80, 0x00, 0x00, 0x01, 0x01, 0x00};
+static uint8_t test_ack_delay_1_nc8[] = {0x02, 0x0A, 0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x01, 0x00};
+static uint8_t test_ack_delay_5_nc2[] = {0x02, 0x0A, 0x40, 0x05, 0x01, 0x00};
+static uint8_t test_ack_delay_5_nc4[] = {0x02, 0x0A, 0x80, 0x00, 0x00, 0x05, 0x01, 0x00};
+static uint8_t test_ack_delay_5_nc8[] = {0x02, 0x0A, 0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x05, 0x01, 0x00};
+
+/* ACK Range Count: Non-Canonical Varints */
+static uint8_t test_ack_range_count_1_nc2[] = {0x02, 0x0A, 0x00, 0x40, 0x01, 0x00};
+static uint8_t test_ack_range_count_1_nc4[] = {0x02, 0x0A, 0x00, 0x80, 0x00, 0x00, 0x01, 0x00};
+static uint8_t test_ack_range_count_1_nc8[] = {0x02, 0x0A, 0x00, 0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00};
+static uint8_t test_ack_range_count_2_nc2[] = {0x02, 0x0A, 0x00, 0x40, 0x02, 0x00, 0x00, 0x00};
+static uint8_t test_ack_range_count_2_nc4[] = {0x02, 0x0A, 0x00, 0x80, 0x00, 0x00, 0x02, 0x00, 0x00, 0x00};
+static uint8_t test_ack_range_count_2_nc8[] = {0x02, 0x0A, 0x00, 0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0x00, 0x00, 0x00};
+
+/* ACK First ACK Range: Non-Canonical Varints */
+static uint8_t test_ack_first_range_0_nc2[] = {0x02, 0x0A, 0x00, 0x01, 0x40, 0x00};
+static uint8_t test_ack_first_range_0_nc4[] = {0x02, 0x0A, 0x00, 0x01, 0x80, 0x00, 0x00, 0x00};
+static uint8_t test_ack_first_range_0_nc8[] = {0x02, 0x0A, 0x00, 0x01, 0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+static uint8_t test_ack_first_range_1_nc2[] = {0x02, 0x0A, 0x00, 0x01, 0x40, 0x01};
+static uint8_t test_ack_first_range_1_nc4[] = {0x02, 0x0A, 0x00, 0x01, 0x80, 0x00, 0x00, 0x01};
+static uint8_t test_ack_first_range_1_nc8[] = {0x02, 0x0A, 0x00, 0x01, 0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01};
+static uint8_t test_ack_first_range_5_nc2[] = {0x02, 0x0A, 0x00, 0x01, 0x40, 0x05};
+static uint8_t test_ack_first_range_5_nc4[] = {0x02, 0x0A, 0x00, 0x01, 0x80, 0x00, 0x00, 0x05};
+static uint8_t test_ack_first_range_5_nc8[] = {0x02, 0x0A, 0x00, 0x01, 0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x05};
+
+/* ACK Gap: Non-Canonical Varints */
+static uint8_t test_ack_gap_0_nc2[] = {0x02, 0x14, 0x00, 0x02, 0x01, 0x40, 0x00, 0x00};
+static uint8_t test_ack_gap_0_nc4[] = {0x02, 0x14, 0x00, 0x02, 0x01, 0x80, 0x00, 0x00, 0x00, 0x00};
+static uint8_t test_ack_gap_0_nc8[] = {0x02, 0x14, 0x00, 0x02, 0x01, 0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+static uint8_t test_ack_gap_1_nc2[] = {0x02, 0x14, 0x00, 0x02, 0x01, 0x40, 0x01, 0x00};
+static uint8_t test_ack_gap_1_nc4[] = {0x02, 0x14, 0x00, 0x02, 0x01, 0x80, 0x00, 0x00, 0x01, 0x00};
+static uint8_t test_ack_gap_1_nc8[] = {0x02, 0x14, 0x00, 0x02, 0x01, 0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00};
+static uint8_t test_ack_gap_2_nc2[] = {0x02, 0x14, 0x00, 0x02, 0x01, 0x40, 0x02, 0x00};
+static uint8_t test_ack_gap_2_nc4[] = {0x02, 0x14, 0x00, 0x02, 0x01, 0x80, 0x00, 0x00, 0x02, 0x00};
+static uint8_t test_ack_gap_2_nc8[] = {0x02, 0x14, 0x00, 0x02, 0x01, 0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0x00};
+
+/* ACK Range Length: Non-Canonical Varints */
+static uint8_t test_ack_range_len_0_nc2[] = {0x02, 0x14, 0x00, 0x02, 0x01, 0x01, 0x40, 0x00};
+static uint8_t test_ack_range_len_0_nc4[] = {0x02, 0x14, 0x00, 0x02, 0x01, 0x01, 0x80, 0x00, 0x00, 0x00};
+static uint8_t test_ack_range_len_0_nc8[] = {0x02, 0x14, 0x00, 0x02, 0x01, 0x01, 0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+static uint8_t test_ack_range_len_1_nc2[] = {0x02, 0x14, 0x00, 0x02, 0x01, 0x01, 0x40, 0x01};
+static uint8_t test_ack_range_len_1_nc4[] = {0x02, 0x14, 0x00, 0x02, 0x01, 0x01, 0x80, 0x00, 0x00, 0x01};
+static uint8_t test_ack_range_len_1_nc8[] = {0x02, 0x14, 0x00, 0x02, 0x01, 0x01, 0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01};
+static uint8_t test_ack_range_len_5_nc2[] = {0x02, 0x14, 0x00, 0x02, 0x01, 0x01, 0x40, 0x05};
+static uint8_t test_ack_range_len_5_nc4[] = {0x02, 0x14, 0x00, 0x02, 0x01, 0x01, 0x80, 0x00, 0x00, 0x05};
+static uint8_t test_ack_range_len_5_nc8[] = {0x02, 0x14, 0x00, 0x02, 0x01, 0x01, 0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x05};
+
+/* RESET_STREAM Stream ID: Non-Canonical Varints */
+static uint8_t test_reset_stream_sid_0_nc2[] = {0x04, 0x40, 0x00, 0x00, 0x00};
+static uint8_t test_reset_stream_sid_0_nc4[] = {0x04, 0x80, 0x00, 0x00, 0x00, 0x00, 0x00};
+static uint8_t test_reset_stream_sid_0_nc8[] = {0x04, 0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+static uint8_t test_reset_stream_sid_1_nc2[] = {0x04, 0x40, 0x01, 0x00, 0x00};
+static uint8_t test_reset_stream_sid_1_nc4[] = {0x04, 0x80, 0x00, 0x00, 0x01, 0x00, 0x00};
+static uint8_t test_reset_stream_sid_1_nc8[] = {0x04, 0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00};
+static uint8_t test_reset_stream_sid_5_nc2[] = {0x04, 0x40, 0x05, 0x00, 0x00};
+static uint8_t test_reset_stream_sid_5_nc4[] = {0x04, 0x80, 0x00, 0x00, 0x05, 0x00, 0x00};
+static uint8_t test_reset_stream_sid_5_nc8[] = {0x04, 0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x05, 0x00, 0x00};
+
+/* RESET_STREAM App Error Code: Non-Canonical Varints */
+static uint8_t test_reset_stream_err_0_nc2[] = {0x04, 0x01, 0x40, 0x00, 0x00};
+static uint8_t test_reset_stream_err_0_nc4[] = {0x04, 0x01, 0x80, 0x00, 0x00, 0x00, 0x00};
+static uint8_t test_reset_stream_err_0_nc8[] = {0x04, 0x01, 0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+static uint8_t test_reset_stream_err_1_nc2[] = {0x04, 0x01, 0x40, 0x01, 0x00};
+static uint8_t test_reset_stream_err_1_nc4[] = {0x04, 0x01, 0x80, 0x00, 0x00, 0x01, 0x00};
+static uint8_t test_reset_stream_err_1_nc8[] = {0x04, 0x01, 0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00};
+static uint8_t test_reset_stream_err_5_nc2[] = {0x04, 0x01, 0x40, 0x05, 0x00};
+static uint8_t test_reset_stream_err_5_nc4[] = {0x04, 0x01, 0x80, 0x00, 0x00, 0x05, 0x00};
+static uint8_t test_reset_stream_err_5_nc8[] = {0x04, 0x01, 0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x05, 0x00};
+
+/* RESET_STREAM Final Size: Non-Canonical Varints */
+static uint8_t test_reset_stream_final_0_nc2[] = {0x04, 0x01, 0x00, 0x40, 0x00};
+static uint8_t test_reset_stream_final_0_nc4[] = {0x04, 0x01, 0x00, 0x80, 0x00, 0x00, 0x00};
+static uint8_t test_reset_stream_final_0_nc8[] = {0x04, 0x01, 0x00, 0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+static uint8_t test_reset_stream_final_1_nc2[] = {0x04, 0x01, 0x00, 0x40, 0x01};
+static uint8_t test_reset_stream_final_1_nc4[] = {0x04, 0x01, 0x00, 0x80, 0x00, 0x00, 0x01};
+static uint8_t test_reset_stream_final_1_nc8[] = {0x04, 0x01, 0x00, 0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01};
+static uint8_t test_reset_stream_final_5_nc2[] = {0x04, 0x01, 0x00, 0x40, 0x05};
+static uint8_t test_reset_stream_final_5_nc4[] = {0x04, 0x01, 0x00, 0x80, 0x00, 0x00, 0x05};
+static uint8_t test_reset_stream_final_5_nc8[] = {0x04, 0x01, 0x00, 0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x05};
+
+/* STOP_SENDING Stream ID: Non-Canonical Varints */
+static uint8_t test_stop_sending_sid_0_nc2[] = {0x05, 0x40, 0x00, 0x00};
+static uint8_t test_stop_sending_sid_0_nc4[] = {0x05, 0x80, 0x00, 0x00, 0x00, 0x00};
+static uint8_t test_stop_sending_sid_0_nc8[] = {0x05, 0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+static uint8_t test_stop_sending_sid_1_nc2[] = {0x05, 0x40, 0x01, 0x00};
+static uint8_t test_stop_sending_sid_1_nc4[] = {0x05, 0x80, 0x00, 0x00, 0x01, 0x00};
+static uint8_t test_stop_sending_sid_1_nc8[] = {0x05, 0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00};
+static uint8_t test_stop_sending_sid_5_nc2[] = {0x05, 0x40, 0x05, 0x00};
+static uint8_t test_stop_sending_sid_5_nc4[] = {0x05, 0x80, 0x00, 0x00, 0x05, 0x00};
+static uint8_t test_stop_sending_sid_5_nc8[] = {0x05, 0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x05, 0x00};
+
+/* STOP_SENDING App Error Code: Non-Canonical Varints */
+static uint8_t test_stop_sending_err_0_nc2[] = {0x05, 0x01, 0x40, 0x00};
+static uint8_t test_stop_sending_err_0_nc4[] = {0x05, 0x01, 0x80, 0x00, 0x00, 0x00};
+static uint8_t test_stop_sending_err_0_nc8[] = {0x05, 0x01, 0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+static uint8_t test_stop_sending_err_1_nc2[] = {0x05, 0x01, 0x40, 0x01};
+static uint8_t test_stop_sending_err_1_nc4[] = {0x05, 0x01, 0x80, 0x00, 0x00, 0x01};
+static uint8_t test_stop_sending_err_1_nc8[] = {0x05, 0x01, 0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01};
+static uint8_t test_stop_sending_err_5_nc2[] = {0x05, 0x01, 0x40, 0x05};
+static uint8_t test_stop_sending_err_5_nc4[] = {0x05, 0x01, 0x80, 0x00, 0x00, 0x05};
+static uint8_t test_stop_sending_err_5_nc8[] = {0x05, 0x01, 0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x05};
+
+/* MAX_DATA Maximum Data: Non-Canonical Varints */
+static uint8_t test_max_data_0_nc2[] = {0x10, 0x40, 0x00};
+static uint8_t test_max_data_0_nc4[] = {0x10, 0x80, 0x00, 0x00, 0x00};
+static uint8_t test_max_data_0_nc8[] = {0x10, 0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+static uint8_t test_max_data_1_nc2[] = {0x10, 0x40, 0x01};
+static uint8_t test_max_data_1_nc4[] = {0x10, 0x80, 0x00, 0x00, 0x01};
+static uint8_t test_max_data_1_nc8[] = {0x10, 0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01};
+static uint8_t test_max_data_10_nc2[] = {0x10, 0x40, 0x0A};
+static uint8_t test_max_data_10_nc4[] = {0x10, 0x80, 0x00, 0x00, 0x0A};
+static uint8_t test_max_data_10_nc8[] = {0x10, 0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x0A};
+
+/* MAX_STREAM_DATA Stream ID: Non-Canonical Varints */
+static uint8_t test_max_sdata_sid_0_nc2[] = {0x11, 0x40, 0x00, 0x64};
+static uint8_t test_max_sdata_sid_0_nc4[] = {0x11, 0x80, 0x00, 0x00, 0x00, 0x64};
+static uint8_t test_max_sdata_sid_0_nc8[] = {0x11, 0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x64};
+static uint8_t test_max_sdata_sid_1_nc2[] = {0x11, 0x40, 0x01, 0x64};
+static uint8_t test_max_sdata_sid_1_nc4[] = {0x11, 0x80, 0x00, 0x00, 0x01, 0x64};
+static uint8_t test_max_sdata_sid_1_nc8[] = {0x11, 0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x64};
+static uint8_t test_max_sdata_sid_5_nc2[] = {0x11, 0x40, 0x05, 0x64};
+static uint8_t test_max_sdata_sid_5_nc4[] = {0x11, 0x80, 0x00, 0x00, 0x05, 0x64};
+static uint8_t test_max_sdata_sid_5_nc8[] = {0x11, 0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x05, 0x64};
+
+/* MAX_STREAM_DATA Max Value: Non-Canonical Varints */
+static uint8_t test_max_sdata_val_0_nc2[] = {0x11, 0x01, 0x40, 0x00};
+static uint8_t test_max_sdata_val_0_nc4[] = {0x11, 0x01, 0x80, 0x00, 0x00, 0x00};
+static uint8_t test_max_sdata_val_0_nc8[] = {0x11, 0x01, 0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+static uint8_t test_max_sdata_val_1_nc2[] = {0x11, 0x01, 0x40, 0x01};
+static uint8_t test_max_sdata_val_1_nc4[] = {0x11, 0x01, 0x80, 0x00, 0x00, 0x01};
+static uint8_t test_max_sdata_val_1_nc8[] = {0x11, 0x01, 0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01};
+static uint8_t test_max_sdata_val_10_nc2[] = {0x11, 0x01, 0x40, 0x0A};
+static uint8_t test_max_sdata_val_10_nc4[] = {0x11, 0x01, 0x80, 0x00, 0x00, 0x0A};
+static uint8_t test_max_sdata_val_10_nc8[] = {0x11, 0x01, 0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x0A};
+
+/* MAX_STREAMS (Bidi): Non-Canonical Varints */
+static uint8_t test_max_streams_bidi_0_nc2[] = {0x12, 0x40, 0x00};
+static uint8_t test_max_streams_bidi_0_nc4[] = {0x12, 0x80, 0x00, 0x00, 0x00};
+static uint8_t test_max_streams_bidi_0_nc8[] = {0x12, 0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+static uint8_t test_max_streams_bidi_1_nc2[] = {0x12, 0x40, 0x01};
+static uint8_t test_max_streams_bidi_1_nc4[] = {0x12, 0x80, 0x00, 0x00, 0x01};
+static uint8_t test_max_streams_bidi_1_nc8[] = {0x12, 0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01};
+static uint8_t test_max_streams_bidi_5_nc2[] = {0x12, 0x40, 0x05};
+static uint8_t test_max_streams_bidi_5_nc4[] = {0x12, 0x80, 0x00, 0x00, 0x05};
+static uint8_t test_max_streams_bidi_5_nc8[] = {0x12, 0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x05};
+
+/* MAX_STREAMS (Uni): Non-Canonical Varints */
+static uint8_t test_max_streams_uni_0_nc2[] = {0x13, 0x40, 0x00};
+static uint8_t test_max_streams_uni_0_nc4[] = {0x13, 0x80, 0x00, 0x00, 0x00};
+static uint8_t test_max_streams_uni_0_nc8[] = {0x13, 0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+static uint8_t test_max_streams_uni_1_nc2[] = {0x13, 0x40, 0x01};
+static uint8_t test_max_streams_uni_1_nc4[] = {0x13, 0x80, 0x00, 0x00, 0x01};
+static uint8_t test_max_streams_uni_1_nc8[] = {0x13, 0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01};
+static uint8_t test_max_streams_uni_5_nc2[] = {0x13, 0x40, 0x05};
+static uint8_t test_max_streams_uni_5_nc4[] = {0x13, 0x80, 0x00, 0x00, 0x05};
+static uint8_t test_max_streams_uni_5_nc8[] = {0x13, 0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x05};
+
+/* RESET_STREAM Stream ID: Non-Canonical Varints */
+static uint8_t test_reset_stream_sid_0_nc2[] = {0x04, 0x40, 0x00, 0x00, 0x00};
+static uint8_t test_reset_stream_sid_0_nc4[] = {0x04, 0x80, 0x00, 0x00, 0x00, 0x00, 0x00};
+static uint8_t test_reset_stream_sid_0_nc8[] = {0x04, 0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+static uint8_t test_reset_stream_sid_1_nc2[] = {0x04, 0x40, 0x01, 0x00, 0x00};
+static uint8_t test_reset_stream_sid_1_nc4[] = {0x04, 0x80, 0x00, 0x00, 0x01, 0x00, 0x00};
+static uint8_t test_reset_stream_sid_1_nc8[] = {0x04, 0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00};
+static uint8_t test_reset_stream_sid_5_nc2[] = {0x04, 0x40, 0x05, 0x00, 0x00};
+static uint8_t test_reset_stream_sid_5_nc4[] = {0x04, 0x80, 0x00, 0x00, 0x05, 0x00, 0x00};
+static uint8_t test_reset_stream_sid_5_nc8[] = {0x04, 0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x05, 0x00, 0x00};
+
+/* RESET_STREAM App Error Code: Non-Canonical Varints */
+static uint8_t test_reset_stream_err_0_nc2[] = {0x04, 0x01, 0x40, 0x00, 0x00};
+static uint8_t test_reset_stream_err_0_nc4[] = {0x04, 0x01, 0x80, 0x00, 0x00, 0x00, 0x00};
+static uint8_t test_reset_stream_err_0_nc8[] = {0x04, 0x01, 0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+static uint8_t test_reset_stream_err_1_nc2[] = {0x04, 0x01, 0x40, 0x01, 0x00};
+static uint8_t test_reset_stream_err_1_nc4[] = {0x04, 0x01, 0x80, 0x00, 0x00, 0x01, 0x00};
+static uint8_t test_reset_stream_err_1_nc8[] = {0x04, 0x01, 0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00};
+static uint8_t test_reset_stream_err_5_nc2[] = {0x04, 0x01, 0x40, 0x05, 0x00};
+static uint8_t test_reset_stream_err_5_nc4[] = {0x04, 0x01, 0x80, 0x00, 0x00, 0x05, 0x00};
+static uint8_t test_reset_stream_err_5_nc8[] = {0x04, 0x01, 0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x05, 0x00};
+
+/* RESET_STREAM Final Size: Non-Canonical Varints */
+static uint8_t test_reset_stream_final_0_nc2[] = {0x04, 0x01, 0x00, 0x40, 0x00};
+static uint8_t test_reset_stream_final_0_nc4[] = {0x04, 0x01, 0x00, 0x80, 0x00, 0x00, 0x00};
+static uint8_t test_reset_stream_final_0_nc8[] = {0x04, 0x01, 0x00, 0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+static uint8_t test_reset_stream_final_1_nc2[] = {0x04, 0x01, 0x00, 0x40, 0x01};
+static uint8_t test_reset_stream_final_1_nc4[] = {0x04, 0x01, 0x00, 0x80, 0x00, 0x00, 0x01};
+static uint8_t test_reset_stream_final_1_nc8[] = {0x04, 0x01, 0x00, 0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01};
+static uint8_t test_reset_stream_final_5_nc2[] = {0x04, 0x01, 0x00, 0x40, 0x05};
+static uint8_t test_reset_stream_final_5_nc4[] = {0x04, 0x01, 0x00, 0x80, 0x00, 0x00, 0x05};
+static uint8_t test_reset_stream_final_5_nc8[] = {0x04, 0x01, 0x00, 0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x05};
+
+/* STOP_SENDING Stream ID: Non-Canonical Varints */
+static uint8_t test_stop_sending_sid_0_nc2[] = {0x05, 0x40, 0x00, 0x00};
+static uint8_t test_stop_sending_sid_0_nc4[] = {0x05, 0x80, 0x00, 0x00, 0x00, 0x00};
+static uint8_t test_stop_sending_sid_0_nc8[] = {0x05, 0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+static uint8_t test_stop_sending_sid_1_nc2[] = {0x05, 0x40, 0x01, 0x00};
+static uint8_t test_stop_sending_sid_1_nc4[] = {0x05, 0x80, 0x00, 0x00, 0x01, 0x00};
+static uint8_t test_stop_sending_sid_1_nc8[] = {0x05, 0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00};
+static uint8_t test_stop_sending_sid_5_nc2[] = {0x05, 0x40, 0x05, 0x00};
+static uint8_t test_stop_sending_sid_5_nc4[] = {0x05, 0x80, 0x00, 0x00, 0x05, 0x00};
+static uint8_t test_stop_sending_sid_5_nc8[] = {0x05, 0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x05, 0x00};
+
+/* STOP_SENDING App Error Code: Non-Canonical Varints */
+static uint8_t test_stop_sending_err_0_nc2[] = {0x05, 0x01, 0x40, 0x00};
+static uint8_t test_stop_sending_err_0_nc4[] = {0x05, 0x01, 0x80, 0x00, 0x00, 0x00};
+static uint8_t test_stop_sending_err_0_nc8[] = {0x05, 0x01, 0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+static uint8_t test_stop_sending_err_1_nc2[] = {0x05, 0x01, 0x40, 0x01};
+static uint8_t test_stop_sending_err_1_nc4[] = {0x05, 0x01, 0x80, 0x00, 0x00, 0x01};
+static uint8_t test_stop_sending_err_1_nc8[] = {0x05, 0x01, 0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01};
+static uint8_t test_stop_sending_err_5_nc2[] = {0x05, 0x01, 0x40, 0x05};
+static uint8_t test_stop_sending_err_5_nc4[] = {0x05, 0x01, 0x80, 0x00, 0x00, 0x05};
+static uint8_t test_stop_sending_err_5_nc8[] = {0x05, 0x01, 0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x05};
+
+/* DATA_BLOCKED Maximum Data: Non-Canonical Varints */
+static uint8_t test_data_blocked_0_nc2[] = {0x14, 0x40, 0x00};
+static uint8_t test_data_blocked_0_nc4[] = {0x14, 0x80, 0x00, 0x00, 0x00};
+static uint8_t test_data_blocked_0_nc8[] = {0x14, 0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+static uint8_t test_data_blocked_1_nc2[] = {0x14, 0x40, 0x01};
+static uint8_t test_data_blocked_1_nc4[] = {0x14, 0x80, 0x00, 0x00, 0x01};
+static uint8_t test_data_blocked_1_nc8[] = {0x14, 0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01};
+static uint8_t test_data_blocked_10_nc2[] = {0x14, 0x40, 0x0A};
+static uint8_t test_data_blocked_10_nc4[] = {0x14, 0x80, 0x00, 0x00, 0x0A};
+static uint8_t test_data_blocked_10_nc8[] = {0x14, 0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x0A};
+
+/* STREAM_DATA_BLOCKED Stream ID: Non-Canonical Varints */
+static uint8_t test_sdata_blocked_sid_0_nc2[] = {0x15, 0x40, 0x00, 0x64};
+static uint8_t test_sdata_blocked_sid_0_nc4[] = {0x15, 0x80, 0x00, 0x00, 0x00, 0x64};
+static uint8_t test_sdata_blocked_sid_0_nc8[] = {0x15, 0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x64};
+static uint8_t test_sdata_blocked_sid_1_nc2[] = {0x15, 0x40, 0x01, 0x64};
+static uint8_t test_sdata_blocked_sid_1_nc4[] = {0x15, 0x80, 0x00, 0x00, 0x01, 0x64};
+static uint8_t test_sdata_blocked_sid_1_nc8[] = {0x15, 0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x64};
+static uint8_t test_sdata_blocked_sid_5_nc2[] = {0x15, 0x40, 0x05, 0x64};
+static uint8_t test_sdata_blocked_sid_5_nc4[] = {0x15, 0x80, 0x00, 0x00, 0x05, 0x64};
+static uint8_t test_sdata_blocked_sid_5_nc8[] = {0x15, 0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x05, 0x64};
+
+/* STREAM_DATA_BLOCKED Stream Data Limit: Non-Canonical Varints */
+static uint8_t test_sdata_blocked_limit_0_nc2[] = {0x15, 0x01, 0x40, 0x00};
+static uint8_t test_sdata_blocked_limit_0_nc4[] = {0x15, 0x01, 0x80, 0x00, 0x00, 0x00};
+static uint8_t test_sdata_blocked_limit_0_nc8[] = {0x15, 0x01, 0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+static uint8_t test_sdata_blocked_limit_1_nc2[] = {0x15, 0x01, 0x40, 0x01};
+static uint8_t test_sdata_blocked_limit_1_nc4[] = {0x15, 0x01, 0x80, 0x00, 0x00, 0x01};
+static uint8_t test_sdata_blocked_limit_1_nc8[] = {0x15, 0x01, 0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01};
+static uint8_t test_sdata_blocked_limit_10_nc2[] = {0x15, 0x01, 0x40, 0x0A};
+static uint8_t test_sdata_blocked_limit_10_nc4[] = {0x15, 0x01, 0x80, 0x00, 0x00, 0x0A};
+static uint8_t test_sdata_blocked_limit_10_nc8[] = {0x15, 0x01, 0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x0A};
+
+/* STREAMS_BLOCKED (Bidi) Maximum Streams: Non-Canonical Varints */
+static uint8_t test_streams_blocked_bidi_0_nc2[] = {0x16, 0x40, 0x00};
+static uint8_t test_streams_blocked_bidi_0_nc4[] = {0x16, 0x80, 0x00, 0x00, 0x00};
+static uint8_t test_streams_blocked_bidi_0_nc8[] = {0x16, 0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+static uint8_t test_streams_blocked_bidi_1_nc2[] = {0x16, 0x40, 0x01};
+static uint8_t test_streams_blocked_bidi_1_nc4[] = {0x16, 0x80, 0x00, 0x00, 0x01};
+static uint8_t test_streams_blocked_bidi_1_nc8[] = {0x16, 0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01};
+static uint8_t test_streams_blocked_bidi_5_nc2[] = {0x16, 0x40, 0x05};
+static uint8_t test_streams_blocked_bidi_5_nc4[] = {0x16, 0x80, 0x00, 0x00, 0x05};
+static uint8_t test_streams_blocked_bidi_5_nc8[] = {0x16, 0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x05};
+
+/* STREAMS_BLOCKED (Uni) Maximum Streams: Non-Canonical Varints */
+static uint8_t test_streams_blocked_uni_0_nc2[] = {0x17, 0x40, 0x00};
+static uint8_t test_streams_blocked_uni_0_nc4[] = {0x17, 0x80, 0x00, 0x00, 0x00};
+static uint8_t test_streams_blocked_uni_0_nc8[] = {0x17, 0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+static uint8_t test_streams_blocked_uni_1_nc2[] = {0x17, 0x40, 0x01};
+static uint8_t test_streams_blocked_uni_1_nc4[] = {0x17, 0x80, 0x00, 0x00, 0x01};
+static uint8_t test_streams_blocked_uni_1_nc8[] = {0x17, 0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01};
+static uint8_t test_streams_blocked_uni_5_nc2[] = {0x17, 0x40, 0x05};
+static uint8_t test_streams_blocked_uni_5_nc4[] = {0x17, 0x80, 0x00, 0x00, 0x05};
+static uint8_t test_streams_blocked_uni_5_nc8[] = {0x17, 0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x05};
+
 /* Aggressive Padding / PMTU Probing Mimics */
 static uint8_t test_frame_ping_padded_to_1200[1200] = {0x01}; /* PING + 1199 PADDING */
 static uint8_t test_frame_ping_padded_to_1500[1500] = {0x01}; /* PING + 1499 PADDING */
@@ -3170,6 +3486,293 @@ fuzi_q_frames_t fuzi_q_frame_list[] = {
     FUZI_Q_ITEM("ack_long_varint_largest_acked_4byte", test_frame_ack_long_varint_largest_acked_4byte),
     FUZI_Q_ITEM("crypto_long_varint_offset_2byte", test_frame_crypto_long_varint_offset_2byte),
     FUZI_Q_ITEM("crypto_long_varint_offset_4byte", test_frame_crypto_long_varint_offset_4byte),
+    /* STREAM SID: Non-Canonical Varints */
+    FUZI_Q_ITEM("stream_sid_0_nc2", test_stream_sid_0_nc2),
+    FUZI_Q_ITEM("stream_sid_0_nc4", test_stream_sid_0_nc4),
+    FUZI_Q_ITEM("stream_sid_0_nc8", test_stream_sid_0_nc8),
+    FUZI_Q_ITEM("stream_sid_1_nc2", test_stream_sid_1_nc2),
+    FUZI_Q_ITEM("stream_sid_1_nc4", test_stream_sid_1_nc4),
+    FUZI_Q_ITEM("stream_sid_1_nc8", test_stream_sid_1_nc8),
+    FUZI_Q_ITEM("stream_sid_5_nc2", test_stream_sid_5_nc2),
+    FUZI_Q_ITEM("stream_sid_5_nc4", test_stream_sid_5_nc4),
+    FUZI_Q_ITEM("stream_sid_5_nc8", test_stream_sid_5_nc8),
+    /* STREAM Offset: Non-Canonical Varints */
+    FUZI_Q_ITEM("stream_off_0_nc2", test_stream_off_0_nc2),
+    FUZI_Q_ITEM("stream_off_0_nc4", test_stream_off_0_nc4),
+    FUZI_Q_ITEM("stream_off_0_nc8", test_stream_off_0_nc8),
+    FUZI_Q_ITEM("stream_off_1_nc2", test_stream_off_1_nc2),
+    FUZI_Q_ITEM("stream_off_1_nc4", test_stream_off_1_nc4),
+    FUZI_Q_ITEM("stream_off_1_nc8", test_stream_off_1_nc8),
+    FUZI_Q_ITEM("stream_off_5_nc2", test_stream_off_5_nc2),
+    FUZI_Q_ITEM("stream_off_5_nc4", test_stream_off_5_nc4),
+    FUZI_Q_ITEM("stream_off_5_nc8", test_stream_off_5_nc8),
+    /* STREAM Length: Non-Canonical Varints */
+    FUZI_Q_ITEM("stream_len_0_nc2", test_stream_len_0_nc2),
+    FUZI_Q_ITEM("stream_len_0_nc4", test_stream_len_0_nc4),
+    FUZI_Q_ITEM("stream_len_0_nc8", test_stream_len_0_nc8),
+    FUZI_Q_ITEM("stream_len_1_nc2", test_stream_len_1_nc2),
+    FUZI_Q_ITEM("stream_len_1_nc4", test_stream_len_1_nc4),
+    FUZI_Q_ITEM("stream_len_1_nc8", test_stream_len_1_nc8),
+    FUZI_Q_ITEM("stream_len_4_nc2", test_stream_len_4_nc2),
+    FUZI_Q_ITEM("stream_len_4_nc4", test_stream_len_4_nc4),
+    FUZI_Q_ITEM("stream_len_4_nc8", test_stream_len_4_nc8),
+    /* ACK Largest Acknowledged: Non-Canonical Varints */
+    FUZI_Q_ITEM("ack_largest_ack_0_nc2", test_ack_largest_ack_0_nc2),
+    FUZI_Q_ITEM("ack_largest_ack_0_nc4", test_ack_largest_ack_0_nc4),
+    FUZI_Q_ITEM("ack_largest_ack_0_nc8", test_ack_largest_ack_0_nc8),
+    FUZI_Q_ITEM("ack_largest_ack_1_nc2", test_ack_largest_ack_1_nc2),
+    FUZI_Q_ITEM("ack_largest_ack_1_nc4", test_ack_largest_ack_1_nc4),
+    FUZI_Q_ITEM("ack_largest_ack_1_nc8", test_ack_largest_ack_1_nc8),
+    FUZI_Q_ITEM("ack_largest_ack_5_nc2", test_ack_largest_ack_5_nc2),
+    FUZI_Q_ITEM("ack_largest_ack_5_nc4", test_ack_largest_ack_5_nc4),
+    FUZI_Q_ITEM("ack_largest_ack_5_nc8", test_ack_largest_ack_5_nc8),
+    /* ACK Delay: Non-Canonical Varints */
+    FUZI_Q_ITEM("ack_delay_0_nc2", test_ack_delay_0_nc2),
+    FUZI_Q_ITEM("ack_delay_0_nc4", test_ack_delay_0_nc4),
+    FUZI_Q_ITEM("ack_delay_0_nc8", test_ack_delay_0_nc8),
+    FUZI_Q_ITEM("ack_delay_1_nc2", test_ack_delay_1_nc2),
+    FUZI_Q_ITEM("ack_delay_1_nc4", test_ack_delay_1_nc4),
+    FUZI_Q_ITEM("ack_delay_1_nc8", test_ack_delay_1_nc8),
+    FUZI_Q_ITEM("ack_delay_5_nc2", test_ack_delay_5_nc2),
+    FUZI_Q_ITEM("ack_delay_5_nc4", test_ack_delay_5_nc4),
+    FUZI_Q_ITEM("ack_delay_5_nc8", test_ack_delay_5_nc8),
+    /* ACK Range Count: Non-Canonical Varints */
+    FUZI_Q_ITEM("ack_range_count_1_nc2", test_ack_range_count_1_nc2),
+    FUZI_Q_ITEM("ack_range_count_1_nc4", test_ack_range_count_1_nc4),
+    FUZI_Q_ITEM("ack_range_count_1_nc8", test_ack_range_count_1_nc8),
+    FUZI_Q_ITEM("ack_range_count_2_nc2", test_ack_range_count_2_nc2),
+    FUZI_Q_ITEM("ack_range_count_2_nc4", test_ack_range_count_2_nc4),
+    FUZI_Q_ITEM("ack_range_count_2_nc8", test_ack_range_count_2_nc8),
+    /* ACK First ACK Range: Non-Canonical Varints */
+    FUZI_Q_ITEM("ack_first_range_0_nc2", test_ack_first_range_0_nc2),
+    FUZI_Q_ITEM("ack_first_range_0_nc4", test_ack_first_range_0_nc4),
+    FUZI_Q_ITEM("ack_first_range_0_nc8", test_ack_first_range_0_nc8),
+    FUZI_Q_ITEM("ack_first_range_1_nc2", test_ack_first_range_1_nc2),
+    FUZI_Q_ITEM("ack_first_range_1_nc4", test_ack_first_range_1_nc4),
+    FUZI_Q_ITEM("ack_first_range_1_nc8", test_ack_first_range_1_nc8),
+    FUZI_Q_ITEM("ack_first_range_5_nc2", test_ack_first_range_5_nc2),
+    FUZI_Q_ITEM("ack_first_range_5_nc4", test_ack_first_range_5_nc4),
+    FUZI_Q_ITEM("ack_first_range_5_nc8", test_ack_first_range_5_nc8),
+    /* ACK Gap: Non-Canonical Varints */
+    FUZI_Q_ITEM("ack_gap_0_nc2", test_ack_gap_0_nc2),
+    FUZI_Q_ITEM("ack_gap_0_nc4", test_ack_gap_0_nc4),
+    FUZI_Q_ITEM("ack_gap_0_nc8", test_ack_gap_0_nc8),
+    FUZI_Q_ITEM("ack_gap_1_nc2", test_ack_gap_1_nc2),
+    FUZI_Q_ITEM("ack_gap_1_nc4", test_ack_gap_1_nc4),
+    FUZI_Q_ITEM("ack_gap_1_nc8", test_ack_gap_1_nc8),
+    FUZI_Q_ITEM("ack_gap_2_nc2", test_ack_gap_2_nc2),
+    FUZI_Q_ITEM("ack_gap_2_nc4", test_ack_gap_2_nc4),
+    FUZI_Q_ITEM("ack_gap_2_nc8", test_ack_gap_2_nc8),
+    /* ACK Range Length: Non-Canonical Varints */
+    FUZI_Q_ITEM("ack_range_len_0_nc2", test_ack_range_len_0_nc2),
+    FUZI_Q_ITEM("ack_range_len_0_nc4", test_ack_range_len_0_nc4),
+    FUZI_Q_ITEM("ack_range_len_0_nc8", test_ack_range_len_0_nc8),
+    FUZI_Q_ITEM("ack_range_len_1_nc2", test_ack_range_len_1_nc2),
+    FUZI_Q_ITEM("ack_range_len_1_nc4", test_ack_range_len_1_nc4),
+    FUZI_Q_ITEM("ack_range_len_1_nc8", test_ack_range_len_1_nc8),
+    FUZI_Q_ITEM("ack_range_len_5_nc2", test_ack_range_len_5_nc2),
+    FUZI_Q_ITEM("ack_range_len_5_nc4", test_ack_range_len_5_nc4),
+    FUZI_Q_ITEM("ack_range_len_5_nc8", test_ack_range_len_5_nc8),
+    /* RESET_STREAM Stream ID: Non-Canonical Varints */
+    FUZI_Q_ITEM("reset_stream_sid_0_nc2", test_reset_stream_sid_0_nc2),
+    FUZI_Q_ITEM("reset_stream_sid_0_nc4", test_reset_stream_sid_0_nc4),
+    FUZI_Q_ITEM("reset_stream_sid_0_nc8", test_reset_stream_sid_0_nc8),
+    FUZI_Q_ITEM("reset_stream_sid_1_nc2", test_reset_stream_sid_1_nc2),
+    FUZI_Q_ITEM("reset_stream_sid_1_nc4", test_reset_stream_sid_1_nc4),
+    FUZI_Q_ITEM("reset_stream_sid_1_nc8", test_reset_stream_sid_1_nc8),
+    FUZI_Q_ITEM("reset_stream_sid_5_nc2", test_reset_stream_sid_5_nc2),
+    FUZI_Q_ITEM("reset_stream_sid_5_nc4", test_reset_stream_sid_5_nc4),
+    FUZI_Q_ITEM("reset_stream_sid_5_nc8", test_reset_stream_sid_5_nc8),
+    /* RESET_STREAM App Error Code: Non-Canonical Varints */
+    FUZI_Q_ITEM("reset_stream_err_0_nc2", test_reset_stream_err_0_nc2),
+    FUZI_Q_ITEM("reset_stream_err_0_nc4", test_reset_stream_err_0_nc4),
+    FUZI_Q_ITEM("reset_stream_err_0_nc8", test_reset_stream_err_0_nc8),
+    FUZI_Q_ITEM("reset_stream_err_1_nc2", test_reset_stream_err_1_nc2),
+    FUZI_Q_ITEM("reset_stream_err_1_nc4", test_reset_stream_err_1_nc4),
+    FUZI_Q_ITEM("reset_stream_err_1_nc8", test_reset_stream_err_1_nc8),
+    FUZI_Q_ITEM("reset_stream_err_5_nc2", test_reset_stream_err_5_nc2),
+    FUZI_Q_ITEM("reset_stream_err_5_nc4", test_reset_stream_err_5_nc4),
+    FUZI_Q_ITEM("reset_stream_err_5_nc8", test_reset_stream_err_5_nc8),
+    /* RESET_STREAM Final Size: Non-Canonical Varints */
+    FUZI_Q_ITEM("reset_stream_final_0_nc2", test_reset_stream_final_0_nc2),
+    FUZI_Q_ITEM("reset_stream_final_0_nc4", test_reset_stream_final_0_nc4),
+    FUZI_Q_ITEM("reset_stream_final_0_nc8", test_reset_stream_final_0_nc8),
+    FUZI_Q_ITEM("reset_stream_final_1_nc2", test_reset_stream_final_1_nc2),
+    FUZI_Q_ITEM("reset_stream_final_1_nc4", test_reset_stream_final_1_nc4),
+    FUZI_Q_ITEM("reset_stream_final_1_nc8", test_reset_stream_final_1_nc8),
+    FUZI_Q_ITEM("reset_stream_final_5_nc2", test_reset_stream_final_5_nc2),
+    FUZI_Q_ITEM("reset_stream_final_5_nc4", test_reset_stream_final_5_nc4),
+    FUZI_Q_ITEM("reset_stream_final_5_nc8", test_reset_stream_final_5_nc8),
+    /* STOP_SENDING Stream ID: Non-Canonical Varints */
+    FUZI_Q_ITEM("stop_sending_sid_0_nc2", test_stop_sending_sid_0_nc2),
+    FUZI_Q_ITEM("stop_sending_sid_0_nc4", test_stop_sending_sid_0_nc4),
+    FUZI_Q_ITEM("stop_sending_sid_0_nc8", test_stop_sending_sid_0_nc8),
+    FUZI_Q_ITEM("stop_sending_sid_1_nc2", test_stop_sending_sid_1_nc2),
+    FUZI_Q_ITEM("stop_sending_sid_1_nc4", test_stop_sending_sid_1_nc4),
+    FUZI_Q_ITEM("stop_sending_sid_1_nc8", test_stop_sending_sid_1_nc8),
+    FUZI_Q_ITEM("stop_sending_sid_5_nc2", test_stop_sending_sid_5_nc2),
+    FUZI_Q_ITEM("stop_sending_sid_5_nc4", test_stop_sending_sid_5_nc4),
+    FUZI_Q_ITEM("stop_sending_sid_5_nc8", test_stop_sending_sid_5_nc8),
+    /* STOP_SENDING App Error Code: Non-Canonical Varints */
+    FUZI_Q_ITEM("stop_sending_err_0_nc2", test_stop_sending_err_0_nc2),
+    FUZI_Q_ITEM("stop_sending_err_0_nc4", test_stop_sending_err_0_nc4),
+    FUZI_Q_ITEM("stop_sending_err_0_nc8", test_stop_sending_err_0_nc8),
+    FUZI_Q_ITEM("stop_sending_err_1_nc2", test_stop_sending_err_1_nc2),
+    FUZI_Q_ITEM("stop_sending_err_1_nc4", test_stop_sending_err_1_nc4),
+    FUZI_Q_ITEM("stop_sending_err_1_nc8", test_stop_sending_err_1_nc8),
+    FUZI_Q_ITEM("stop_sending_err_5_nc2", test_stop_sending_err_5_nc2),
+    FUZI_Q_ITEM("stop_sending_err_5_nc4", test_stop_sending_err_5_nc4),
+    FUZI_Q_ITEM("stop_sending_err_5_nc8", test_stop_sending_err_5_nc8),
+    /* MAX_DATA Maximum Data: Non-Canonical Varints */
+    FUZI_Q_ITEM("max_data_0_nc2", test_max_data_0_nc2),
+    FUZI_Q_ITEM("max_data_0_nc4", test_max_data_0_nc4),
+    FUZI_Q_ITEM("max_data_0_nc8", test_max_data_0_nc8),
+    FUZI_Q_ITEM("max_data_1_nc2", test_max_data_1_nc2),
+    FUZI_Q_ITEM("max_data_1_nc4", test_max_data_1_nc4),
+    FUZI_Q_ITEM("max_data_1_nc8", test_max_data_1_nc8),
+    FUZI_Q_ITEM("max_data_10_nc2", test_max_data_10_nc2),
+    FUZI_Q_ITEM("max_data_10_nc4", test_max_data_10_nc4),
+    FUZI_Q_ITEM("max_data_10_nc8", test_max_data_10_nc8),
+    /* MAX_STREAM_DATA Stream ID: Non-Canonical Varints */
+    FUZI_Q_ITEM("max_sdata_sid_0_nc2", test_max_sdata_sid_0_nc2),
+    FUZI_Q_ITEM("max_sdata_sid_0_nc4", test_max_sdata_sid_0_nc4),
+    FUZI_Q_ITEM("max_sdata_sid_0_nc8", test_max_sdata_sid_0_nc8),
+    FUZI_Q_ITEM("max_sdata_sid_1_nc2", test_max_sdata_sid_1_nc2),
+    FUZI_Q_ITEM("max_sdata_sid_1_nc4", test_max_sdata_sid_1_nc4),
+    FUZI_Q_ITEM("max_sdata_sid_1_nc8", test_max_sdata_sid_1_nc8),
+    FUZI_Q_ITEM("max_sdata_sid_5_nc2", test_max_sdata_sid_5_nc2),
+    FUZI_Q_ITEM("max_sdata_sid_5_nc4", test_max_sdata_sid_5_nc4),
+    FUZI_Q_ITEM("max_sdata_sid_5_nc8", test_max_sdata_sid_5_nc8),
+    /* MAX_STREAM_DATA Max Value: Non-Canonical Varints */
+    FUZI_Q_ITEM("max_sdata_val_0_nc2", test_max_sdata_val_0_nc2),
+    FUZI_Q_ITEM("max_sdata_val_0_nc4", test_max_sdata_val_0_nc4),
+    FUZI_Q_ITEM("max_sdata_val_0_nc8", test_max_sdata_val_0_nc8),
+    FUZI_Q_ITEM("max_sdata_val_1_nc2", test_max_sdata_val_1_nc2),
+    FUZI_Q_ITEM("max_sdata_val_1_nc4", test_max_sdata_val_1_nc4),
+    FUZI_Q_ITEM("max_sdata_val_1_nc8", test_max_sdata_val_1_nc8),
+    FUZI_Q_ITEM("max_sdata_val_10_nc2", test_max_sdata_val_10_nc2),
+    FUZI_Q_ITEM("max_sdata_val_10_nc4", test_max_sdata_val_10_nc4),
+    FUZI_Q_ITEM("max_sdata_val_10_nc8", test_max_sdata_val_10_nc8),
+    /* MAX_STREAMS (Bidi): Non-Canonical Varints */
+    FUZI_Q_ITEM("max_streams_bidi_0_nc2", test_max_streams_bidi_0_nc2),
+    FUZI_Q_ITEM("max_streams_bidi_0_nc4", test_max_streams_bidi_0_nc4),
+    FUZI_Q_ITEM("max_streams_bidi_0_nc8", test_max_streams_bidi_0_nc8),
+    FUZI_Q_ITEM("max_streams_bidi_1_nc2", test_max_streams_bidi_1_nc2),
+    FUZI_Q_ITEM("max_streams_bidi_1_nc4", test_max_streams_bidi_1_nc4),
+    FUZI_Q_ITEM("max_streams_bidi_1_nc8", test_max_streams_bidi_1_nc8),
+    FUZI_Q_ITEM("max_streams_bidi_5_nc2", test_max_streams_bidi_5_nc2),
+    FUZI_Q_ITEM("max_streams_bidi_5_nc4", test_max_streams_bidi_5_nc4),
+    FUZI_Q_ITEM("max_streams_bidi_5_nc8", test_max_streams_bidi_5_nc8),
+    /* MAX_STREAMS (Uni): Non-Canonical Varints */
+    FUZI_Q_ITEM("max_streams_uni_0_nc2", test_max_streams_uni_0_nc2),
+    FUZI_Q_ITEM("max_streams_uni_0_nc4", test_max_streams_uni_0_nc4),
+    FUZI_Q_ITEM("max_streams_uni_0_nc8", test_max_streams_uni_0_nc8),
+    FUZI_Q_ITEM("max_streams_uni_1_nc2", test_max_streams_uni_1_nc2),
+    FUZI_Q_ITEM("max_streams_uni_1_nc4", test_max_streams_uni_1_nc4),
+    FUZI_Q_ITEM("max_streams_uni_1_nc8", test_max_streams_uni_1_nc8),
+    FUZI_Q_ITEM("max_streams_uni_5_nc2", test_max_streams_uni_5_nc2),
+    FUZI_Q_ITEM("max_streams_uni_5_nc4", test_max_streams_uni_5_nc4),
+    FUZI_Q_ITEM("max_streams_uni_5_nc8", test_max_streams_uni_5_nc8),
+    /* RESET_STREAM Stream ID: Non-Canonical Varints */
+    FUZI_Q_ITEM("reset_stream_sid_0_nc2", test_reset_stream_sid_0_nc2),
+    FUZI_Q_ITEM("reset_stream_sid_0_nc4", test_reset_stream_sid_0_nc4),
+    FUZI_Q_ITEM("reset_stream_sid_0_nc8", test_reset_stream_sid_0_nc8),
+    FUZI_Q_ITEM("reset_stream_sid_1_nc2", test_reset_stream_sid_1_nc2),
+    FUZI_Q_ITEM("reset_stream_sid_1_nc4", test_reset_stream_sid_1_nc4),
+    FUZI_Q_ITEM("reset_stream_sid_1_nc8", test_reset_stream_sid_1_nc8),
+    FUZI_Q_ITEM("reset_stream_sid_5_nc2", test_reset_stream_sid_5_nc2),
+    FUZI_Q_ITEM("reset_stream_sid_5_nc4", test_reset_stream_sid_5_nc4),
+    FUZI_Q_ITEM("reset_stream_sid_5_nc8", test_reset_stream_sid_5_nc8),
+    /* RESET_STREAM App Error Code: Non-Canonical Varints */
+    FUZI_Q_ITEM("reset_stream_err_0_nc2", test_reset_stream_err_0_nc2),
+    FUZI_Q_ITEM("reset_stream_err_0_nc4", test_reset_stream_err_0_nc4),
+    FUZI_Q_ITEM("reset_stream_err_0_nc8", test_reset_stream_err_0_nc8),
+    FUZI_Q_ITEM("reset_stream_err_1_nc2", test_reset_stream_err_1_nc2),
+    FUZI_Q_ITEM("reset_stream_err_1_nc4", test_reset_stream_err_1_nc4),
+    FUZI_Q_ITEM("reset_stream_err_1_nc8", test_reset_stream_err_1_nc8),
+    FUZI_Q_ITEM("reset_stream_err_5_nc2", test_reset_stream_err_5_nc2),
+    FUZI_Q_ITEM("reset_stream_err_5_nc4", test_reset_stream_err_5_nc4),
+    FUZI_Q_ITEM("reset_stream_err_5_nc8", test_reset_stream_err_5_nc8),
+    /* RESET_STREAM Final Size: Non-Canonical Varints */
+    FUZI_Q_ITEM("reset_stream_final_0_nc2", test_reset_stream_final_0_nc2),
+    FUZI_Q_ITEM("reset_stream_final_0_nc4", test_reset_stream_final_0_nc4),
+    FUZI_Q_ITEM("reset_stream_final_0_nc8", test_reset_stream_final_0_nc8),
+    FUZI_Q_ITEM("reset_stream_final_1_nc2", test_reset_stream_final_1_nc2),
+    FUZI_Q_ITEM("reset_stream_final_1_nc4", test_reset_stream_final_1_nc4),
+    FUZI_Q_ITEM("reset_stream_final_1_nc8", test_reset_stream_final_1_nc8),
+    FUZI_Q_ITEM("reset_stream_final_5_nc2", test_reset_stream_final_5_nc2),
+    FUZI_Q_ITEM("reset_stream_final_5_nc4", test_reset_stream_final_5_nc4),
+    FUZI_Q_ITEM("reset_stream_final_5_nc8", test_reset_stream_final_5_nc8),
+    /* STOP_SENDING Stream ID: Non-Canonical Varints */
+    FUZI_Q_ITEM("stop_sending_sid_0_nc2", test_stop_sending_sid_0_nc2),
+    FUZI_Q_ITEM("stop_sending_sid_0_nc4", test_stop_sending_sid_0_nc4),
+    FUZI_Q_ITEM("stop_sending_sid_0_nc8", test_stop_sending_sid_0_nc8),
+    FUZI_Q_ITEM("stop_sending_sid_1_nc2", test_stop_sending_sid_1_nc2),
+    FUZI_Q_ITEM("stop_sending_sid_1_nc4", test_stop_sending_sid_1_nc4),
+    FUZI_Q_ITEM("stop_sending_sid_1_nc8", test_stop_sending_sid_1_nc8),
+    FUZI_Q_ITEM("stop_sending_sid_5_nc2", test_stop_sending_sid_5_nc2),
+    FUZI_Q_ITEM("stop_sending_sid_5_nc4", test_stop_sending_sid_5_nc4),
+    FUZI_Q_ITEM("stop_sending_sid_5_nc8", test_stop_sending_sid_5_nc8),
+    /* STOP_SENDING App Error Code: Non-Canonical Varints */
+    FUZI_Q_ITEM("stop_sending_err_0_nc2", test_stop_sending_err_0_nc2),
+    FUZI_Q_ITEM("stop_sending_err_0_nc4", test_stop_sending_err_0_nc4),
+    FUZI_Q_ITEM("stop_sending_err_0_nc8", test_stop_sending_err_0_nc8),
+    FUZI_Q_ITEM("stop_sending_err_1_nc2", test_stop_sending_err_1_nc2),
+    FUZI_Q_ITEM("stop_sending_err_1_nc4", test_stop_sending_err_1_nc4),
+    FUZI_Q_ITEM("stop_sending_err_1_nc8", test_stop_sending_err_1_nc8),
+    FUZI_Q_ITEM("stop_sending_err_5_nc2", test_stop_sending_err_5_nc2),
+    FUZI_Q_ITEM("stop_sending_err_5_nc4", test_stop_sending_err_5_nc4),
+    FUZI_Q_ITEM("stop_sending_err_5_nc8", test_stop_sending_err_5_nc8),
+    /* DATA_BLOCKED Maximum Data: Non-Canonical Varints */
+    FUZI_Q_ITEM("data_blocked_0_nc2", test_data_blocked_0_nc2),
+    FUZI_Q_ITEM("data_blocked_0_nc4", test_data_blocked_0_nc4),
+    FUZI_Q_ITEM("data_blocked_0_nc8", test_data_blocked_0_nc8),
+    FUZI_Q_ITEM("data_blocked_1_nc2", test_data_blocked_1_nc2),
+    FUZI_Q_ITEM("data_blocked_1_nc4", test_data_blocked_1_nc4),
+    FUZI_Q_ITEM("data_blocked_1_nc8", test_data_blocked_1_nc8),
+    FUZI_Q_ITEM("data_blocked_10_nc2", test_data_blocked_10_nc2),
+    FUZI_Q_ITEM("data_blocked_10_nc4", test_data_blocked_10_nc4),
+    FUZI_Q_ITEM("data_blocked_10_nc8", test_data_blocked_10_nc8),
+    /* STREAM_DATA_BLOCKED Stream ID: Non-Canonical Varints */
+    FUZI_Q_ITEM("sdata_blocked_sid_0_nc2", test_sdata_blocked_sid_0_nc2),
+    FUZI_Q_ITEM("sdata_blocked_sid_0_nc4", test_sdata_blocked_sid_0_nc4),
+    FUZI_Q_ITEM("sdata_blocked_sid_0_nc8", test_sdata_blocked_sid_0_nc8),
+    FUZI_Q_ITEM("sdata_blocked_sid_1_nc2", test_sdata_blocked_sid_1_nc2),
+    FUZI_Q_ITEM("sdata_blocked_sid_1_nc4", test_sdata_blocked_sid_1_nc4),
+    FUZI_Q_ITEM("sdata_blocked_sid_1_nc8", test_sdata_blocked_sid_1_nc8),
+    FUZI_Q_ITEM("sdata_blocked_sid_5_nc2", test_sdata_blocked_sid_5_nc2),
+    FUZI_Q_ITEM("sdata_blocked_sid_5_nc4", test_sdata_blocked_sid_5_nc4),
+    FUZI_Q_ITEM("sdata_blocked_sid_5_nc8", test_sdata_blocked_sid_5_nc8),
+    /* STREAM_DATA_BLOCKED Stream Data Limit: Non-Canonical Varints */
+    FUZI_Q_ITEM("sdata_blocked_limit_0_nc2", test_sdata_blocked_limit_0_nc2),
+    FUZI_Q_ITEM("sdata_blocked_limit_0_nc4", test_sdata_blocked_limit_0_nc4),
+    FUZI_Q_ITEM("sdata_blocked_limit_0_nc8", test_sdata_blocked_limit_0_nc8),
+    FUZI_Q_ITEM("sdata_blocked_limit_1_nc2", test_sdata_blocked_limit_1_nc2),
+    FUZI_Q_ITEM("sdata_blocked_limit_1_nc4", test_sdata_blocked_limit_1_nc4),
+    FUZI_Q_ITEM("sdata_blocked_limit_1_nc8", test_sdata_blocked_limit_1_nc8),
+    FUZI_Q_ITEM("sdata_blocked_limit_10_nc2", test_sdata_blocked_limit_10_nc2),
+    FUZI_Q_ITEM("sdata_blocked_limit_10_nc4", test_sdata_blocked_limit_10_nc4),
+    FUZI_Q_ITEM("sdata_blocked_limit_10_nc8", test_sdata_blocked_limit_10_nc8),
+    /* STREAMS_BLOCKED (Bidi) Maximum Streams: Non-Canonical Varints */
+    FUZI_Q_ITEM("streams_blocked_bidi_0_nc2", test_streams_blocked_bidi_0_nc2),
+    FUZI_Q_ITEM("streams_blocked_bidi_0_nc4", test_streams_blocked_bidi_0_nc4),
+    FUZI_Q_ITEM("streams_blocked_bidi_0_nc8", test_streams_blocked_bidi_0_nc8),
+    FUZI_Q_ITEM("streams_blocked_bidi_1_nc2", test_streams_blocked_bidi_1_nc2),
+    FUZI_Q_ITEM("streams_blocked_bidi_1_nc4", test_streams_blocked_bidi_1_nc4),
+    FUZI_Q_ITEM("streams_blocked_bidi_1_nc8", test_streams_blocked_bidi_1_nc8),
+    FUZI_Q_ITEM("streams_blocked_bidi_5_nc2", test_streams_blocked_bidi_5_nc2),
+    FUZI_Q_ITEM("streams_blocked_bidi_5_nc4", test_streams_blocked_bidi_5_nc4),
+    FUZI_Q_ITEM("streams_blocked_bidi_5_nc8", test_streams_blocked_bidi_5_nc8),
+    /* STREAMS_BLOCKED (Uni) Maximum Streams: Non-Canonical Varints */
+    FUZI_Q_ITEM("streams_blocked_uni_0_nc2", test_streams_blocked_uni_0_nc2),
+    FUZI_Q_ITEM("streams_blocked_uni_0_nc4", test_streams_blocked_uni_0_nc4),
+    FUZI_Q_ITEM("streams_blocked_uni_0_nc8", test_streams_blocked_uni_0_nc8),
+    FUZI_Q_ITEM("streams_blocked_uni_1_nc2", test_streams_blocked_uni_1_nc2),
+    FUZI_Q_ITEM("streams_blocked_uni_1_nc4", test_streams_blocked_uni_1_nc4),
+    FUZI_Q_ITEM("streams_blocked_uni_1_nc8", test_streams_blocked_uni_1_nc8),
+    FUZI_Q_ITEM("streams_blocked_uni_5_nc2", test_streams_blocked_uni_5_nc2),
+    FUZI_Q_ITEM("streams_blocked_uni_5_nc4", test_streams_blocked_uni_5_nc4),
+    FUZI_Q_ITEM("streams_blocked_uni_5_nc8", test_streams_blocked_uni_5_nc8),
     /* Aggressive Padding / PMTU Probing Mimics */
     FUZI_Q_ITEM("ping_padded_to_1200", test_frame_ping_padded_to_1200),
     FUZI_Q_ITEM("ping_padded_to_1500", test_frame_ping_padded_to_1500),
