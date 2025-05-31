@@ -2687,6 +2687,13 @@ static uint8_t test_h3_frame_goaway_payload[] = {0x07, 0x01, 0x00}; /* Type 0x07
 static uint8_t test_h3_frame_max_push_id_payload[] = {0x0D, 0x01, 0x0A}; /* Type 0x0D (MAX_PUSH_ID), Length 1, ID 10 */
 static uint8_t test_h3_frame_cancel_push_payload[] = {0x03, 0x01, 0x03}; /* Type 0x03 (CANCEL_PUSH), Length 1, ID 3 */
 static uint8_t test_h3_frame_push_promise_payload_simple[] = {0x05, 0x02, 0x01, 0x99}; /* Type 0x05 (PUSH_PROMISE), Len 2, PushID 1, QPACK :method: GET */
+
+/* HTTP/3 ORIGIN frame draft-ietf-httpbis-origin-frame-00 */
+static uint8_t test_frame_h3_origin_val_0x0c[] = { 0x0c };
+
+/* HTTP/3 PRIORITY_UPDATE frame RFC9218 */
+static uint8_t test_frame_h3_priority_update_val_0xf0700[] = { 0x80, 0x0F, 0x07, 0x00 };
+
 /* H3_DATA Frame Variations */
 static uint8_t test_h3_frame_data_empty[] = {0x00, 0x00};
 static uint8_t test_h3_frame_data_len_non_canon[] = {0x00, 0x40, 0x04, 't', 'e', 's', 't'};
@@ -2723,6 +2730,19 @@ static uint8_t test_doq_dns_query_payload[] = {
     0x00, 0x01,                            /* Type: A */
     0x00, 0x01                             /* Class: IN */
 };
+
+/* RFC 9113 (HTTP/2) Frame Types */
+static uint8_t test_frame_h2_data_val_0x0[] = { 0x00 };
+static uint8_t test_frame_h2_headers_val_0x1[] = { 0x01 };
+static uint8_t test_frame_h2_priority_val_0x2[] = { 0x02 };
+static uint8_t test_frame_h2_rst_stream_val_0x3[] = { 0x03 };
+static uint8_t test_frame_h2_settings_val_0x4[] = { 0x04 };
+static uint8_t test_frame_h2_push_promise_val_0x5[] = { 0x05 };
+static uint8_t test_frame_h2_ping_val_0x6[] = { 0x06 };
+static uint8_t test_frame_h2_goaway_val_0x7[] = { 0x07 };
+static uint8_t test_frame_h2_window_update_val_0x8[] = { 0x08 };
+static uint8_t test_frame_h2_continuation_val_0x9[] = { 0x09 };
+static uint8_t test_frame_h2_altsvc_val_0xa[] = { 0x0a };
 
 /* Test Case: NEW_TOKEN frame with an empty token. */
 /* Expected: Client treats as FRAME_ENCODING_ERROR (RFC 19.7). */
@@ -4311,6 +4331,8 @@ fuzi_q_frames_t fuzi_q_frame_list[] = {
     FUZI_Q_ITEM("h3_max_push_id", test_h3_frame_max_push_id_payload),
     FUZI_Q_ITEM("h3_cancel_push", test_h3_frame_cancel_push_payload),
     FUZI_Q_ITEM("h3_push_promise_simple", test_h3_frame_push_promise_payload_simple),
+    FUZI_Q_ITEM("h3_origin_val_0x0c", test_frame_h3_origin_val_0x0c),
+    FUZI_Q_ITEM("h3_priority_update_val_0xf0700", test_frame_h3_priority_update_val_0xf0700),
     /* Additional H3 Frame Payload Variations */
     FUZI_Q_ITEM("h3_data_empty", test_h3_frame_data_empty),
     FUZI_Q_ITEM("h3_data_len_non_canon", test_h3_frame_data_len_non_canon),
@@ -4327,6 +4349,28 @@ fuzi_q_frames_t fuzi_q_frame_list[] = {
     FUZI_Q_ITEM("h3_cancel_push_id_non_canon", test_h3_cancel_push_id_non_canon),
     /* DoQ Payload */
     FUZI_Q_ITEM("doq_dns_query_payload", test_doq_dns_query_payload),
+
+    /* RFC 9113 (HTTP/2) Frame Types */
+    FUZI_Q_ITEM("h2_data_val_0x0", test_frame_h2_data_val_0x0),
+    FUZI_Q_ITEM("h2_headers_val_0x1", test_frame_h2_headers_val_0x1),
+    FUZI_Q_ITEM("h2_priority_val_0x2", test_frame_h2_priority_val_0x2),
+    FUZI_Q_ITEM("h2_rst_stream_val_0x3", test_frame_h2_rst_stream_val_0x3),
+    FUZI_Q_ITEM("h2_settings_val_0x4", test_frame_h2_settings_val_0x4),
+    FUZI_Q_ITEM("h2_push_promise_val_0x5", test_frame_h2_push_promise_val_0x5),
+    FUZI_Q_ITEM("h2_ping_val_0x6", test_frame_h2_ping_val_0x6),
+    FUZI_Q_ITEM("h2_goaway_val_0x7", test_frame_h2_goaway_val_0x7),
+    FUZI_Q_ITEM("h2_window_update_val_0x8", test_frame_h2_window_update_val_0x8),
+    FUZI_Q_ITEM("h2_continuation_val_0x9", test_frame_h2_continuation_val_0x9),
+    FUZI_Q_ITEM("h2_altsvc_val_0xa", test_frame_h2_altsvc_val_0xa),
+
+    /* RFC 6455 (WebSocket) Frame Types */
+    FUZI_Q_ITEM("ws_continuation_val_0x0", test_frame_ws_continuation_val_0x0),
+    FUZI_Q_ITEM("ws_text_val_0x1", test_frame_ws_text_val_0x1),
+    FUZI_Q_ITEM("ws_binary_val_0x2", test_frame_ws_binary_val_0x2),
+    FUZI_Q_ITEM("ws_connection_close_val_0x8", test_frame_ws_connection_close_val_0x8),
+    FUZI_Q_ITEM("ws_ping_val_0x9", test_frame_ws_ping_val_0x9),
+    FUZI_Q_ITEM("ws_pong_val_0xa", test_frame_ws_pong_val_0xa),
+
     /* STREAM Frame Variations (RFC 9000, Section 19.8) */
     FUZI_Q_ITEM("stream_0x08_minimal", test_stream_0x08_minimal),
     FUZI_Q_ITEM("stream_0x08_sid_non_canon", test_stream_0x08_sid_non_canon),
