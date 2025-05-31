@@ -3447,6 +3447,37 @@ static uint8_t test_streams_blocked_uni_over_limit[] = {
     0xD0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01
 };
 
+/* --- Batch 4 of New Edge Case Test Variants (Path Validation Frames) --- */
+
+/* RFC 9000, Sec 19.17 - PATH_CHALLENGE frame with Data field all ones. */
+static uint8_t test_path_challenge_all_ones[] = {
+    0x1a,       /* Type: PATH_CHALLENGE */
+    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF /* Data */
+};
+
+/* RFC 9000, Sec 19.18 - PATH_RESPONSE frame with Data field as 0xAA pattern. */
+static uint8_t test_path_response_alt_bits_AA[] = {
+    0x1b,       /* Type: PATH_RESPONSE */
+    0xAA, 0xAA, 0xAA, 0xAA, 0xAA, 0xAA, 0xAA, 0xAA /* Data */
+};
+
+/* RFC 9000, Sec 19.17 - PATH_CHALLENGE frame, truncated after 4 data bytes.
+ * Expected: FRAME_ENCODING_ERROR by receiver.
+ */
+static uint8_t test_path_challenge_truncated_4bytes[] = {
+    0x1a,       /* Type: PATH_CHALLENGE */
+    0xDE, 0xAD, 0xBE, 0xEF /* Data (4 of 8 bytes) */
+    /* Packet ends here */
+};
+
+/* RFC 9000, Sec 19.18 - PATH_RESPONSE frame, truncated after type (0 data bytes).
+ * Expected: FRAME_ENCODING_ERROR by receiver.
+ */
+static uint8_t test_path_response_truncated_0bytes[] = {
+    0x1b       /* Type: PATH_RESPONSE */
+    /* Packet ends here */
+};
+
 fuzi_q_frames_t fuzi_q_frame_list[] = {
     FUZI_Q_ITEM("padding", test_frame_type_padding),
     FUZI_Q_ITEM("padding_zero_byte", test_frame_type_padding_zero_byte),
@@ -4288,7 +4319,16 @@ fuzi_q_frames_t fuzi_q_frame_list[] = {
     /* RFC 9000, Sec 19.14 - STREAMS_BLOCKED (bidi) with Maximum Streams over 2^60 limit */
     FUZI_Q_ITEM("test_streams_blocked_bidi_over_limit", test_streams_blocked_bidi_over_limit),
     /* RFC 9000, Sec 19.14 - STREAMS_BLOCKED (uni) with Maximum Streams over 2^60 limit */
-    FUZI_Q_ITEM("test_streams_blocked_uni_over_limit", test_streams_blocked_uni_over_limit)
+    FUZI_Q_ITEM("test_streams_blocked_uni_over_limit", test_streams_blocked_uni_over_limit),
+    /* --- Batch 4 of New Edge Case Test Variants (Path Validation Frames) --- */
+    /* RFC 9000, Sec 19.17 - PATH_CHALLENGE with all ones data */
+    FUZI_Q_ITEM("test_path_challenge_all_ones", test_path_challenge_all_ones),
+    /* RFC 9000, Sec 19.18 - PATH_RESPONSE with 0xAA pattern data */
+    FUZI_Q_ITEM("test_path_response_alt_bits_AA", test_path_response_alt_bits_AA),
+    /* RFC 9000, Sec 19.17 - PATH_CHALLENGE truncated (4 of 8 data bytes) */
+    FUZI_Q_ITEM("test_path_challenge_truncated_4bytes", test_path_challenge_truncated_4bytes),
+    /* RFC 9000, Sec 19.18 - PATH_RESPONSE truncated (0 of 8 data bytes) */
+    FUZI_Q_ITEM("test_path_response_truncated_0bytes", test_path_response_truncated_0bytes)
 };
 
 size_t nb_fuzi_q_frame_list = sizeof(fuzi_q_frame_list) / sizeof(fuzi_q_frames_t);
