@@ -3397,6 +3397,29 @@ static uint8_t test_new_connection_id_cid_overrun_length_field[] = {
     0xE8, 0xE9, 0xEA, 0xEB, 0xEC, 0xED, 0xEE, 0xEF
 };
 
+/* --- Batch 2 of New Edge Case Test Variants (Flow Control) --- */
+
+/* RFC 9000, Sec 19.12 - DATA_BLOCKED frame with Maximum Data at max varint value.
+ * Maximum Data: (1ULL<<62)-1 = 0x3FFFFFFFFFFFFFFF
+ */
+static uint8_t test_data_blocked_max_value[] = {
+    0x14,       /* Type: DATA_BLOCKED */
+    /* Maximum Data: (1ULL<<62)-1. Encoded as 8-byte varint. */
+    0xBF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF
+};
+
+/* RFC 9000, Sec 19.13 - STREAM_DATA_BLOCKED frame with Stream ID and Max Stream Data at max varint values.
+ * Stream ID: (1ULL<<62)-1
+ * Maximum Stream Data: (1ULL<<62)-1
+ */
+static uint8_t test_stream_data_blocked_max_id_max_value[] = {
+    0x15,       /* Type: STREAM_DATA_BLOCKED */
+    /* Stream ID: (1ULL<<62)-1. Encoded as 8-byte varint. */
+    0xBF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+    /* Maximum Stream Data: (1ULL<<62)-1. Encoded as 8-byte varint. */
+    0xBF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF
+};
+
 fuzi_q_frames_t fuzi_q_frame_list[] = {
     FUZI_Q_ITEM("padding", test_frame_type_padding),
     FUZI_Q_ITEM("padding_zero_byte", test_frame_type_padding_zero_byte),
@@ -4228,7 +4251,12 @@ fuzi_q_frames_t fuzi_q_frame_list[] = {
     /* RFC 9000, Sec 19.15 - NEW_CONNECTION_ID with truncated Stateless Reset Token. Expected: FRAME_ENCODING_ERROR. */
     FUZI_Q_ITEM("new_connection_id_truncated_token", test_new_connection_id_truncated_token),
     /* RFC 9000, Sec 19.15 - NEW_CONNECTION_ID with CID data longer than Length field. Parser should use Length. */
-    FUZI_Q_ITEM("new_connection_id_cid_overrun_length_field", test_new_connection_id_cid_overrun_length_field)
+    FUZI_Q_ITEM("new_connection_id_cid_overrun_length_field", test_new_connection_id_cid_overrun_length_field),
+    /* --- Batch 2 of New Edge Case Test Variants (Flow Control) --- */
+    /* RFC 9000, Sec 19.12 - DATA_BLOCKED with max value */
+    FUZI_Q_ITEM("test_data_blocked_max_value", test_data_blocked_max_value),
+    /* RFC 9000, Sec 19.13 - STREAM_DATA_BLOCKED with max StreamID and max Value */
+    FUZI_Q_ITEM("test_stream_data_blocked_max_id_max_value", test_stream_data_blocked_max_id_max_value)
 };
 
 size_t nb_fuzi_q_frame_list = sizeof(fuzi_q_frame_list) / sizeof(fuzi_q_frames_t);
