@@ -2373,6 +2373,7 @@ uint32_t fuzi_q_fuzzer(void* fuzz_ctx_param, picoquic_cnx_t* cnx,
 
             if (main_strategy_choice < 3) { /* Strategies 0, 1, 2: Inject from fuzi_q_frame_list */
                 size_t fuzz_frame_id = (size_t)((fuzz_pilot) % nb_fuzi_q_frame_list);
+                printf("Fuzzer selected frame for injection: %s (ID: %zu)\n", fuzi_q_frame_list[fuzz_frame_id].name, fuzz_frame_id);
                 sub_fuzzer_pilot = fuzz_pilot >> 5; /* Consume fuzz_frame_id bits */
 
                 size_t len = fuzi_q_frame_list[fuzz_frame_id].len;
