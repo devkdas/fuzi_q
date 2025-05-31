@@ -3249,6 +3249,78 @@ static uint8_t test_frame_hsd_type_non_canon[] = {
     0x40, 0x1e  /* Frame Type: HANDSHAKE_DONE (0x1e) as 2-byte varint */
 };
 
+/* Proposed New STREAM Variants - RFC 9000, Section 19.8, 4.5 */
+
+/* Test STREAM frame with LEN=1, FIN=1, OFF=0, explicit non-zero Length, but NO actual Stream Data.
+ * Type 0x0B (OFF=0, LEN=1, FIN=1), Stream ID 1, Length 5. Packet ends.
+ * Final size should be 5.
+ */
+static uint8_t test_stream_len_set_explicit_length_no_data_fin[] = {
+    0x0B,       /* Type: OFF=0, LEN=1, FIN=1 */
+    0x01,       /* Stream ID: 1 */
+    0x05        /* Length: 5 */
+    /* Packet is truncated here; no stream data provided. */
+};
+
+/* Test STREAM frame with OFF=1, LEN=1, FIN=1, where offset + length is very close to 2^62-1.
+ * Type 0x0F, Stream ID 2, Offset ((1ULL<<62)-10), Length 5, Data "hello".
+ * Final size should be (2^62)-10 + 5 = (2^62)-5.
+ */
+static uint8_t test_stream_off_len_fin_offset_plus_length_almost_max[] = {
+    0x0F,        /* Type: OFF=1, LEN=1, FIN=1 */
+    0x02,        /* Stream ID: 2 */
+    /* Offset: (1ULL<<62)-10. Encoded as 8-byte varint.
+       (2^62)-10 = 0x3FFFFFFFFFFFFFF6
+       Prefix 0b11 -> 8 bytes.
+       Value: 0x3F, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xF6
+    */
+    0xBF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xF6,
+    0x05,        /* Length: 5 */
+    'h', 'e', 'l', 'l', 'o' /* Stream Data */
+};
+
+/* Proposed New ACK Variant - RFC 9000, Section 19.3, 19.3.1, 19.3.2 */
+
+/* Test ACK frame with ECN (Type 0x03), ACK Range Count = 0, but First ACK Range is set.
+ * Largest Ack: 0x10, Delay: 0, Range Count: 0, First ACK Range: 0x05.
+ * ECN Counts: ECT0=1, ECT1=1, CE=1.
+ */
+static uint8_t test_ack_ecn_range_count_zero_first_range_set_with_counts[] = {
+    0x03,       /* Type: ACK with ECN */
+    0x10,       /* Largest Acknowledged: 16 */
+    0x00,       /* ACK Delay: 0 */
+    0x00,       /* ACK Range Count: 0 */
+    0x05,       /* First ACK Range: 5 (acks packets 11-16) */
+    0x01,       /* ECT0 Count: 1 */
+    0x01,       /* ECT1 Count: 1 */
+    0x01        /* ECN-CE Count: 1 */
+};
+
+/* Proposed New CONNECTION_CLOSE Variant - RFC 9000, Section 19.19 */
+
+/* Test CONNECTION_CLOSE (transport) with minimal fields.
+ * Type 0x1c, Error Code INTERNAL_ERROR (0x01), Frame Type PADDING (0x00), Reason Phrase Length 0.
+ */
+static uint8_t test_connection_close_transport_min_fields[] = {
+    0x1c,       /* Type: CONNECTION_CLOSE (transport) */
+    0x01,       /* Error Code: INTERNAL_ERROR (0x01) */
+    0x00,       /* Frame Type: PADDING (0x00) */
+    0x00        /* Reason Phrase Length: 0 */
+};
+
+/* Proposed New MAX_STREAM_DATA Variant - RFC 9000, Section 19.10 */
+
+/* Test MAX_STREAM_DATA with Stream ID and Max Stream Data at max varint values.
+ * Type 0x11, Stream ID (2^62)-1, Max Stream Data (2^62)-1.
+ */
+static uint8_t test_max_stream_data_id_max_val_max[] = {
+    0x11,       /* Type: MAX_STREAM_DATA */
+    /* Stream ID: (1ULL<<62)-1 = 0x3FFFFFFFFFFFFFFF. Encoded as 8-byte varint. */
+    0xBF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+    /* Maximum Stream Data: (1ULL<<62)-1 = 0x3FFFFFFFFFFFFFFF. Encoded as 8-byte varint. */
+    0xBF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF
+};
+
 fuzi_q_frames_t fuzi_q_frame_list[] = {
     FUZI_Q_ITEM("padding", test_frame_type_padding),
     FUZI_Q_ITEM("padding_zero_byte", test_frame_type_padding_zero_byte),
@@ -4058,7 +4130,18 @@ fuzi_q_frames_t fuzi_q_frame_list[] = {
     FUZI_Q_ITEM("conn_close_ec_non_canon", test_frame_conn_close_ec_non_canon),
     FUZI_Q_ITEM("conn_close_rlen_non_canon", test_frame_conn_close_rlen_non_canon),
     FUZI_Q_ITEM("conn_close_app_ec_non_canon", test_frame_conn_close_app_ec_non_canon),
-    FUZI_Q_ITEM("conn_close_app_rlen_non_canon_2byte", test_frame_conn_close_app_rlen_non_canon_2byte)
+    FUZI_Q_ITEM("conn_close_app_rlen_non_canon_2byte", test_frame_conn_close_app_rlen_non_canon_2byte),
+    /* Added from Plan - Step 4 */
+    /* RFC 9000, Sec 19.8, 4.5 - STREAM with explicit non-zero len, no data, FIN */
+    FUZI_Q_ITEM("stream_len_set_explicit_length_no_data_fin", test_stream_len_set_explicit_length_no_data_fin),
+    /* RFC 9000, Sec 19.8, 4.5 - STREAM with offset+length near max final size */
+    FUZI_Q_ITEM("stream_off_len_fin_offset_plus_length_almost_max", test_stream_off_len_fin_offset_plus_length_almost_max),
+    /* RFC 9000, Sec 19.3 - ACK+ECN, RangeCount=0, FirstRange set, ECN counts present */
+    FUZI_Q_ITEM("ack_ecn_range_count_zero_first_range_set_with_counts", test_ack_ecn_range_count_zero_first_range_set_with_counts),
+    /* RFC 9000, Sec 19.19 - CONNECTION_CLOSE (transport) minimal fields */
+    FUZI_Q_ITEM("connection_close_transport_min_fields", test_connection_close_transport_min_fields),
+    /* RFC 9000, Sec 19.10 - MAX_STREAM_DATA with max StreamID and max Value */
+    FUZI_Q_ITEM("max_stream_data_id_max_val_max", test_max_stream_data_id_max_val_max)
 };
 
 size_t nb_fuzi_q_frame_list = sizeof(fuzi_q_frame_list) / sizeof(fuzi_q_frames_t);
