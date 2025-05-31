@@ -3420,6 +3420,33 @@ static uint8_t test_stream_data_blocked_max_id_max_value[] = {
     0xBF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF
 };
 
+/* --- Batch 3 of New Edge Case Test Variants (Stream Limit Frames) --- */
+
+/* RFC 9000, Sec 19.14 - STREAMS_BLOCKED (bidirectional) with Maximum Streams over limit.
+ * Maximum Streams: (1ULL<<60) + 1.
+ * Expected: FRAME_ENCODING_ERROR or STREAM_LIMIT_ERROR by receiver.
+ */
+static uint8_t test_streams_blocked_bidi_over_limit[] = {
+    0x16,       /* Type: STREAMS_BLOCKED (bidirectional) */
+    /* Maximum Streams: (1ULL<<60) + 1. Varint encoded: */
+    /* (1ULL<<60) is 0x1000000000000000. (1ULL<<60)+1 is 0x1000000000000001 */
+    /* For 8-byte varint, first byte is (value >> 56) | 0xC0 */
+    /* (0x1000000000000001 >> 56) & 0x3F = 0x10 & 0x3F = 0x10. */
+    /* First byte: 0xC0 | 0x10 = 0xD0. */
+    /* Remaining 7 bytes: 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01. */
+    0xD0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01
+};
+
+/* RFC 9000, Sec 19.14 - STREAMS_BLOCKED (unidirectional) with Maximum Streams over limit.
+ * Maximum Streams: (1ULL<<60) + 1.
+ * Expected: FRAME_ENCODING_ERROR or STREAM_LIMIT_ERROR by receiver.
+ */
+static uint8_t test_streams_blocked_uni_over_limit[] = {
+    0x17,       /* Type: STREAMS_BLOCKED (unidirectional) */
+    /* Maximum Streams: (1ULL<<60) + 1. Varint encoded (same as above): */
+    0xD0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01
+};
+
 fuzi_q_frames_t fuzi_q_frame_list[] = {
     FUZI_Q_ITEM("padding", test_frame_type_padding),
     FUZI_Q_ITEM("padding_zero_byte", test_frame_type_padding_zero_byte),
@@ -4256,7 +4283,12 @@ fuzi_q_frames_t fuzi_q_frame_list[] = {
     /* RFC 9000, Sec 19.12 - DATA_BLOCKED with max value */
     FUZI_Q_ITEM("test_data_blocked_max_value", test_data_blocked_max_value),
     /* RFC 9000, Sec 19.13 - STREAM_DATA_BLOCKED with max StreamID and max Value */
-    FUZI_Q_ITEM("test_stream_data_blocked_max_id_max_value", test_stream_data_blocked_max_id_max_value)
+    FUZI_Q_ITEM("test_stream_data_blocked_max_id_max_value", test_stream_data_blocked_max_id_max_value),
+    /* --- Batch 3 of New Edge Case Test Variants (Stream Limit Frames) --- */
+    /* RFC 9000, Sec 19.14 - STREAMS_BLOCKED (bidi) with Maximum Streams over 2^60 limit */
+    FUZI_Q_ITEM("test_streams_blocked_bidi_over_limit", test_streams_blocked_bidi_over_limit),
+    /* RFC 9000, Sec 19.14 - STREAMS_BLOCKED (uni) with Maximum Streams over 2^60 limit */
+    FUZI_Q_ITEM("test_streams_blocked_uni_over_limit", test_streams_blocked_uni_over_limit)
 };
 
 size_t nb_fuzi_q_frame_list = sizeof(fuzi_q_frame_list) / sizeof(fuzi_q_frames_t);
