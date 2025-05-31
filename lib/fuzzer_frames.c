@@ -2687,6 +2687,21 @@ static uint8_t test_h3_frame_goaway_payload[] = {0x07, 0x01, 0x00}; /* Type 0x07
 static uint8_t test_h3_frame_max_push_id_payload[] = {0x0D, 0x01, 0x0A}; /* Type 0x0D (MAX_PUSH_ID), Length 1, ID 10 */
 static uint8_t test_h3_frame_cancel_push_payload[] = {0x03, 0x01, 0x03}; /* Type 0x03 (CANCEL_PUSH), Length 1, ID 3 */
 static uint8_t test_h3_frame_push_promise_payload_simple[] = {0x05, 0x02, 0x01, 0x99}; /* Type 0x05 (PUSH_PROMISE), Len 2, PushID 1, QPACK :method: GET */
+
+/* HTTP/3 ORIGIN Frame Payload */
+static uint8_t test_h3_frame_origin_payload[] = {
+    0x0c, 0x14, 0x00, 0x12, 'h', 't', 't', 'p', ':', '/', '/', 'o', 'r', 'i', 'g', 'i', 'n', '.', 't', 'e', 's', 't'
+};
+
+/* HTTP/3 PRIORITY_UPDATE Frame Payloads */
+static uint8_t test_h3_frame_priority_update_request_payload[] = {
+    0x80, 0x0F, 0x07, 0x00, 0x06, 0x04, 0x75, 0x3d, 0x33, 0x2c, 0x69
+};
+
+static uint8_t test_h3_frame_priority_update_placeholder_payload[] = {
+    0x80, 0x0F, 0x07, 0x01, 0x04, 0x02, 0x75, 0x3d, 0x35
+};
+
 /* H3_DATA Frame Variations */
 static uint8_t test_h3_frame_data_empty[] = {0x00, 0x00};
 static uint8_t test_h3_frame_data_len_non_canon[] = {0x00, 0x40, 0x04, 't', 'e', 's', 't'};
@@ -4325,6 +4340,9 @@ fuzi_q_frames_t fuzi_q_frame_list[] = {
     FUZI_Q_ITEM("h3_max_push_id_non_canon", test_h3_max_push_id_non_canon),
     FUZI_Q_ITEM("h3_cancel_push_max_id", test_h3_cancel_push_max_id),
     FUZI_Q_ITEM("h3_cancel_push_id_non_canon", test_h3_cancel_push_id_non_canon),
+    FUZI_Q_ITEM("h3_origin_payload", test_h3_frame_origin_payload),
+    FUZI_Q_ITEM("h3_priority_update_placeholder_payload", test_h3_frame_priority_update_placeholder_payload),
+    FUZI_Q_ITEM("h3_priority_update_request_payload", test_h3_frame_priority_update_request_payload),
     /* DoQ Payload */
     FUZI_Q_ITEM("doq_dns_query_payload", test_doq_dns_query_payload),
     /* STREAM Frame Variations (RFC 9000, Section 19.8) */
