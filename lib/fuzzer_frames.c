@@ -3447,6 +3447,55 @@ static uint8_t test_streams_blocked_uni_over_limit[] = {
     0xD0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01
 };
 
+/* --- Batch 5 of New Edge Case Test Variants (Other Control Frames) --- */
+
+/* RFC 9000, Sec 19.5 - STOP_SENDING with max Stream ID and max App Error Code.
+ * Stream ID: (1ULL<<62)-1
+ * App Error Code: (1ULL<<62)-1
+ */
+static uint8_t test_stop_sending_max_id_max_error[] = {
+    0x05,       /* Type: STOP_SENDING */
+    /* Stream ID: (1ULL<<62)-1. Varint encoded: */
+    0xBF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+    /* Application Protocol Error Code: (1ULL<<62)-1. Varint encoded: */
+    0xBF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF
+};
+
+/* RFC 9000, Sec 19.16 - RETIRE_CONNECTION_ID with max Sequence Number.
+ * Sequence Number: (1ULL<<62)-1
+ */
+static uint8_t test_retire_connection_id_max_sequence[] = {
+    0x19,       /* Type: RETIRE_CONNECTION_ID */
+    /* Sequence Number: (1ULL<<62)-1. Varint encoded: */
+    0xBF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF
+};
+
+/* RFC 9000, Sec 19.7 - NEW_TOKEN with Token Length > 0, but no token data (truncated).
+ * Token Length: 5
+ * Expected: FRAME_ENCODING_ERROR by receiver.
+ */
+static uint8_t test_new_token_len_gt_zero_no_token_data_truncated[] = {
+    0x07,       /* Type: NEW_TOKEN */
+    0x05        /* Token Length: 5 */
+    /* Packet ends here, no token data */
+};
+
+/* RFC 9000, Sec 19.4 - RESET_STREAM with Stream ID, App Error Code, and Final Size all max.
+ * Stream ID: (1ULL<<62)-1
+ * App Error Code: (1ULL<<62)-1
+ * Final Size: (1ULL<<62)-1
+ * Expected: Likely FINAL_SIZE_ERROR by receiver.
+ */
+static uint8_t test_reset_stream_all_fields_max_value[] = {
+    0x04,       /* Type: RESET_STREAM */
+    /* Stream ID: (1ULL<<62)-1. Varint encoded: */
+    0xBF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+    /* Application Protocol Error Code: (1ULL<<62)-1. Varint encoded: */
+    0xBF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+    /* Final Size: (1ULL<<62)-1. Varint encoded: */
+    0xBF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF
+};
+
 /* --- Batch 4 of New Edge Case Test Variants (Path Validation Frames) --- */
 
 /* RFC 9000, Sec 19.17 - PATH_CHALLENGE frame with Data field all ones. */
@@ -3476,6 +3525,58 @@ static uint8_t test_path_challenge_truncated_4bytes[] = {
 static uint8_t test_path_response_truncated_0bytes[] = {
     0x1b       /* Type: PATH_RESPONSE */
     /* Packet ends here */
+};
+
+/* --- Batch 6 of New Edge Case Test Variants (CRYPTO, DATAGRAM, PADDING) --- */
+
+/* RFC 9000, Sec 19.6 - CRYPTO frame with Length > 0, but no data (truncated after Length).
+ * Offset 0, Length 5. Expected: FRAME_ENCODING_ERROR.
+ */
+static uint8_t test_crypto_len_gt_zero_no_data_truncated[] = {
+    0x06,       /* Type: CRYPTO */
+    0x00,       /* Offset: 0 */
+    0x05        /* Length: 5 */
+    /* Packet ends here, no crypto data */
+};
+
+/* RFC 9221, Sec 4 - DATAGRAM frame (Type 0x30, no length) empty (truncated after type). */
+static uint8_t test_datagram_type0x30_empty_truncated[] = {
+    0x30        /* Type: DATAGRAM (no length) */
+    /* Packet ends here */
+};
+
+/* RFC 9221, Sec 4 - DATAGRAM frame (Type 0x30, no length) with one byte of data. */
+static uint8_t test_datagram_type0x30_one_byte[] = {
+    0x30,       /* Type: DATAGRAM (no length) */
+    0xAB        /* Datagram Data: 1 byte */
+};
+
+/* RFC 9221, Sec 4 - DATAGRAM frame (Type 0x31, with length) with max Length field, minimal data.
+ * Length: (1ULL<<62)-1. Actual data: 1 byte (truncated).
+ * Expected: FRAME_ENCODING_ERROR.
+ */
+static uint8_t test_datagram_type0x31_maxlength_field_min_data[] = {
+    0x31,       /* Type: DATAGRAM (with length) */
+    /* Length: (1ULL<<62)-1. Varint encoded (0xBF, 0xFF, ..., 0xFF) */
+    0xBF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+    0xCD        /* Datagram Data: 1 byte */
+    /* Packet ends, far short of declared length */
+};
+
+/* RFC 9221, Sec 4 - DATAGRAM frame (Type 0x31, with length) with Length > 0, but no data (truncated after Length).
+ * Length: 5. Expected: FRAME_ENCODING_ERROR.
+ */
+static uint8_t test_datagram_type0x31_len_gt_zero_no_data_truncated[] = {
+    0x31,       /* Type: DATAGRAM (with length) */
+    0x05        /* Length: 5 */
+    /* Packet ends here, no datagram data */
+};
+
+/* RFC 9000, Sec 19.1, 12.4 - PADDING frame type (0x00) non-canonically encoded (2 bytes).
+ * Expected: PROTOCOL_VIOLATION (optional).
+ */
+static uint8_t test_padding_type_non_canonical_2byte[] = {
+    0x40, 0x00  /* PADDING type 0x00 encoded as 2-byte varint */
 };
 
 fuzi_q_frames_t fuzi_q_frame_list[] = {
@@ -4328,7 +4429,29 @@ fuzi_q_frames_t fuzi_q_frame_list[] = {
     /* RFC 9000, Sec 19.17 - PATH_CHALLENGE truncated (4 of 8 data bytes) */
     FUZI_Q_ITEM("test_path_challenge_truncated_4bytes", test_path_challenge_truncated_4bytes),
     /* RFC 9000, Sec 19.18 - PATH_RESPONSE truncated (0 of 8 data bytes) */
-    FUZI_Q_ITEM("test_path_response_truncated_0bytes", test_path_response_truncated_0bytes)
+    FUZI_Q_ITEM("test_path_response_truncated_0bytes", test_path_response_truncated_0bytes),
+    /* --- Batch 5 of New Edge Case Test Variants (Other Control Frames) --- */
+    /* RFC 9000, Sec 19.5 - STOP_SENDING with max StreamID and max App Error Code */
+    FUZI_Q_ITEM("test_stop_sending_max_id_max_error", test_stop_sending_max_id_max_error),
+    /* RFC 9000, Sec 19.16 - RETIRE_CONNECTION_ID with max Sequence Number */
+    FUZI_Q_ITEM("test_retire_connection_id_max_sequence", test_retire_connection_id_max_sequence),
+    /* RFC 9000, Sec 19.7 - NEW_TOKEN with Token Length > 0, truncated before token data */
+    FUZI_Q_ITEM("test_new_token_len_gt_zero_no_token_data_truncated", test_new_token_len_gt_zero_no_token_data_truncated),
+    /* RFC 9000, Sec 19.4 - RESET_STREAM with StreamID, App Error, and Final Size all max */
+    FUZI_Q_ITEM("test_reset_stream_all_fields_max_value", test_reset_stream_all_fields_max_value),
+    /* --- Batch 6 of New Edge Case Test Variants (CRYPTO, DATAGRAM, PADDING) --- */
+    /* RFC 9000, Sec 19.6 - CRYPTO, Len > 0, truncated before data */
+    FUZI_Q_ITEM("test_crypto_len_gt_zero_no_data_truncated", test_crypto_len_gt_zero_no_data_truncated),
+    /* RFC 9221, Sec 4 - DATAGRAM (Type 0x30) empty, truncated after type */
+    FUZI_Q_ITEM("test_datagram_type0x30_empty_truncated", test_datagram_type0x30_empty_truncated),
+    /* RFC 9221, Sec 4 - DATAGRAM (Type 0x30) one byte data */
+    FUZI_Q_ITEM("test_datagram_type0x30_one_byte", test_datagram_type0x30_one_byte),
+    /* RFC 9221, Sec 4 - DATAGRAM (Type 0x31) max Length field, minimal actual data */
+    FUZI_Q_ITEM("test_datagram_type0x31_maxlength_field_min_data", test_datagram_type0x31_maxlength_field_min_data),
+    /* RFC 9221, Sec 4 - DATAGRAM (Type 0x31) Len > 0, truncated before data */
+    FUZI_Q_ITEM("test_datagram_type0x31_len_gt_zero_no_data_truncated", test_datagram_type0x31_len_gt_zero_no_data_truncated),
+    /* RFC 9000, Sec 19.1, 12.4 - PADDING type non-canonically encoded (2 bytes) */
+    FUZI_Q_ITEM("test_padding_type_non_canonical_2byte", test_padding_type_non_canonical_2byte)
 };
 
 size_t nb_fuzi_q_frame_list = sizeof(fuzi_q_frame_list) / sizeof(fuzi_q_frames_t);
