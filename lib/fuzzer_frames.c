@@ -4383,6 +4383,13 @@ fuzi_q_frames_t fuzi_q_frame_list[] = {
     FUZI_Q_ITEM("h2_altsvc_val_0xa", test_frame_h2_altsvc_val_0xa),
 
     /* RFC 6455 (WebSocket) Frame Types */
+static uint8_t test_frame_ws_continuation_val_0x0[] = { 0x00 };
+static uint8_t test_frame_ws_text_val_0x1[] = { 0x01 };
+static uint8_t test_frame_ws_binary_val_0x2[] = { 0x02 };
+static uint8_t test_frame_ws_connection_close_val_0x8[] = { 0x08 };
+static uint8_t test_frame_ws_ping_val_0x9[] = { 0x09 };
+static uint8_t test_frame_ws_pong_val_0xa[] = { 0x0A };
+
     FUZI_Q_ITEM("ws_continuation_val_0x0", test_frame_ws_continuation_val_0x0),
     FUZI_Q_ITEM("ws_text_val_0x1", test_frame_ws_text_val_0x1),
     FUZI_Q_ITEM("ws_binary_val_0x2", test_frame_ws_binary_val_0x2),
