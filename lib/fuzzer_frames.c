@@ -3620,6 +3620,19 @@ static uint8_t test_padding_type_non_canonical_2byte[] = {
     0x40, 0x00  /* PADDING type 0x00 encoded as 2-byte varint */
 };
 
+/* RFC 9204 (QPACK Instructions) Placeholders */
+/* Encoder Instructions */
+static uint8_t test_qpack_enc_set_dynamic_table_capacity[] = {0x20}; /* Placeholder: Set Dynamic Table Capacity (e.g., 001xxxxx) */
+static uint8_t test_qpack_enc_insert_with_name_ref[] = {0x80}; /* Placeholder: Insert With Name Reference (Indexed Name, e.g., 1xxxxxxx) */
+static uint8_t test_qpack_enc_insert_without_name_ref[] = {0x40}; /* Placeholder: Insert Without Name Reference (e.g., 0100xxxx) */
+static uint8_t test_qpack_enc_duplicate[] = {0x00}; /* Placeholder: Duplicate (e.g., 000xxxxx) */
+
+/* Decoder Instructions (as per prompt, acknowledging potential mismatch with RFC for "Set Dynamic Table Capacity") */
+static uint8_t test_qpack_dec_header_block_ack[] = {0x80}; /* Placeholder: Section Acknowledgment (Decoder, e.g., 1xxxxxxx) */
+static uint8_t test_qpack_dec_stream_cancellation[] = {0x40}; /* Placeholder: Stream Cancellation (Decoder, e.g., 01xxxxxx) */
+static uint8_t test_qpack_dec_insert_count_increment[] = {0x01}; /* Placeholder: Insert Count Increment (Decoder, e.g., 00xxxxxx) */
+static uint8_t test_qpack_dec_set_dynamic_table_capacity[] = {0x20}; /* Placeholder: Set Dynamic Table Capacity (Encoder Instruction pattern 001xxxxx) */
+
 fuzi_q_frames_t fuzi_q_frame_list[] = {
     FUZI_Q_ITEM("padding", test_frame_type_padding),
     FUZI_Q_ITEM("padding_zero_byte", test_frame_type_padding_zero_byte),
@@ -4522,7 +4535,17 @@ fuzi_q_frames_t fuzi_q_frame_list[] = {
     /* RFC 9221, Sec 4 - DATAGRAM (Type 0x31) Len > 0, truncated before data */
     FUZI_Q_ITEM("test_datagram_type0x31_len_gt_zero_no_data_truncated", test_datagram_type0x31_len_gt_zero_no_data_truncated),
     /* RFC 9000, Sec 19.1, 12.4 - PADDING type non-canonically encoded (2 bytes) */
-    FUZI_Q_ITEM("test_padding_type_non_canonical_2byte", test_padding_type_non_canonical_2byte)
+    FUZI_Q_ITEM("test_padding_type_non_canonical_2byte", test_padding_type_non_canonical_2byte),
+
+    /* RFC 9204 QPACK Instructions */
+    FUZI_Q_ITEM("qpack_enc_set_dynamic_table_capacity", test_qpack_enc_set_dynamic_table_capacity),
+    FUZI_Q_ITEM("qpack_enc_insert_with_name_ref", test_qpack_enc_insert_with_name_ref),
+    FUZI_Q_ITEM("qpack_enc_insert_without_name_ref", test_qpack_enc_insert_without_name_ref), /* Corresponds to "Insert with Literal Name" */
+    FUZI_Q_ITEM("qpack_enc_duplicate", test_qpack_enc_duplicate),
+    FUZI_Q_ITEM("qpack_dec_header_block_ack", test_qpack_dec_header_block_ack),
+    FUZI_Q_ITEM("qpack_dec_stream_cancellation", test_qpack_dec_stream_cancellation),
+    FUZI_Q_ITEM("qpack_dec_insert_count_increment", test_qpack_dec_insert_count_increment),
+    FUZI_Q_ITEM("qpack_enc_set_dynamic_table_capacity_alt", test_qpack_dec_set_dynamic_table_capacity),
 };
 
 size_t nb_fuzi_q_frame_list = sizeof(fuzi_q_frame_list) / sizeof(fuzi_q_frames_t);
