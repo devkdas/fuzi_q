@@ -4576,6 +4576,30 @@ fuzi_q_frames_t fuzi_q_frame_list[] = {
     FUZI_Q_ITEM("qpack_dec_stream_cancellation", test_qpack_dec_stream_cancellation),
     FUZI_Q_ITEM("qpack_dec_insert_count_increment", test_qpack_dec_insert_count_increment),
     FUZI_Q_ITEM("qpack_enc_set_dynamic_table_capacity_alt", test_qpack_dec_set_dynamic_table_capacity),
+    /* WebSocket Frame Types */
+    FUZI_Q_ITEM("test_ws_frame_pong", test_ws_frame_pong),
+    FUZI_Q_ITEM("test_ws_frame_ping", test_ws_frame_ping),
+    FUZI_Q_ITEM("test_ws_frame_connection_close", test_ws_frame_connection_close),
+    FUZI_Q_ITEM("test_ws_frame_binary", test_ws_frame_binary),
+    FUZI_Q_ITEM("test_ws_frame_text", test_ws_frame_text),
+    FUZI_Q_ITEM("test_ws_frame_continuation", test_ws_frame_continuation),
+    /* HTTP/2 and HPACK Frame Types */
+    FUZI_Q_ITEM("test_h2_frame_type_altsvc", test_h2_frame_type_altsvc),
+    FUZI_Q_ITEM("test_hpack_dynamic_table_size_update", test_hpack_dynamic_table_size_update),
+    FUZI_Q_ITEM("test_hpack_literal_never_indexed", test_hpack_literal_never_indexed),
+    FUZI_Q_ITEM("test_hpack_literal_no_indexing", test_hpack_literal_no_indexing),
+    FUZI_Q_ITEM("test_hpack_literal_inc_indexing", test_hpack_literal_inc_indexing),
+    FUZI_Q_ITEM("test_hpack_indexed_header_field", test_hpack_indexed_header_field),
+    FUZI_Q_ITEM("test_h2_frame_type_continuation", test_h2_frame_type_continuation),
+    FUZI_Q_ITEM("test_h2_frame_type_window_update", test_h2_frame_type_window_update),
+    FUZI_Q_ITEM("test_h2_frame_type_goaway", test_h2_frame_type_goaway),
+    FUZI_Q_ITEM("test_h2_frame_type_ping", test_h2_frame_type_ping),
+    FUZI_Q_ITEM("test_h2_frame_type_push_promise", test_h2_frame_type_push_promise),
+    FUZI_Q_ITEM("test_h2_frame_type_settings", test_h2_frame_type_settings),
+    FUZI_Q_ITEM("test_h2_frame_type_rst_stream", test_h2_frame_type_rst_stream),
+    FUZI_Q_ITEM("test_h2_frame_type_priority", test_h2_frame_type_priority),
+    FUZI_Q_ITEM("test_h2_frame_type_headers", test_h2_frame_type_headers),
+    FUZI_Q_ITEM("test_h2_frame_type_data", test_h2_frame_type_data),
 };
 
 size_t nb_fuzi_q_frame_list = sizeof(fuzi_q_frame_list) / sizeof(fuzi_q_frames_t);
