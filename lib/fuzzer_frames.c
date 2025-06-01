@@ -2757,6 +2757,14 @@ static uint8_t test_frame_h2_window_update_val_0x8[] = { 0x08 };
 static uint8_t test_frame_h2_continuation_val_0x9[] = { 0x09 };
 static uint8_t test_frame_h2_altsvc_val_0xa[] = { 0x0a };
 
+/* RFC 6455 (WebSocket) Frame Types */
+static uint8_t test_frame_ws_continuation_val_0x0[] = { 0x00, 0x00 }; /* FIN=0, RSV1=0, RSV2=0, RSV3=0, Opcode=0x0 (Continuation), Mask=0, Payload length=0 */
+static uint8_t test_frame_ws_text_val_0x1[] = { 0x81, 0x00 };         /* FIN=1, RSV1=0, RSV2=0, RSV3=0, Opcode=0x1 (Text), Mask=0, Payload length=0 */
+static uint8_t test_frame_ws_binary_val_0x2[] = { 0x82, 0x00 };        /* FIN=1, RSV1=0, RSV2=0, RSV3=0, Opcode=0x2 (Binary), Mask=0, Payload length=0 */
+static uint8_t test_frame_ws_connection_close_val_0x8[] = { 0x88, 0x00 }; /* FIN=1, RSV1=0, RSV2=0, RSV3=0, Opcode=0x8 (Connection Close), Mask=0, Payload length=0 */
+static uint8_t test_frame_ws_ping_val_0x9[] = { 0x89, 0x00 };          /* FIN=1, RSV1=0, RSV2=0, RSV3=0, Opcode=0x9 (Ping), Mask=0, Payload length=0 */
+static uint8_t test_frame_ws_pong_val_0xa[] = { 0x8A, 0x00 };          /* FIN=1, RSV1=0, RSV2=0, RSV3=0, Opcode=0xA (Pong), Mask=0, Payload length=0 */
+
 /* Test Case: NEW_TOKEN frame with an empty token. */
 /* Expected: Client treats as FRAME_ENCODING_ERROR (RFC 19.7). */
 static uint8_t test_frame_new_token_empty_token[] = {
