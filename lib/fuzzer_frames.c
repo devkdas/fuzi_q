@@ -2757,6 +2757,14 @@ static uint8_t test_frame_h2_window_update_val_0x8[] = { 0x08 };
 static uint8_t test_frame_h2_continuation_val_0x9[] = { 0x09 };
 static uint8_t test_frame_h2_altsvc_val_0xa[] = { 0x0a };
 
+/* Defines for WebSocket test frames, added to fix compilation errors */
+static uint8_t test_frame_ws_continuation_val_0x0[] = { 0x00 };
+static uint8_t test_frame_ws_text_val_0x1[] = { 0x01 };
+static uint8_t test_frame_ws_binary_val_0x2[] = { 0x02 };
+static uint8_t test_frame_ws_connection_close_val_0x8[] = { 0x08 };
+static uint8_t test_frame_ws_ping_val_0x9[] = { 0x09 };
+static uint8_t test_frame_ws_pong_val_0xa[] = { 0x0A };
+
 /* Test Case: NEW_TOKEN frame with an empty token. */
 /* Expected: Client treats as FRAME_ENCODING_ERROR (RFC 19.7). */
 static uint8_t test_frame_new_token_empty_token[] = {
@@ -4521,7 +4529,89 @@ static uint8_t test_frame_ws_pong_val_0xa[] = { 0x0A };
     /* RFC 9221, Sec 4 - DATAGRAM (Type 0x31) Len > 0, truncated before data */
     FUZI_Q_ITEM("test_datagram_type0x31_len_gt_zero_no_data_truncated", test_datagram_type0x31_len_gt_zero_no_data_truncated),
     /* RFC 9000, Sec 19.1, 12.4 - PADDING type non-canonically encoded (2 bytes) */
-    FUZI_Q_ITEM("test_padding_type_non_canonical_2byte", test_padding_type_non_canonical_2byte)
+    FUZI_Q_ITEM("test_padding_type_non_canonical_2byte", test_padding_type_non_canonical_2byte),
+    FUZI_Q_ITEM("datagram type0x31 len gt zero no data truncated", test_datagram_type0x31_len_gt_zero_no_data_truncated),
+    FUZI_Q_ITEM("datagram type0x31 maxlength field min data", test_datagram_type0x31_maxlength_field_min_data),
+    FUZI_Q_ITEM("datagram type0x30 one byte", test_datagram_type0x30_one_byte),
+    FUZI_Q_ITEM("datagram type0x30 empty truncated", test_datagram_type0x30_empty_truncated),
+    FUZI_Q_ITEM("crypto len gt zero no data truncated", test_crypto_len_gt_zero_no_data_truncated),
+    FUZI_Q_ITEM("path response truncated 0bytes", test_path_response_truncated_0bytes),
+    FUZI_Q_ITEM("path challenge truncated 4bytes", test_path_challenge_truncated_4bytes),
+    FUZI_Q_ITEM("path response alt bits AA", test_path_response_alt_bits_AA),
+    FUZI_Q_ITEM("path challenge all ones", test_path_challenge_all_ones),
+    FUZI_Q_ITEM("reset stream all fields max value", test_reset_stream_all_fields_max_value),
+    FUZI_Q_ITEM("new token len gt zero no token data truncated", test_new_token_len_gt_zero_no_token_data_truncated),
+    FUZI_Q_ITEM("retire connection id max sequence", test_retire_connection_id_max_sequence),
+    FUZI_Q_ITEM("stop sending max id max error", test_stop_sending_max_id_max_error),
+    FUZI_Q_ITEM("streams blocked uni over limit", test_streams_blocked_uni_over_limit),
+    FUZI_Q_ITEM("streams blocked bidi over limit", test_streams_blocked_bidi_over_limit),
+    FUZI_Q_ITEM("stream data blocked max id max value", test_stream_data_blocked_max_id_max_value),
+    FUZI_Q_ITEM("data blocked max value", test_data_blocked_max_value),
+    FUZI_Q_ITEM("new connection id cid overrun length field", test_new_connection_id_cid_overrun_length_field),
+    FUZI_Q_ITEM("new connection id truncated token", test_new_connection_id_truncated_token),
+    FUZI_Q_ITEM("new connection id truncated cid", test_new_connection_id_truncated_cid),
+    FUZI_Q_ITEM("ack type02 with trailing ecn like data", test_ack_type02_with_trailing_ecn_like_data),
+    FUZI_Q_ITEM("stream implicit len max offset with data", test_stream_implicit_len_max_offset_with_data),
+    FUZI_Q_ITEM("max stream data id max val max", test_max_stream_data_id_max_val_max),
+    FUZI_Q_ITEM("connection close transport min fields", test_connection_close_transport_min_fields),
+    FUZI_Q_ITEM("ack ecn range count zero first range set with counts", test_ack_ecn_range_count_zero_first_range_set_with_counts),
+    FUZI_Q_ITEM("stream off len fin offset plus length almost max", test_stream_off_len_fin_offset_plus_length_almost_max),
+    FUZI_Q_ITEM("stream len set explicit length no data fin", test_stream_len_set_explicit_length_no_data_fin),
+    FUZI_Q_ITEM("stream 0x0F all non canon fin", test_stream_0x0F_all_non_canon_fin),
+    FUZI_Q_ITEM("stream 0x0F all fields fin", test_stream_0x0F_all_fields_fin),
+    FUZI_Q_ITEM("stream 0x0E all non canon", test_stream_0x0E_all_non_canon),
+    FUZI_Q_ITEM("stream 0x0E all fields present", test_stream_0x0E_all_fields_present),
+    FUZI_Q_ITEM("stream 0x0D offset non canon fin", test_stream_0x0D_offset_non_canon_fin),
+    FUZI_Q_ITEM("stream 0x0D offset zero fin", test_stream_0x0D_offset_zero_fin),
+    FUZI_Q_ITEM("stream 0x0C offset non canon", test_stream_0x0C_offset_non_canon),
+    FUZI_Q_ITEM("stream 0x0C sid non canon", test_stream_0x0C_sid_non_canon),
+    FUZI_Q_ITEM("stream 0x0C offset large", test_stream_0x0C_offset_large),
+    FUZI_Q_ITEM("stream 0x0C offset zero", test_stream_0x0C_offset_zero),
+    FUZI_Q_ITEM("stream 0x0B len non canon fin", test_stream_0x0B_len_non_canon_fin),
+    FUZI_Q_ITEM("stream 0x0B len zero no data fin", test_stream_0x0B_len_zero_no_data_fin),
+    FUZI_Q_ITEM("stream 0x0A len non canon", test_stream_0x0A_len_non_canon),
+    FUZI_Q_ITEM("stream 0x0A sid non canon", test_stream_0x0A_sid_non_canon),
+    FUZI_Q_ITEM("stream 0x0A len large", test_stream_0x0A_len_large),
+    FUZI_Q_ITEM("stream 0x0A len small", test_stream_0x0A_len_small),
+    FUZI_Q_ITEM("stream 0x0A len zero with data", test_stream_0x0A_len_zero_with_data),
+    FUZI_Q_ITEM("stream 0x0A len zero no data", test_stream_0x0A_len_zero_no_data),
+    FUZI_Q_ITEM("stream 0x09 sid non canon", test_stream_0x09_sid_non_canon),
+    FUZI_Q_ITEM("stream 0x09 minimal", test_stream_0x09_minimal),
+    FUZI_Q_ITEM("stream 0x08 data long", test_stream_0x08_data_long),
+    FUZI_Q_ITEM("stream 0x08 sid non canon", test_stream_0x08_sid_non_canon),
+    FUZI_Q_ITEM("stream 0x08 minimal", test_stream_0x08_minimal),
+    FUZI_Q_ITEM("stop sending app err non canon", test_frame_stop_sending_app_err_non_canon),
+    FUZI_Q_ITEM("reset stream final size non canon 8byte", test_frame_reset_stream_final_size_non_canon_8byte),
+    FUZI_Q_ITEM("reset stream app err non canon", test_frame_reset_stream_app_err_non_canon),
+    FUZI_Q_ITEM("ack gap non canon", test_frame_ack_gap_non_canon),
+    FUZI_Q_ITEM("ack first ack range non canon", test_frame_ack_first_ack_range_non_canon),
+    FUZI_Q_ITEM("ack range count non canon", test_frame_ack_range_count_non_canon),
+    FUZI_Q_ITEM("ack delay non canon", test_frame_ack_delay_non_canon),
+    FUZI_Q_ITEM("ack ecn all large", test_frame_ack_ecn_all_large),
+    FUZI_Q_ITEM("ack ecn ce large", test_frame_ack_ecn_ce_large),
+    FUZI_Q_ITEM("ack ecn ect1 large", test_frame_ack_ecn_ect1_large),
+    FUZI_Q_ITEM("ack ecn ect0 large", test_frame_ack_ecn_ect0_large),
+    FUZI_Q_ITEM("max streams uni non canon 4byte", test_frame_max_streams_uni_non_canon_4byte),
+    FUZI_Q_ITEM("max streams bidi non canon 8byte", test_frame_max_streams_bidi_non_canon_8byte),
+    FUZI_Q_ITEM("max streams bidi non canon 2byte", test_frame_max_streams_bidi_non_canon_2byte),
+    FUZI_Q_ITEM("max stream data val non canon 4byte", test_frame_max_stream_data_val_non_canon_4byte),
+    FUZI_Q_ITEM("max stream data sid non canon 2byte", test_frame_max_stream_data_sid_non_canon_2byte),
+    FUZI_Q_ITEM("max data non canon 8byte", test_frame_max_data_non_canon_8byte),
+    FUZI_Q_ITEM("new token len non canon 4byte", test_frame_new_token_len_non_canon_4byte),
+    FUZI_Q_ITEM("crypto len non canon 4byte", test_frame_crypto_len_non_canon_4byte),
+    FUZI_Q_ITEM("crypto offset non canon 4byte", test_frame_crypto_offset_non_canon_4byte),
+    FUZI_Q_ITEM("conn close app rlen non canon 2byte", test_frame_conn_close_app_rlen_non_canon_2byte),
+    FUZI_Q_ITEM("conn close app ec non canon", test_frame_conn_close_app_ec_non_canon),
+    FUZI_Q_ITEM("conn close rlen non canon", test_frame_conn_close_rlen_non_canon),
+    FUZI_Q_ITEM("conn close ec non canon", test_frame_conn_close_ec_non_canon),
+    FUZI_Q_ITEM("retire cid seq non canon 4byte", test_frame_retire_cid_seq_non_canon_4byte),
+    FUZI_Q_ITEM("ncid ret non canon 4byte", test_frame_ncid_ret_non_canon_4byte),
+    FUZI_Q_ITEM("ncid seq non canon 2byte", test_frame_ncid_seq_non_canon_2byte),
+    FUZI_Q_ITEM("streams blocked uni non canon 2byte", test_frame_streams_blocked_uni_non_canon_2byte),
+    FUZI_Q_ITEM("streams blocked bidi non canon 8byte", test_frame_streams_blocked_bidi_non_canon_8byte),
+    FUZI_Q_ITEM("sdb val non canon 8byte", test_frame_sdb_val_non_canon_8byte),
+    FUZI_Q_ITEM("sdb sid non canon 4byte", test_frame_sdb_sid_non_canon_4byte),
+    FUZI_Q_ITEM("data blocked val non canon 2byte", test_frame_data_blocked_val_non_canon_2byte)
 };
 
 size_t nb_fuzi_q_frame_list = sizeof(fuzi_q_frame_list) / sizeof(fuzi_q_frames_t);
