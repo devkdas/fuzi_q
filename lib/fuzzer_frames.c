@@ -4333,6 +4333,9 @@ fuzi_q_frames_t fuzi_q_frame_list[] = {
     FUZI_Q_ITEM("h3_push_promise_simple", test_h3_frame_push_promise_payload_simple),
     FUZI_Q_ITEM("h3_origin_val_0x0c", test_frame_h3_origin_val_0x0c),
     FUZI_Q_ITEM("h3_priority_update_val_0xf0700", test_frame_h3_priority_update_val_0xf0700),
+    FUZI_Q_ITEM("h3_origin_payload", test_h3_frame_origin_payload),
+    FUZI_Q_ITEM("h3_priority_update_request_payload", test_h3_frame_priority_update_request_payload),
+    FUZI_Q_ITEM("h3_priority_update_placeholder_payload", test_h3_frame_priority_update_placeholder_payload),
     /* Additional H3 Frame Payload Variations */
     FUZI_Q_ITEM("h3_data_empty", test_h3_frame_data_empty),
     FUZI_Q_ITEM("h3_data_len_non_canon", test_h3_frame_data_len_non_canon),
