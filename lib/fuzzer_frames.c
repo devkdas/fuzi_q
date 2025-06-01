@@ -3633,6 +3633,36 @@ static uint8_t test_qpack_dec_stream_cancellation[] = {0x40}; /* Placeholder: St
 static uint8_t test_qpack_dec_insert_count_increment[] = {0x01}; /* Placeholder: Insert Count Increment (Decoder, e.g., 00xxxxxx) */
 static uint8_t test_qpack_dec_set_dynamic_table_capacity[] = {0x20}; /* Placeholder: Set Dynamic Table Capacity (Encoder Instruction pattern 001xxxxx) */
 
+// HTTP/2 Frame Types (RFC 9113) - Placeholders
+static uint8_t test_h2_frame_type_data[] = {0x00}; /* H2 DATA frame type */
+static uint8_t test_h2_frame_type_headers[] = {0x01}; /* H2 HEADERS frame type */
+static uint8_t test_h2_frame_type_priority[] = {0x02}; /* H2 PRIORITY frame type */
+static uint8_t test_h2_frame_type_rst_stream[] = {0x03}; /* H2 RST_STREAM frame type */
+static uint8_t test_h2_frame_type_settings[] = {0x04}; /* H2 SETTINGS frame type */
+static uint8_t test_h2_frame_type_push_promise[] = {0x05}; /* H2 PUSH_PROMISE frame type */
+static uint8_t test_h2_frame_type_ping[] = {0x06, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}; /* H2 PING frame type (type + 8 bytes opaque data) */
+static uint8_t test_h2_frame_type_goaway[] = {0x07}; /* H2 GOAWAY frame type */
+static uint8_t test_h2_frame_type_window_update[] = {0x08}; /* H2 WINDOW_UPDATE frame type */
+static uint8_t test_h2_frame_type_continuation[] = {0x09}; /* H2 CONTINUATION frame type */
+
+// HPACK Representations/Instructions (RFC 7541) - Placeholders
+static uint8_t test_hpack_indexed_header_field[] = {0x80}; /* HPACK Indexed Header Field (pattern 1xxxxxxx) */
+static uint8_t test_hpack_literal_inc_indexing[] = {0x40}; /* HPACK Literal Header Field with Incremental Indexing (pattern 01xxxxxx) */
+static uint8_t test_hpack_literal_no_indexing[] = {0x00}; /* HPACK Literal Header Field without Indexing (pattern 0000xxxx) */
+static uint8_t test_hpack_literal_never_indexed[] = {0x10}; /* HPACK Literal Header Field Never Indexed (pattern 0001xxxx) */
+static uint8_t test_hpack_dynamic_table_size_update[] = {0x20}; /* HPACK Dynamic Table Size Update (pattern 001xxxxx) */
+
+// HTTP Alternative Services (RFC 7838) - H2 Frame Type Placeholder
+static uint8_t test_h2_frame_type_altsvc[] = {0x0a}; /* H2 ALTSVC frame type (0xa) */
+
+// WebSocket Frame Types (RFC 6455) - Placeholders (minimal frames, FIN=1, Mask=0, PayloadLen=0)
+static uint8_t test_ws_frame_continuation[] = {0x80, 0x00}; /* WebSocket Continuation Frame (FIN + Opcode 0x0) */
+static uint8_t test_ws_frame_text[] = {0x81, 0x00};         /* WebSocket Text Frame (FIN + Opcode 0x1) */
+static uint8_t test_ws_frame_binary[] = {0x82, 0x00};        /* WebSocket Binary Frame (FIN + Opcode 0x2) */
+static uint8_t test_ws_frame_connection_close[] = {0x88, 0x00}; /* WebSocket Connection Close Frame (FIN + Opcode 0x8) */
+static uint8_t test_ws_frame_ping[] = {0x89, 0x00};          /* WebSocket Ping Frame (FIN + Opcode 0x9) */
+static uint8_t test_ws_frame_pong[] = {0x8a, 0x00};          /* WebSocket Pong Frame (FIN + Opcode 0xA) */
+
 fuzi_q_frames_t fuzi_q_frame_list[] = {
     FUZI_Q_ITEM("padding", test_frame_type_padding),
     FUZI_Q_ITEM("padding_zero_byte", test_frame_type_padding_zero_byte),
