@@ -24,6 +24,7 @@
 #include <picoquic.h>
 #include <picoquic_utils.h>
 #include <picoquic_internal.h>
+#include <stdio.h>
 #include <stddef.h>
 #include <stdlib.h>
 #include <string.h>
@@ -2385,22 +2386,26 @@ uint32_t fuzi_q_fuzzer(void* fuzz_ctx_param, picoquic_cnx_t* cnx,
                 switch (main_strategy_choice) {
                 case 0: /* Add random frame at end */
                     if (final_pad + len <= bytes_max) {
+                        printf("Fuzzer injecting frame: %s (Index: %zu)\n", fuzi_q_frame_list[fuzz_frame_id].name, fuzz_frame_id);
                         memcpy(&bytes[final_pad], fuzi_q_frame_list[fuzz_frame_id].val, len);
                         final_pad += len; was_fuzzed++;
                     }
                     break;
                 case 1: /* Add random frame at beginning */
                      if (final_pad + len <= bytes_max && header_length + len <= final_pad) {
+                        printf("Fuzzer injecting frame: %s (Index: %zu)\n", fuzi_q_frame_list[fuzz_frame_id].name, fuzz_frame_id);
                         memmove(bytes + header_length + len, bytes + header_length, final_pad - header_length);
                         memcpy(&bytes[header_length], fuzi_q_frame_list[fuzz_frame_id].val, len);
                         final_pad += len; was_fuzzed++;
                     } else if (header_length + len <= bytes_max) {
+                        printf("Fuzzer injecting frame: %s (Index: %zu)\n", fuzi_q_frame_list[fuzz_frame_id].name, fuzz_frame_id);
                         memcpy(&bytes[header_length], fuzi_q_frame_list[fuzz_frame_id].val, len);
                         final_pad = header_length + len; was_fuzzed++;
                     }
                     break;
                 case 2: /* Replace packet with random frame */
                     if (header_length + len <= bytes_max) {
+                        printf("Fuzzer injecting frame: %s (Index: %zu)\n", fuzi_q_frame_list[fuzz_frame_id].name, fuzz_frame_id);
                         memcpy(&bytes[header_length], fuzi_q_frame_list[fuzz_frame_id].val, len);
                         final_pad = header_length + len; was_fuzzed++;
                     }
