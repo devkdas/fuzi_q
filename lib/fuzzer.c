@@ -2252,6 +2252,7 @@ uint32_t fuzi_q_fuzzer(void* fuzz_ctx_param, picoquic_cnx_t* cnx,
         return (uint32_t)length;
     }
 
+    static size_t next_frame_index = 0;
     uint64_t fuzz_pilot = picoquic_test_random(&icid_ctx->random_context);
     fuzzer_cnx_state_enum fuzz_cnx_state = (cnx != NULL) ? fuzzer_get_cnx_state(cnx) : fuzzer_cnx_state_closing;
     uint32_t fuzzed_length = (uint32_t)length;
@@ -2372,7 +2373,11 @@ uint32_t fuzi_q_fuzzer(void* fuzz_ctx_param, picoquic_cnx_t* cnx,
             uint64_t sub_fuzzer_pilot = fuzz_pilot; /* Default for strategies not using list */
 
             if (main_strategy_choice < 3) { /* Strategies 0, 1, 2: Inject from fuzi_q_frame_list */
-                size_t fuzz_frame_id = (size_t)((fuzz_pilot) % nb_fuzi_q_frame_list);
+                size_t fuzz_frame_id = next_frame_index;
+                next_frame_index++;
+                if (next_frame_index >= nb_fuzi_q_frame_list) {
+                    next_frame_index = 0;
+                }
                 /* printf("Fuzzer selected frame for injection: %s (ID: %zu)\n", fuzi_q_frame_list[fuzz_frame_id].name, fuzz_frame_id); */
                 sub_fuzzer_pilot = fuzz_pilot >> 5; /* Consume fuzz_frame_id bits */
 
