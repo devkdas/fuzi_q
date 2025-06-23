@@ -56,10 +56,15 @@
 
 #ifndef picoquic_varint_encode_length
 static inline int local_picoquic_varint_encode_length(uint64_t n64) {
-    if (n64 < 0x40) return 1;
-    else if (n64 < 0x4000) return 2;
-    else if (n64 < 0x40000000) return 4;
-    else return 8; /* Matches standard picoquic varint encoding lengths */
+    if (n64 < (1ull << 6)) {
+        return 1;
+    } else if (n64 < (1ull << 14)) {
+        return 2;
+    } else if (n64 < (1ull << 30)) {
+        return 4;
+    } else {
+        return 8;
+    }
 }
 #define picoquic_varint_encode_length local_picoquic_varint_encode_length
 #endif
@@ -1012,8 +1017,8 @@ void datagram_frame_fuzzer(fuzzer_ctx_t* ctx, fuzzer_icid_ctx_t* icid_ctx, uint6
                 size_t fuzzable_data_len = 0;
                 if (original_length > 0 && data_actual_start + original_length <= frame_max) {
                     fuzzable_data_len = original_length;
-                } else if (original_length > 0 && data_actual_start < frame_max) {
-                    fuzzable_data_len = frame_max - data_actual_start;
+                } else if (original_length > 0 && data_actual_start < bytes_max) {
+                    fuzzable_data_len = bytes_max - data_actual_start;
                 }
 
                 if (fuzzable_data_len > 0) {
@@ -2160,6 +2165,8 @@ size_t retry_packet_fuzzer(uint64_t fuzz_pilot, uint8_t* bytes, size_t current_l
                  if (current_length < (scid_len_offset + 1 + scid_len + token_len)) {
                      current_length = scid_len_offset + 1 + scid_len + token_len;
                  }
+            } else if (original_length > scid_len_offset + 1 + scid_len) {
+                current_length = scid_len_offset + 1 + scid_len;
             }
         }
         break;
