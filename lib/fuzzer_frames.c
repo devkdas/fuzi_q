@@ -3620,6 +3620,260 @@ static uint8_t test_padding_type_non_canonical_2byte[] = {
     0x40, 0x00  /* PADDING type 0x00 encoded as 2-byte varint */
 };
 
+/* --- Unknown or Unassigned Frame Types --- */
+/* QUIC Unknown Frame Type 0x20 (from unassigned grease range) */
+/* Minimal payload, just the type. */
+static uint8_t test_frame_quic_unknown_0x20[] = { 0x20 };
+
+/* HTTP/3 Reserved Frame Type 0x02 */
+/* Minimal payload, just the type. HTTP/3 frames are Type + Length. Length 0. */
+static uint8_t test_frame_h3_reserved_0x02[] = { 0x02, 0x00 };
+
+/* HTTP/3 Reserved Frame Type 0x06 */
+/* Minimal payload, just the type. HTTP/3 frames are Type + Length. Length 0. */
+static uint8_t test_frame_h3_reserved_0x06[] = { 0x06, 0x00 };
+
+/* --- Malformed Frame Lengths --- */
+/* QUIC STREAM (Type 0x0a: LEN=1, OFF=0, FIN=0), explicit zero length, but data present */
+static uint8_t test_frame_quic_stream_len0_with_data[] = {
+    0x0a,       /* Type: Stream, LEN=1, OFF=0, FIN=0 */
+    0x01,       /* Stream ID: 1 */
+    0x00,       /* Length: 0 */
+    'd', 'a', 't', 'a' /* Unexpected data */
+};
+
+/* QUIC STREAM (Type 0x0a), length indicates more data than present */
+static uint8_t test_frame_quic_stream_len_gt_data[] = {
+    0x0a,       /* Type: Stream, LEN=1, OFF=0, FIN=0 */
+    0x02,       /* Stream ID: 2 */
+    0x64,       /* Length: 100 */
+    's', 'h', 'o', 'r', 't' /* Actual data is only 5 bytes */
+};
+
+/* QUIC STREAM (Type 0x0a), length indicates less data than present */
+static uint8_t test_frame_quic_stream_len_lt_data[] = {
+    0x0a,       /* Type: Stream, LEN=1, OFF=0, FIN=0 */
+    0x03,       /* Stream ID: 3 */
+    0x02,       /* Length: 2 */
+    'l', 'o', 'n', 'g', 'e', 'r', 'd', 'a', 't', 'a' /* Actual data is 10 bytes, only first 2 should be read for this frame */
+};
+
+/* --- Invalid Frame Field Values --- */
+/* QUIC MAX_STREAMS (Bidirectional, Type 0x12) with Max Streams value of 0 */
+static uint8_t test_frame_quic_max_streams_bidi_value0[] = {
+    0x12,       /* Type: MAX_STREAMS (Bidirectional) */
+    0x00        /* Maximum Streams: 0 */
+};
+
+/* QUIC STOP_SENDING (Type 0x05) with a very large application error code */
+static uint8_t test_frame_quic_stop_sending_large_error[] = {
+    0x05,       /* Type: STOP_SENDING */
+    0x01,       /* Stream ID: 1 (example) */
+                /* Application Error Code: 0x3FFFFFFFFFFFFFFF (max 8-byte varint) */
+    0xBF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF
+};
+
+/* --- Batch 2: More Invalid Frame Field Values --- */
+/* QUIC MAX_DATA (Type 0x10) with Maximum Data value of 0 */
+static uint8_t test_frame_quic_max_data_value0[] = {
+    0x10,       /* Type: MAX_DATA */
+    0x00        /* Maximum Data: 0 */
+};
+
+/* QUIC ACK (Type 0x02) with Largest Acknowledged 0, ACK Delay 0, 1 ACK Range, First ACK Range 0 */
+static uint8_t test_frame_quic_ack_largest0_delay0_1range0[] = {
+    0x02,       /* Type: ACK */
+    0x00,       /* Largest Acknowledged: 0 */
+    0x00,       /* ACK Delay: 0 */
+    0x01,       /* ACK Range Count: 1 */
+    0x00        /* First ACK Range: 0 (acks packet 0) */
+};
+
+/* QUIC ACK (Type 0x02) with ACK Range Count 0, but First ACK Range specified.
+ * Largest Ack 10, Delay 0. (RFC 9000, Section 19.3)
+ */
+static uint8_t test_frame_quic_ack_range_count0_first_range_set[] = {
+    0x02,       /* Type: ACK */
+    0x0A,       /* Largest Acknowledged: 10 */
+    0x00,       /* ACK Delay: 0 */
+    0x00,       /* ACK Range Count: 0 */
+    0x05        /* First ACK Range: 5 (acks packets 6-10). This field is present despite range count being 0. */
+};
+
+/* HTTP/3 SETTINGS (Type 0x04) with an unknown Setting Identifier (0xFFFF), value 0 */
+static uint8_t test_frame_h3_settings_unknown_id[] = {
+    0x04,       /* Type: SETTINGS */
+    0x03,       /* Frame Length: 3 (ID is 2 bytes, Value is 1 byte for 0) */
+    0x7F, 0xFF, /* Setting Identifier: 0xFFFF (varint encoded) */
+    0x00        /* Setting Value: 0 */
+};
+
+/* HTTP/3 SETTINGS (Type 0x04) with SETTINGS_MAX_FIELD_SECTION_SIZE (0x06) and value 0 */
+static uint8_t test_frame_h3_settings_max_field_section_size0[] = {
+    0x04,       /* Type: SETTINGS */
+    0x02,       /* Frame Length: 2 (ID is 1 byte, Value is 1 byte for 0) */
+    0x06,       /* Setting Identifier: SETTINGS_MAX_FIELD_SECTION_SIZE (0x06) */
+    0x00        /* Setting Value: 0 */
+};
+
+/* --- Batch 2: Padding Fuzzing --- */
+/* QUIC PADDING frame (Type 0x00), excessively long (70 bytes) */
+static uint8_t test_frame_quic_padding_excessive_70bytes[] = {
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* 10 */
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* 20 */
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* 30 */
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* 40 */
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* 50 */
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* 60 */
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00  /* 70 */
+};
+
+/* --- Batch 2: Stream ID Fuzzing (static part) --- */
+/* QUIC STREAM (Type 0x0a: LEN=1, OFF=0, FIN=0) using Stream ID 0x00 */
+static uint8_t test_frame_quic_stream_id0[] = {
+    0x0a,       /* Type: Stream, LEN=1, OFF=0, FIN=0 */
+    0x00,       /* Stream ID: 0 */
+    0x04,       /* Length: 4 */
+    't', 'e', 's', 't' /* Data */
+};
+
+/* --- Batch 3: User Prioritized Frames --- */
+/* DATAGRAM type 0x30 (no length field), but providing data as if length was present (error case) */
+static uint8_t test_frame_datagram_type30_with_len_data_error[] = {
+    0x30,       /* Type: DATAGRAM (no length field) */
+    0x04,       /* Spurious length, should not be here */
+    'd','a','t','a'
+};
+
+/* DATAGRAM type 0x31 (length field present), but length field is missing (truncated frame) */
+static uint8_t test_frame_datagram_type31_missing_len_error[] = {
+    0x31        /* Type: DATAGRAM (length field present) */
+                /* Length and data missing */
+};
+
+/* DATAGRAM type 0x31 (length field present), length is 0, but data is present */
+static uint8_t test_frame_datagram_type31_len_zero_with_data_error[] = {
+    0x31,       /* Type: DATAGRAM (length field present) */
+    0x00,       /* Length: 0 */
+    'd','a','t','a'
+};
+
+/* HTTP/3 SETTINGS frame with an excessively large number of setting identifier/value pairs */
+static uint8_t test_h3_settings_excessive_pairs[] = {
+    0x04,       /* Type: SETTINGS (HTTP/3) */
+    0x80, 0x01, 0xFE, /* Length: 254 (varint, allows for 127 minimal pairs of ID=1, VAL=1) */
+    /* 127 pairs of (ID=0x01, Value=0x01) */
+    0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, /* 5 pairs */
+    0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, /* 10 pairs */
+    0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, /* 15 pairs */
+    0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, /* 20 pairs */
+    0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, /* 25 pairs */
+    0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, /* 30 pairs */
+    0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, /* 35 pairs */
+    0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, /* 40 pairs */
+    0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, /* 45 pairs */
+    0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, /* 50 pairs */
+    0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, /* 55 pairs */
+    0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, /* 60 pairs */
+    0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, /* 65 pairs */
+    0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, /* 70 pairs */
+    0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, /* 75 pairs */
+    0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, /* 80 pairs */
+    0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, /* 85 pairs */
+    0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, /* 90 pairs */
+    0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, /* 95 pairs */
+    0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, /* 100 pairs */
+    0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, /* 105 pairs */
+    0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, /* 110 pairs */
+    0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, /* 115 pairs */
+    0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, /* 120 pairs */
+    0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01                  /* 127 pairs */
+};
+
+/* HTTP/3 ORIGIN frame (Type 0x0c) - for unnegotiated scenario */
+static uint8_t test_h3_origin_unnegotiated[] = {
+    0x0c,       /* Type: ORIGIN (HTTP/3) */
+    0x14,       /* Frame Length: 20 bytes total (1 for type, 1 for val-len, 18 for value) */
+    0x00,       /* Origin-Entry type: 0x00 (main) */
+    0x12,       /* Origin-Value Length: 18 bytes */
+    'h', 't', 't', 'p', ':', '/', '/', 'o', 'r', 'i', 'g', 'i', 'n', '.', 't', 'e', 's', 't'
+};
+
+/* QUIC STREAM Type 0x0A (LEN=1, OFF=0, FIN=0), but length field is missing (truncated) */
+static uint8_t test_stream_len_bit_no_len_field[] = {
+    0x0A,       /* Type: Stream, LEN=1, OFF=0, FIN=0 */
+    0x01        /* Stream ID: 1 */
+                /* Length field and data missing */
+};
+
+/* QUIC STREAM Type 0x0C (OFF=1, LEN=0, FIN=0), but offset field is missing (truncated) */
+static uint8_t test_stream_off_bit_no_off_field[] = {
+    0x0C,       /* Type: Stream, OFF=1, LEN=0, FIN=0 */
+    0x01        /* Stream ID: 1 */
+                /* Offset field and data missing */
+};
+
+/* QUIC STREAM Type 0x0B (LEN=1, FIN=1, OFF=0), Length 0, but data "extra" is present */
+static uint8_t test_stream_len_fin_zero_len_with_data[] = {
+    0x0B,       /* Type: Stream, LEN=1, FIN=1, OFF=0 */
+    0x01,       /* Stream ID: 1 */
+    0x00,       /* Length: 0 */
+    'e','x','t','r','a' /* This data should not be here for this stream if length is 0 */
+};
+
+/* QUIC frame type 0x07 (just below STREAM range 0x08-0x0f) */
+static uint8_t test_frame_type_stream_range_just_below[] = {
+    0x07,       /* Invalid type, pretending to be stream-like */
+    0x01,       /* Stream ID: 1 (example) */
+    'd','a','t','a' /* Some payload */
+};
+
+/* QUIC STREAM frame type 0x08 (lower bound of STREAM range 0x08-0x0f) */
+static uint8_t test_frame_type_stream_range_lower_bound[] = {
+    0x08,       /* Valid STREAM type (OFF=0,LEN=0,FIN=0) */
+    0x01,       /* Stream ID: 1 (example) */
+    'd','a','t','a' /* Some payload */
+};
+
+/* QUIC STREAM frame type 0x0F (upper bound of STREAM range 0x08-0x0f) */
+static uint8_t test_frame_type_stream_range_upper_bound[] = {
+    0x0F,       /* Valid STREAM type (OFF=1,LEN=1,FIN=1) */
+    0x01,       /* Stream ID: 1 (example) */
+    0x00,       /* Offset: 0 */
+    0x04,       /* Length: 4 */
+    'd','a','t','a' /* Some payload */
+};
+
+/* QUIC frame type 0x10 (just above STREAM range 0x08-0x0f, this is MAX_DATA type)
+ * Payload here is not a valid MAX_DATA payload but serves to test type parsing boundaries.
+ */
+static uint8_t test_frame_type_stream_range_just_above[] = {
+    0x10,       /* Type: MAX_DATA */
+    0x01,       /* Not a varint, but used as placeholder data like other stream tests */
+    'd','a','t','a'
+};
+
+/* WebSocket PING (control frame opcode 0x9) with FIN=0 (invalid, control frames must not be fragmented) */
+static uint8_t test_ws_control_frame_fin_zero_invalid[] = {
+    0x09,       /* FIN=0, RSV1=0, RSV2=0, RSV3=0, Opcode=PING (0x9) */
+    0x00        /* Mask=0, PayloadLen=0 */
+};
+
+/* WebSocket Text frame (opcode 0x1) with FIN=0, data "part" */
+static uint8_t test_ws_text_fin0_then_text_continuation_part1[] = {
+    0x01,       /* FIN=0, RSV1=0, RSV2=0, RSV3=0, Opcode=Text (0x1) */
+    0x04,       /* Mask=0, PayloadLen=4 */
+    'p','a','r','t'
+};
+
+/* WebSocket Text frame (opcode 0x1) with FIN=0, data "two". Invalid if used as a continuation. */
+static uint8_t test_ws_text_fin0_then_text_continuation_part2_invalid[] = {
+    0x01,       /* FIN=0, RSV1=0, RSV2=0, RSV3=0, Opcode=Text (0x1) -- invalid as continuation */
+    0x03,       /* Mask=0, PayloadLen=3 */
+    't','w','o'
+};
+
+
 /* RFC 9204 (QPACK Instructions) Placeholders */
 /* Encoder Instructions */
 static uint8_t test_qpack_enc_set_dynamic_table_capacity[] = {0x20}; /* Placeholder: Set Dynamic Table Capacity (e.g., 001xxxxx) */
@@ -4600,6 +4854,80 @@ fuzi_q_frames_t fuzi_q_frame_list[] = {
     FUZI_Q_ITEM("test_h2_frame_type_priority", test_h2_frame_type_priority),
     FUZI_Q_ITEM("test_h2_frame_type_headers", test_h2_frame_type_headers),
     FUZI_Q_ITEM("test_h2_frame_type_data", test_h2_frame_type_data),
+
+    /* == Unknown or Unassigned Frame Types == */
+    /* QUIC Unknown Frame Type 0x20 (unassigned grease range) */
+    FUZI_Q_ITEM("quic_unknown_frame_0x20", test_frame_quic_unknown_0x20),
+    /* HTTP/3 Reserved Frame Type 0x02 */
+    FUZI_Q_ITEM("h3_reserved_frame_0x02", test_frame_h3_reserved_0x02),
+    /* HTTP/3 Reserved Frame Type 0x06 */
+    FUZI_Q_ITEM("h3_reserved_frame_0x06", test_frame_h3_reserved_0x06),
+
+    /* == Malformed Frame Lengths == */
+    /* QUIC STREAM (0x0a), explicit zero length, but data present */
+    FUZI_Q_ITEM("quic_stream_len0_with_data", test_frame_quic_stream_len0_with_data),
+    /* QUIC STREAM (0x0a), length > actual data */
+    FUZI_Q_ITEM("quic_stream_len_gt_data", test_frame_quic_stream_len_gt_data),
+    /* QUIC STREAM (0x0a), length < actual data */
+    FUZI_Q_ITEM("quic_stream_len_lt_data", test_frame_quic_stream_len_lt_data),
+
+    /* == Invalid Frame Field Values == */
+    /* QUIC MAX_STREAMS (Bidi, 0x12), value 0 */
+    FUZI_Q_ITEM("quic_max_streams_bidi_value0", test_frame_quic_max_streams_bidi_value0),
+    /* QUIC STOP_SENDING (0x05), large error code */
+    FUZI_Q_ITEM("quic_stop_sending_large_error", test_frame_quic_stop_sending_large_error),
+
+    /* --- Batch 2: More Invalid Frame Field Values --- */
+    /* QUIC MAX_DATA (0x10), value 0 */
+    FUZI_Q_ITEM("quic_max_data_value0", test_frame_quic_max_data_value0),
+    /* QUIC ACK (0x02), Largest Ack 0, Delay 0, 1 Range (0) */
+    FUZI_Q_ITEM("quic_ack_largest0_delay0_1range0", test_frame_quic_ack_largest0_delay0_1range0),
+    /* QUIC ACK (0x02), Range Count 0, but First ACK Range specified */
+    FUZI_Q_ITEM("quic_ack_range_count0_first_range_set", test_frame_quic_ack_range_count0_first_range_set),
+    /* HTTP/3 SETTINGS (0x04), unknown ID 0xFFFF, value 0 */
+    FUZI_Q_ITEM("h3_settings_unknown_id", test_frame_h3_settings_unknown_id),
+    /* HTTP/3 SETTINGS (0x04), MAX_FIELD_SECTION_SIZE (0x06), value 0 */
+    FUZI_Q_ITEM("h3_settings_max_field_section_size0", test_frame_h3_settings_max_field_section_size0),
+
+    /* --- Batch 2: Padding Fuzzing --- */
+    /* QUIC PADDING frame (0x00), excessively long (70 bytes) */
+    FUZI_Q_ITEM("quic_padding_excessive_70bytes", test_frame_quic_padding_excessive_70bytes),
+
+    /* --- Batch 2: Stream ID Fuzzing (static part) --- */
+    /* QUIC STREAM (0x0a) using reserved Stream ID 0x00 */
+    FUZI_Q_ITEM("quic_stream_id0", test_frame_quic_stream_id0),
+
+    /* --- Batch 3: User Prioritized Frames --- */
+    /* DATAGRAM type 0x30 (no length field), but providing data as if length was present (error case) */
+    FUZI_Q_ITEM("datagram_type30_with_len_data_error", test_frame_datagram_type30_with_len_data_error),
+    /* DATAGRAM type 0x31 (length field present), but length field is missing (truncated frame) */
+    FUZI_Q_ITEM("datagram_type31_missing_len_error", test_frame_datagram_type31_missing_len_error),
+    /* DATAGRAM type 0x31 (length field present), length is 0, but data is present */
+    FUZI_Q_ITEM("datagram_type31_len_zero_with_data_error", test_frame_datagram_type31_len_zero_with_data_error),
+    /* HTTP/3 SETTINGS frame with an excessively large number of setting identifier/value pairs */
+    FUZI_Q_ITEM("h3_settings_excessive_pairs", test_h3_settings_excessive_pairs),
+    /* HTTP/3 ORIGIN frame sent when extension not negotiated */
+    FUZI_Q_ITEM("h3_origin_unnegotiated", test_h3_origin_unnegotiated),
+    /* QUIC STREAM Type 0x0A (LEN=1), but length field is missing */
+    FUZI_Q_ITEM("stream_len_bit_no_len_field", test_stream_len_bit_no_len_field),
+    /* QUIC STREAM Type 0x0C (OFF=1), but offset field is missing */
+    FUZI_Q_ITEM("stream_off_bit_no_off_field", test_stream_off_bit_no_off_field),
+    /* QUIC STREAM Type 0x0B (LEN=1, FIN=1), Length 0, but data "extra" is present */
+    FUZI_Q_ITEM("stream_len_fin_zero_len_with_data", test_stream_len_fin_zero_len_with_data),
+    /* QUIC frame type 0x07 (just below STREAM range) */
+    FUZI_Q_ITEM("type_stream_range_just_below", test_frame_type_stream_range_just_below),
+    /* QUIC STREAM frame type 0x08 (lower bound of STREAM range) */
+    FUZI_Q_ITEM("type_stream_range_lower_bound", test_frame_type_stream_range_lower_bound),
+    /* QUIC STREAM frame type 0x0F (upper bound of STREAM range) */
+    FUZI_Q_ITEM("type_stream_range_upper_bound", test_frame_type_stream_range_upper_bound),
+    /* QUIC frame type 0x10 (just above STREAM range, actually MAX_DATA) */
+    FUZI_Q_ITEM("type_stream_range_just_above", test_frame_type_stream_range_just_above),
+    /* WebSocket PING (control frame) with FIN=0 (invalid) */
+    FUZI_Q_ITEM("ws_control_frame_fin_zero_invalid", test_ws_control_frame_fin_zero_invalid),
+    /* WebSocket Text frame, FIN=0, data "part" (Part 1 of a sequence) */
+    FUZI_Q_ITEM("ws_text_fin0_then_text_continuation_part1", test_ws_text_fin0_then_text_continuation_part1),
+    /* WebSocket Text frame (opcode 0x1, FIN=0), invalid as a continuation. Data "two" */
+    FUZI_Q_ITEM("ws_text_fin0_then_text_continuation_part2_invalid", test_ws_text_fin0_then_text_continuation_part2_invalid),
 };
 
 size_t nb_fuzi_q_frame_list = sizeof(fuzi_q_frame_list) / sizeof(fuzi_q_frames_t);
