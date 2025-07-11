@@ -3938,6 +3938,12 @@ static uint8_t test_ws_frame_connection_close[] = {0x88, 0x00}; /* WebSocket Con
 static uint8_t test_ws_frame_ping[] = {0x89, 0x00};          /* WebSocket Ping Frame (FIN + Opcode 0x9) */
 static uint8_t test_ws_frame_pong[] = {0x8a, 0x00};          /* WebSocket Pong Frame (FIN + Opcode 0xA) */
 
+typedef struct {
+    const char* name;
+    const uint8_t* data;
+    size_t size;
+} fuzi_q_frames_t;
+
 fuzi_q_frames_t fuzi_q_frame_list[] = {
     FUZI_Q_ITEM("padding", test_frame_type_padding),
     FUZI_Q_ITEM("padding_zero_byte", test_frame_type_padding_zero_byte),
@@ -5072,11 +5078,9 @@ fuzi_q_frames_t fuzi_q_frame_list[] = {
     FUZI_Q_ITEM("quic_unknown_frame_grease_0x2A", test_frame_quic_unknown_frame_grease_0x2A),
     FUZI_Q_ITEM("h3_reserved_frame_0x09", test_frame_h3_reserved_frame_0x09),
     FUZI_Q_ITEM("ws_control_frame_0x0C_invalid", test_frame_ws_control_frame_0x0C_invalid),
-    FUZI_Q_ITEM("quic_crypto_len_gt_data", test_frame_quic_crypto_len_gt_data),
     FUZI_Q_ITEM("h3_push_promise_incomplete_payload", test_frame_h3_push_promise_incomplete_payload),
     FUZI_Q_ITEM("quic_retire_connection_id_large_seq", test_frame_quic_retire_connection_id_large_seq),
     FUZI_Q_ITEM("h3_goaway_large_id", test_frame_h3_goaway_large_id),
-    FUZI_Q_ITEM("quic_ncid_retire_gt_seq", test_frame_quic_ncid_retire_gt_seq),
     FUZI_Q_ITEM("quic_path_challenge_empty", test_frame_quic_path_challenge_empty),
     FUZI_Q_ITEM("quic_path_response_empty", test_frame_quic_path_response_empty),
 
