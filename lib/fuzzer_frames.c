@@ -3895,6 +3895,115 @@ static uint8_t test_frame_ws_all_rsv_set[] = { 0xF1, 0x04, 'd', 'a', 't', 'a' };
 
  /* END OF JULES ADDED FRAMES */
 
+/* Additional QUIC Negative Test Cases for Comprehensive Fuzzing */
+
+// CRYPTO frame with offset exceeding limits  
+static uint8_t test_frame_quic_crypto_offset_max[] = { 0x06, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x04, 't', 'e', 's', 't' };
+
+// STREAM frame with invalid final size (smaller than offset)
+static uint8_t test_frame_quic_stream_invalid_final_size[] = { 0x0f, 0x01, 0x0A, 0x05, 't', 'e', 's', 't' };
+
+// ACK frame with packet number overflow
+static uint8_t test_frame_quic_ack_pkt_overflow[] = { 0x02, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0x01, 0x00 };
+
+// HANDSHAKE_DONE in wrong context
+static uint8_t test_frame_quic_handshake_done_invalid[] = { 0x1e };
+
+// Multiple HANDSHAKE_DONE frames
+static uint8_t test_frame_quic_multiple_handshake_done[] = { 0x1e, 0x1e };
+
+// STREAM frame with maximum stream ID
+static uint8_t test_frame_quic_stream_id_maximum[] = { 0x08, 0xBF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFC, 'd', 'a', 't', 'a' };
+
+// PING frame in wrong packet type context
+static uint8_t test_frame_quic_ping_invalid_context[] = { 0x01 };
+
+// CONNECTION_CLOSE with maximum error code
+static uint8_t test_frame_quic_conn_close_max_err[] = { 0x1c, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0x00 };
+
+// RESET_STREAM after FIN violation
+static uint8_t test_frame_quic_reset_after_fin_violation[] = { 0x04, 0x01, 0x00, 0x04 };
+
+// Unknown frame types for stress testing
+static uint8_t test_frame_quic_unknown_type_0x40[] = { 0x40, 0x00 };
+static uint8_t test_frame_quic_unknown_type_0x41[] = { 0x41, 0x01, 0x02 };
+static uint8_t test_frame_quic_unknown_type_0x42[] = { 0x42, 0x03, 0x04, 0x05 };
+
+// PATH_RESPONSE with incorrect data
+static uint8_t test_frame_quic_path_response_incorrect[] = { 0x1b, 0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77 };
+
+// STREAM frame exceeding flow control
+static uint8_t test_frame_quic_stream_flow_violation[] = { 0x0a, 0x01, 0xFF, 0xFF, 'd','a','t','a' };
+
+// CRYPTO frame in 0-RTT packet (invalid)
+static uint8_t test_frame_quic_crypto_0rtt_invalid[] = { 0x06, 0x00, 0x04, 't', 'e', 's', 't' };
+
+// ACK frame in 0-RTT packet (invalid)
+static uint8_t test_frame_quic_ack_0rtt_invalid[] = { 0x02, 0x01, 0x00, 0x01, 0x00 };
+
+// NEW_CONNECTION_ID flooding (rapid sequence numbers)
+static uint8_t test_frame_quic_ncid_flood_seq1[] = { 0x18, 0x01, 0x00, 0x08, 0x01,0x01,0x01,0x01,0x01,0x01,0x01,0x01, 0xB1,0xB1,0xB1,0xB1,0xB1,0xB1,0xB1,0xB1,0xB1,0xB1,0xB1,0xB1,0xB1,0xB1,0xB1,0xB1 };
+static uint8_t test_frame_quic_ncid_flood_seq2[] = { 0x18, 0x02, 0x00, 0x08, 0x02,0x02,0x02,0x02,0x02,0x02,0x02,0x02, 0xB2,0xB2,0xB2,0xB2,0xB2,0xB2,0xB2,0xB2,0xB2,0xB2,0xB2,0xB2,0xB2,0xB2,0xB2,0xB2 };
+
+// MAX_STREAMS rapid changes for DoS testing
+static uint8_t test_frame_quic_max_streams_rapid1[] = { 0x12, 0x64 }; // 100 streams
+static uint8_t test_frame_quic_max_streams_rapid2[] = { 0x12, 0x32 }; // 50 streams
+
+// STREAM frame with zero-length data but LEN bit set
+static uint8_t test_frame_quic_stream_zero_len_explicit[] = { 0x0a, 0x01, 0x00 };
+
+// PATH_CHALLENGE replay attack simulation
+static uint8_t test_frame_quic_path_challenge_replay[] = { 0x1a, 0xDE, 0xAD, 0xBE, 0xEF, 0xCA, 0xFE, 0xBA, 0xBE };
+
+// MAX_STREAM_DATA with decreasing value
+static uint8_t test_frame_quic_max_stream_data_decrease[] = { 0x11, 0x01, 0x32 };
+
+// STREAMS_BLOCKED with invalid higher limit
+static uint8_t test_frame_quic_streams_blocked_invalid_limit[] = { 0x16, 0xC8 };
+
+// Frame with invalid varint encoding
+static uint8_t test_frame_quic_invalid_varint[] = { 0xFF, 0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01 };
+
+// ACK frame with malformed ack range
+static uint8_t test_frame_quic_ack_malformed[] = { 0x02, 0x0A, 0x00, 0x01, 0xFF, 0xFF, 0xFF, 0xFF };
+
+// Multiple PATH_CHALLENGE frames in single packet
+static uint8_t test_frame_quic_multiple_path_challenge[] = { 
+    0x1a, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08,
+    0x1a, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18
+};
+
+// STREAM fragments for memory pressure testing
+static uint8_t test_frame_quic_stream_fragment1[] = { 0x0a, 0x01, 0x01, 'A' };
+static uint8_t test_frame_quic_stream_fragment2[] = { 0x0c, 0x01, 0x01, 0x01, 'B' };
+
+// ACK frame with many ranges for memory pressure
+static uint8_t test_frame_quic_ack_many_ranges[] = { 
+    0x02, 0x64, 0x00, 0x05, // Largest 100, delay 0, 5 ranges
+    0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01
+};
+
+// NEW_CONNECTION_ID with duplicate sequence number
+static uint8_t test_frame_quic_ncid_duplicate[] = { 0x18, 0x01, 0x00, 0x08, 0xDD,0xDD,0xDD,0xDD,0xDD,0xDD,0xDD,0xDD, 0xEE,0xEE,0xEE,0xEE,0xEE,0xEE,0xEE,0xEE,0xEE,0xEE,0xEE,0xEE,0xEE,0xEE,0xEE,0xEE };
+
+// Connection ID at maximum length (20 bytes)
+static uint8_t test_frame_quic_ncid_max_len[] = { 
+    0x18, 0x05, 0x00, 20, 
+    0xF1,0xF2,0xF3,0xF4,0xF5,0xF6,0xF7,0xF8,0xF9,0xFA,0xFB,0xFC,0xFD,0xFE,0xFF,0x00,0x01,0x02,0x03,0x04,
+    0xA1,0xA2,0xA3,0xA4,0xA5,0xA6,0xA7,0xA8,0xA9,0xAA,0xAB,0xAC,0xAD,0xAE,0xAF,0xB0
+};
+
+// Reset flood simulation
+static uint8_t test_frame_quic_reset_flood1[] = { 0x04, 0x05, 0x00, 0x00 };
+static uint8_t test_frame_quic_reset_flood2[] = { 0x04, 0x09, 0x00, 0x00 };
+
+// Buffer overflow attempts
+static uint8_t test_frame_quic_crypto_overflow[] = { 0x06, 0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0x01 };
+static uint8_t test_frame_quic_new_token_overflow[] = { 0x07, 0xFF, 0xFF, 0x01 };
+
+// ACK with suspicious timing patterns
+static uint8_t test_frame_quic_ack_timing_suspicious[] = { 0x02, 0xFF, 0xFF, 0xFF, 0xFF, 0x01, 0x00 };
+
  /* RFC 9204 (QPACK Instructions) Placeholders */
 /* Encoder Instructions */
 static uint8_t test_qpack_enc_set_dynamic_table_capacity[] = {0x20}; /* Placeholder: Set Dynamic Table Capacity (e.g., 001xxxxx) */
@@ -5090,6 +5199,64 @@ fuzi_q_frames_t fuzi_q_frame_list[] = {
     FUZI_Q_ITEM("h3_reserved_type_4byte_varint", test_frame_h3_reserved_type_4byte_varint),
     FUZI_Q_ITEM("ws_continuation_fin1_with_payload", test_frame_ws_continuation_fin1_with_payload),
     FUZI_Q_ITEM("quic_ncid_large_retire_small_seq", test_frame_quic_ncid_large_retire_small_seq),
+
+    /* New QUIC negative test cases */
+    FUZI_Q_ITEM("quic_conn_close_missing_error", test_quic_conn_close_missing_error),
+    FUZI_Q_ITEM("quic_ack_bad_range", test_quic_ack_bad_range),
+    FUZI_Q_ITEM("quic_reset_zero_error", test_quic_reset_zero_error),
+    FUZI_Q_ITEM("quic_crypto_big_offset", test_quic_crypto_big_offset),
+    FUZI_Q_ITEM("quic_new_token_empty", test_quic_new_token_empty),
+    FUZI_Q_ITEM("quic_stream_id_zero", test_quic_stream_id_zero),
+    FUZI_Q_ITEM("quic_max_data_zero", test_quic_max_data_zero),
+    FUZI_Q_ITEM("quic_max_streams_huge", test_quic_max_streams_huge),
+    FUZI_Q_ITEM("quic_ncid_bad_seq", test_quic_ncid_bad_seq),
+    FUZI_Q_ITEM("quic_retire_seq_zero", test_quic_retire_seq_zero),
+    FUZI_Q_ITEM("quic_path_challenge_predictable", test_quic_path_challenge_predictable),
+    FUZI_Q_ITEM("quic_reserved_frame_type", test_quic_reserved_frame_type),
+    FUZI_Q_ITEM("quic_stream_len_mismatch", test_quic_stream_len_mismatch),
+    FUZI_Q_ITEM("quic_ack_future", test_quic_ack_future),
+    FUZI_Q_ITEM("quic_datagram_bad_len", test_quic_datagram_bad_len),
+    FUZI_Q_ITEM("quic_stream_noncanon_varint", test_quic_stream_noncanon_varint),
+    FUZI_Q_ITEM("quic_conn_close_bad_frame_ref", test_quic_conn_close_bad_frame_ref),
+
+    /* Additional QUIC Negative Test Cases */
+    FUZI_Q_ITEM("quic_crypto_offset_max", test_frame_quic_crypto_offset_max),
+    FUZI_Q_ITEM("quic_stream_invalid_final_size", test_frame_quic_stream_invalid_final_size),
+    FUZI_Q_ITEM("quic_ack_pkt_overflow", test_frame_quic_ack_pkt_overflow),
+    FUZI_Q_ITEM("quic_handshake_done_invalid", test_frame_quic_handshake_done_invalid),
+    FUZI_Q_ITEM("quic_multiple_handshake_done", test_frame_quic_multiple_handshake_done),
+    FUZI_Q_ITEM("quic_stream_id_maximum", test_frame_quic_stream_id_maximum),
+    FUZI_Q_ITEM("quic_ping_invalid_context", test_frame_quic_ping_invalid_context),
+    FUZI_Q_ITEM("quic_conn_close_max_err", test_frame_quic_conn_close_max_err),
+    FUZI_Q_ITEM("quic_reset_after_fin_violation", test_frame_quic_reset_after_fin_violation),
+    FUZI_Q_ITEM("quic_unknown_type_0x40", test_frame_quic_unknown_type_0x40),
+    FUZI_Q_ITEM("quic_unknown_type_0x41", test_frame_quic_unknown_type_0x41),
+    FUZI_Q_ITEM("quic_unknown_type_0x42", test_frame_quic_unknown_type_0x42),
+    FUZI_Q_ITEM("quic_path_response_incorrect", test_frame_quic_path_response_incorrect),
+    FUZI_Q_ITEM("quic_stream_flow_violation", test_frame_quic_stream_flow_violation),
+    FUZI_Q_ITEM("quic_crypto_0rtt_invalid", test_frame_quic_crypto_0rtt_invalid),
+    FUZI_Q_ITEM("quic_ack_0rtt_invalid", test_frame_quic_ack_0rtt_invalid),
+    FUZI_Q_ITEM("quic_ncid_flood_seq1", test_frame_quic_ncid_flood_seq1),
+    FUZI_Q_ITEM("quic_ncid_flood_seq2", test_frame_quic_ncid_flood_seq2),
+    FUZI_Q_ITEM("quic_max_streams_rapid1", test_frame_quic_max_streams_rapid1),
+    FUZI_Q_ITEM("quic_max_streams_rapid2", test_frame_quic_max_streams_rapid2),
+    FUZI_Q_ITEM("quic_stream_zero_len_explicit", test_frame_quic_stream_zero_len_explicit),
+    FUZI_Q_ITEM("quic_path_challenge_replay", test_frame_quic_path_challenge_replay),
+    FUZI_Q_ITEM("quic_max_stream_data_decrease", test_frame_quic_max_stream_data_decrease),
+    FUZI_Q_ITEM("quic_streams_blocked_invalid_limit", test_frame_quic_streams_blocked_invalid_limit),
+    FUZI_Q_ITEM("quic_invalid_varint", test_frame_quic_invalid_varint),
+    FUZI_Q_ITEM("quic_ack_malformed", test_frame_quic_ack_malformed),
+    FUZI_Q_ITEM("quic_multiple_path_challenge", test_frame_quic_multiple_path_challenge),
+    FUZI_Q_ITEM("quic_stream_fragment1", test_frame_quic_stream_fragment1),
+    FUZI_Q_ITEM("quic_stream_fragment2", test_frame_quic_stream_fragment2),
+    FUZI_Q_ITEM("quic_ack_many_ranges", test_frame_quic_ack_many_ranges),
+    FUZI_Q_ITEM("quic_ncid_duplicate", test_frame_quic_ncid_duplicate),
+    FUZI_Q_ITEM("quic_ncid_max_len", test_frame_quic_ncid_max_len),
+    FUZI_Q_ITEM("quic_reset_flood1", test_frame_quic_reset_flood1),
+    FUZI_Q_ITEM("quic_reset_flood2", test_frame_quic_reset_flood2),
+    FUZI_Q_ITEM("quic_crypto_overflow", test_frame_quic_crypto_overflow),
+    FUZI_Q_ITEM("quic_new_token_overflow", test_frame_quic_new_token_overflow),
+    FUZI_Q_ITEM("quic_ack_timing_suspicious", test_frame_quic_ack_timing_suspicious),
 
     /* END OF JULES ADDED FUZI_Q_ITEM ENTRIES */
 };
