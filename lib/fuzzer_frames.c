@@ -3747,29 +3747,29 @@ static uint8_t test_h3_settings_excessive_pairs[] = {
 };
 // H3 SETTINGS frame with an unknown Setting ID (e.g., 0x7FFF)
 static uint8_t test_h3_settings_unknown_id_b3[] = { 0x04, 0x03, 0x7F, 0xFF, 0x00 }; // Renamed
-+// H3 SETTINGS with duplicate setting ID
-+static uint8_t test_h3_settings_duplicate_id[] = { 0x04, 0x04, 0x01, 0x0A, 0x01, 0x0B }; // ID 1=10, ID 1=11
-+// H3 SETTINGS with a setting ID that requires a specific value range, but value is outside (e.g., hypothetical ID 0x20 requires value < 100, sent 1000)
-+static uint8_t test_h3_settings_invalid_value_for_id[] = { 0x04, 0x03, 0x20, 0x83, 0xE8 }; // ID 0x20, Value 1000
+// H3 SETTINGS with duplicate setting ID
+static uint8_t test_h3_settings_duplicate_id[] = { 0x04, 0x04, 0x01, 0x0A, 0x01, 0x0B }; // ID 1=10, ID 1=11
+// H3 SETTINGS with a setting ID that requires a specific value range, but value is outside (e.g., hypothetical ID 0x20 requires value < 100, sent 1000)
+static uint8_t test_h3_settings_invalid_value_for_id[] = { 0x04, 0x03, 0x20, 0x83, 0xE8 }; // ID 0x20, Value 1000
 
 
  /* --- Batch 3: User Prioritized Frames (Part 2 - H3 ORIGIN & QUIC STREAM) --- */
  // H3 ORIGIN frame (type 0x0c) sent when ORIGIN extension was not negotiated
  static uint8_t test_h3_origin_unnegotiated[] = { 0x0c, 0x14, 0x00, 0x12, 'h', 't', 't', 'p', ':', '/', '/', 'o', 'r', 'i', 'g', 'i', 'n', '.', 't', 'e', 's', 't' };
-+// H3 ORIGIN frame with multiple Origin entries (invalid, only one allowed per RFC draft-ietf-httpbis-origin-frame)
-+static uint8_t test_h3_origin_multiple_entries[] = { 0x0c, 0x2A, 0x00, 0x12, 'h','t','t','p',':','/','/','o','1','.','t','e','s','t', 0x00, 0x12, 'h','t','t','p',':','/','/','o','2','.','t','e','s','t' };
-+// H3 ORIGIN frame with empty Origin-Entry (e.g. Length 0 for the ASCII Origin value)
-+static uint8_t test_h3_origin_empty_entry[] = { 0x0c, 0x02, 0x00, 0x00 }; // Two Origin-Entries, both zero length
+// H3 ORIGIN frame with multiple Origin entries (invalid, only one allowed per RFC draft-ietf-httpbis-origin-frame)
+static uint8_t test_h3_origin_multiple_entries[] = { 0x0c, 0x2A, 0x00, 0x12, 'h','t','t','p',':','/','/','o','1','.','t','e','s','t', 0x00, 0x12, 'h','t','t','p',':','/','/','o','2','.','t','e','s','t' };
+// H3 ORIGIN frame with empty Origin-Entry (e.g. Length 0 for the ASCII Origin value)
+static uint8_t test_h3_origin_empty_entry[] = { 0x0c, 0x02, 0x00, 0x00 }; // Two Origin-Entries, both zero length
  // QUIC STREAM frame with LEN bit set (e.g. 0x0A) but Length field is missing (truncated)
  static uint8_t test_stream_len_bit_no_len_field[] = { 0x0A, 0x01 }; // Stream ID 1
  // QUIC STREAM frame with OFF bit set (e.g. 0x0C) but Offset field is missing (truncated)
  static uint8_t test_stream_off_bit_no_off_field[] = { 0x0C, 0x01 }; // Stream ID 1
  // QUIC STREAM frame with LEN and FIN set (e.g. 0x0B), Length is 0, but data is present after frame.
  static uint8_t test_stream_len_fin_zero_len_with_data[] = { 0x0B, 0x01, 0x00, 'e','x','t','r','a' };
-+// QUIC STREAM frame, type 0x08 (no OFF, no LEN, no FIN), but packet ends immediately (empty stream data)
-+static uint8_t test_stream_type08_empty_implicit_len[] = { 0x08, 0x04 }; // Stream ID 4
-+// QUIC STREAM frame, type 0x0C (OFF, no LEN, no FIN), Offset present, but packet ends (empty stream data)
-+static uint8_t test_stream_type0C_offset_empty_implicit_len[] = { 0x0C, 0x04, 0x40, 0x10 }; // Stream ID 4, Offset 16
+// QUIC STREAM frame, type 0x08 (no OFF, no LEN, no FIN), but packet ends immediately (empty stream data)
+static uint8_t test_stream_type08_empty_implicit_len[] = { 0x08, 0x04 }; // Stream ID 4
+// QUIC STREAM frame, type 0x0C (OFF, no LEN, no FIN), Offset present, but packet ends (empty stream data)
+static uint8_t test_stream_type0C_offset_empty_implicit_len[] = { 0x0C, 0x04, 0x40, 0x10 }; // Stream ID 4, Offset 16
 
 
  /* --- Batch 3: User Prioritized Frames (Part 3 - QUIC STREAM type range & WebSocket) --- */
@@ -3790,83 +3790,16 @@ static uint8_t test_h3_settings_unknown_id_b3[] = { 0x04, 0x03, 0x7F, 0xFF, 0x00
  // WebSocket Text Frame (0x01 FIN=0), then another Text Frame (0x01 FIN=0) instead of Continuation (0x00)
  static uint8_t test_ws_text_fin0_then_text_continuation_part1[] = { 0x01, 0x04, 'p','a','r','t' }; // Text, FIN=0, "part"
  static uint8_t test_ws_text_fin0_then_text_continuation_part2_invalid[] = { 0x01, 0x03, 't','w','o' }; // Text, FIN=0, "two" (invalid sequence)
-+// WebSocket frame with payload length 126, but length field indicates more data than available
-+static uint8_t test_ws_len126_data_truncated[] = { 0x81, 0x7E, 0x00, 0xFA, 's', 'h', 'o', 'r', 't' }; // Text, FIN=1, actual len 250, but only "short" provided
-+// WebSocket frame with payload length 127 (extended 64-bit), but length field indicates more data than available
-+static uint8_t test_ws_len127_data_truncated[] = { 0x81, 0x7F, 0x00,0x00,0x00,0x00,0x00,0x01,0x00,0x00, 's', 'm', 'a', 'l', 'l' }; // Text, FIN=1, actual len 65536
-+
+// WebSocket frame with payload length 126, but length field indicates more data than available
+static uint8_t test_ws_len126_data_truncated[] = { 0x81, 0x7E, 0x00, 0xFA, 's', 'h', 'o', 'r', 't' }; // Text, FIN=1, actual len 250, but only "short" provided
+// WebSocket frame with payload length 127 (extended 64-bit), but length field indicates more data than available
+static uint8_t test_ws_len127_data_truncated[] = { 0x81, 0x7F, 0x00,0x00,0x00,0x00,0x00,0x01,0x00,0x00, 's', 'm', 'a', 'l', 'l' }; // Text, FIN=1, actual len 65536
 
  /* --- Batch 4: More Static Frames (as per plan before user specified Batch 8) --- */
  // QUIC Unknown Frame Type (high value, e.g., 0x7FEE DEAD BEEF - uses max 2-byte varint for type)
  // QUIC Unknown Frame Type (high value, e.g., 0x7FEE DEAD BEEF - uses max 2-byte varint for type)
-// DATAGRAM type 0x31 (with length) but is truncated before the length field
-static uint8_t test_frame_datagram_type31_missing_len_error[] = { 0x31 };
-// DATAGRAM type 0x31 (with length), length is 0, but data is present
-static uint8_t test_frame_datagram_type31_len_zero_with_data_error[] = { 0x31, 0x00, 'd','a','t','a' };
-// DATAGRAM type 0x31, length is huge, data is small (truncated content)
-static uint8_t test_frame_datagram_type31_len_huge_data_small[] = { 0x31, 0x80, 0x01, 0x00, 0x00, 't', 'i', 'n', 'y' }; /* Length 65536 */
-// DATAGRAM type 0x30 (no length) but packet is empty after type (valid empty datagram)
-static uint8_t test_frame_datagram_type30_empty_valid[] = { 0x30 };
-// DATAGRAM type 0x31 (with length), length is 0, no data (valid empty datagram)
-static uint8_t test_frame_datagram_type31_len0_empty_valid[] = { 0x31, 0x00 };
-
-/* --- Batch 3: User Prioritized Frames (Part 1 - H3 SETTINGS) --- */
-// H3 SETTINGS frame with an unknown Setting ID (e.g., 0x7FFF)
-static uint8_t test_h3_settings_unknown_id_b3[] = { 0x04, 0x03, 0x7F, 0xFF, 0x00 }; // Renamed
-// H3 SETTINGS with duplicate setting ID
-static uint8_t test_h3_settings_duplicate_id[] = { 0x04, 0x04, 0x01, 0x0A, 0x01, 0x0B }; // ID 1=10, ID 1=11
-// H3 SETTINGS with a setting ID that requires a specific value range, but value is outside (e.g., hypothetical ID 0x20 requires value < 100, sent 1000)
-static uint8_t test_h3_settings_invalid_value_for_id[] = { 0x04, 0x03, 0x20, 0x83, 0xE8 }; // ID 0x20, Value 1000
-// Note: test_h3_settings_excessive_pairs has been removed for now to simplify debugging syntax errors.
-// It can be re-added later if necessary, possibly with a smaller size or more careful formatting.
 
 
- /* --- Batch 3: User Prioritized Frames (Part 2 - H3 ORIGIN & QUIC STREAM) --- */
-// H3 ORIGIN frame (type 0x0c) sent when ORIGIN extension was not negotiated
-static uint8_t test_h3_origin_unnegotiated[] = { 0x0c, 0x14, 0x00, 0x12, 'h', 't', 't', 'p', ':', '/', '/', 'o', 'r', 'i', 'g', 'i', 'n', '.', 't', 'e', 's', 't' };
-+// H3 ORIGIN frame with multiple Origin entries (invalid, only one allowed per RFC draft-ietf-httpbis-origin-frame)
-+static uint8_t test_h3_origin_multiple_entries[] = { 0x0c, 0x2A, 0x00, 0x12, 'h','t','t','p',':','/','/','o','1','.','t','e','s','t', 0x00, 0x12, 'h','t','t','p',':','/','/','o','2','.','t','e','s','t' };
-+// H3 ORIGIN frame with empty Origin-Entry (e.g. Length 0 for the ASCII Origin value)
-+static uint8_t test_h3_origin_empty_entry[] = { 0x0c, 0x02, 0x00, 0x00 }; // Two Origin-Entries, both zero length
-// QUIC STREAM frame with LEN bit set (e.g. 0x0A) but Length field is missing (truncated)
-static uint8_t test_stream_len_bit_no_len_field[] = { 0x0A, 0x01 }; // Stream ID 1
-// QUIC STREAM frame with OFF bit set (e.g. 0x0C) but Offset field is missing (truncated)
-static uint8_t test_stream_off_bit_no_off_field[] = { 0x0C, 0x01 }; // Stream ID 1
-// QUIC STREAM frame with LEN and FIN set (e.g. 0x0B), Length is 0, but data is present after frame.
-static uint8_t test_stream_len_fin_zero_len_with_data[] = { 0x0B, 0x01, 0x00, 'e','x','t','r','a' };
-+// QUIC STREAM frame, type 0x08 (no OFF, no LEN, no FIN), but packet ends immediately (empty stream data)
-+static uint8_t test_stream_type08_empty_implicit_len[] = { 0x08, 0x04 }; // Stream ID 4
-+// QUIC STREAM frame, type 0x0C (OFF, no LEN, no FIN), Offset present, but packet ends (empty stream data)
-+static uint8_t test_stream_type0C_offset_empty_implicit_len[] = { 0x0C, 0x04, 0x40, 0x10 }; // Stream ID 4, Offset 16
-
-
- /* --- Batch 3: User Prioritized Frames (Part 3 - QUIC STREAM type range & WebSocket) --- */
-// Frame type just below STREAM range (e.g. 0x07 NEW_TOKEN) but formatted like a STREAM frame
-static uint8_t test_frame_type_stream_range_just_below[] = {0x07, 0x01, 0x00, 0x04, 'd','a','t','a'}; // ID 1, Offset 0, Len 4
-// Frame type PADDING (0x00) formatted like a STREAM frame (should be invalid)
-static uint8_t test_frame_type_padding_as_stream[] = {0x00, 0x01, 0x00, 0x04, 'd','a','t','a'};
-// Frame type at lower bound of STREAM (0x08)
-static uint8_t test_frame_type_stream_range_lower_bound[] = {0x08, 0x01, 'd','a','t','a'}; // Implicit off 0, implicit len
-// Frame type at upper bound of STREAM (0x0F)
-static uint8_t test_frame_type_stream_range_upper_bound[] = {0x0F, 0x01, 0x00, 0x04, 'd','a','t','a'}; // ID 1, Offset 0, Len 4, FIN
-// Frame type just above STREAM range (e.g. 0x10 MAX_DATA) but formatted like a STREAM frame
-static uint8_t test_frame_type_stream_range_just_above[] = {0x10, 0x01, 0x00, 0x04, 'd','a','t','a'};
-// WebSocket Control Frame (e.g. PING 0x89) with FIN bit = 0 (invalid for control frames)
-static uint8_t test_ws_control_frame_fin_zero_invalid[] = { 0x09, 0x00 }; // PING, FIN=0, len=0
-// WebSocket Text Frame (0x81 FIN=1) but RSV1 bit set (invalid if not negotiated)
-static uint8_t test_ws_text_frame_rsv1_set_invalid[] = { 0xC1, 0x04, 't','e','s','t'}; // FIN=1, RSV1=1, Opcode=Text, len=4
-// WebSocket Text Frame (0x01 FIN=0), then another Text Frame (0x01 FIN=0) instead of Continuation (0x00)
-static uint8_t test_ws_text_fin0_then_text_continuation_part1[] = { 0x01, 0x04, 'p','a','r','t' }; // Text, FIN=0, "part"
-static uint8_t test_ws_text_fin0_then_text_continuation_part2_invalid[] = { 0x01, 0x03, 't','w','o' }; // Text, FIN=0, "two" (invalid sequence)
-+// WebSocket frame with payload length 126, but length field indicates more data than available
-+static uint8_t test_ws_len126_data_truncated[] = { 0x81, 0x7E, 0x00, 0xFA, 's', 'h', 'o', 'r', 't' }; // Text, FIN=1, actual len 250, but only "short" provided
-+// WebSocket frame with payload length 127 (extended 64-bit), but length field indicates more data than available
-+static uint8_t test_ws_len127_data_truncated[] = { 0x81, 0x7F, 0x00,0x00,0x00,0x00,0x00,0x01,0x00,0x00, 's', 'm', 'a', 'l', 'l' }; // Text, FIN=1, actual len 65536
-+
-
- /* --- Batch 4: More Static Frames (as per plan before user specified Batch 8) --- */
- // QUIC Unknown Frame Type (high value, e.g., 0x7FEE DEAD BEEF - uses max 2-byte varint for type)
-// QUIC Unknown Frame Type (high value, e.g., 0x7FEE DEAD BEEF - uses max 2-byte varint for type)
 static uint8_t test_frame_quic_unknown_frame_high_value[] = { 0x7F, 0xEE, 0xDE, 0xAD, 0xBE, 0xEF };
 // H3 Reserved Frame Type 0x08 (from RFC9114 Table 2) with empty payload
 static uint8_t test_frame_h3_reserved_frame_0x08[] = { 0x08, 0x00 };
@@ -3886,11 +3819,10 @@ static uint8_t test_frame_quic_max_streams_uni_value0[] = { 0x13, 0x00 };
 static uint8_t test_frame_quic_ncid_short_token[] = { 0x18, 0x01, 0x00, 0x08, 0xA1,0xA2,0xA3,0xA4,0xA5,0xA6,0xA7,0xA8, 0xB1,0xB2,0xB3,0xB4,0xB5,0xB6,0xB7,0xB8 }; // Token is only 8 bytes
 // QUIC NEW_CONNECTION_ID (0x18) with CID length 0 (invalid)
 static uint8_t test_frame_quic_ncid_zero_len_cid[] = { 0x18, 0x02, 0x00, 0x00, 0xC1,0xC2,0xC3,0xC4,0xC5,0xC6,0xC7,0xC8,0xC9,0xCA,0xCB,0xCC,0xCD,0xCE,0xCF,0xD0 };
-+// QUIC PATH_CHALLENGE (0x1a) with data all zeros
-+static uint8_t test_frame_quic_path_challenge_all_zero_data_b4[] = { 0x1a, 0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00 }; // Renamed
-+// QUIC PATH_RESPONSE (0x1b) with data mismatching a typical challenge
-+static uint8_t test_frame_quic_path_response_mismatch_data_b4[] = { 0x1b, 0x11,0x22,0x33,0x44,0x55,0x66,0x77,0x88 }; // Renamed
-+
+// QUIC PATH_CHALLENGE (0x1a) with data all zeros
+static uint8_t test_frame_quic_path_challenge_all_zero_data_b4[] = { 0x1a, 0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00 }; // Renamed
+// QUIC PATH_RESPONSE (0x1b) with data mismatching a typical challenge
+static uint8_t test_frame_quic_path_response_mismatch_data_b4[] = { 0x1b, 0x11,0x22,0x33,0x44,0x55,0x66,0x77,0x88 }; // Renamed
 
  /* --- Batch 5: Further Static Frames (as per plan before user specified Batch 8) --- */
 // QUIC Unknown Frame Type (greased 0x2A type from RFC9000 Sec 15) with some payload
@@ -3913,21 +3845,20 @@ static uint8_t test_frame_quic_ncid_retire_gt_seq_b5[] = { 0x18, 0x02, 0x05, 0x0
 static uint8_t test_frame_quic_path_challenge_empty[] = { 0x1a };
 // QUIC PATH_RESPONSE (0x1b) frame truncated (empty data)
 static uint8_t test_frame_quic_path_response_empty[] = { 0x1b };
-+// QUIC ACK frame (0x02) with ACK Delay encoded using max varint (8 bytes)
-+static uint8_t test_frame_quic_ack_delay_max_varint[] = { 0x02, 0x0A, 0xC0,0x00,0x00,0x00,0x00,0x00,0x00,0x01, 0x01, 0x00 }; // LargestAck 10, Delay 1 (8-byte), RangeCount 1, FirstRange 0
-+// QUIC STREAM frame (0x0F, all bits set) with StreamID, Offset, Length all max varint values
-+static uint8_t test_frame_quic_stream_all_fields_max_varint[] = {
-+    0x0F,                                                               // Type
-+    0xBF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,                            // Stream ID (2^62-1)
-+    0xBF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,                            // Offset (2^62-1)
-+    0xBF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFD,                            // Length (2^62-3 to avoid total overflow with data)
-+    'd', 'a', 't', 'a'                                                  // Data (4 bytes)
-+};
-+// H3 DATA frame (type 0x00) with length 0, but payload present
-+static uint8_t test_frame_h3_data_len0_with_payload[] = { 0x00, 0x00, 0x01, 0x02, 0x03 };
-+// WebSocket Close frame (0x88) with invalid close code (e.g. 0)
-+static uint8_t test_frame_ws_close_invalid_code[] = { 0x88, 0x02, 0x00, 0x00 }; // FIN=1, Opcode=Close, Len=2, Code=0 (invalid)
-+
+// QUIC ACK frame (0x02) with ACK Delay encoded using max varint (8 bytes)
+static uint8_t test_frame_quic_ack_delay_max_varint[] = { 0x02, 0x0A, 0xC0,0x00,0x00,0x00,0x00,0x00,0x00,0x01, 0x01, 0x00 }; // LargestAck 10, Delay 1 (8-byte), RangeCount 1, FirstRange 0
+// QUIC STREAM frame (0x0F, all bits set) with StreamID, Offset, Length all max varint values
+static uint8_t test_frame_quic_stream_all_fields_max_varint[] = {
+    0x0F,                                                               // Type
+    0xBF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,                            // Stream ID (2^62-1)
+    0xBF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,                            // Offset (2^62-1)
+    0xBF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFD,                            // Length (2^62-3 to avoid total overflow with data)
+    'd', 'a', 't', 'a'                                                  // Data (4 bytes)
+};
+// H3 DATA frame (type 0x00) with length 0, but payload present
+static uint8_t test_frame_h3_data_len0_with_payload[] = { 0x00, 0x00, 0x01, 0x02, 0x03 };
+// WebSocket Close frame (0x88) with invalid close code (e.g. 0)
+static uint8_t test_frame_ws_close_invalid_code[] = { 0x88, 0x02, 0x00, 0x00 }; // FIN=1, Opcode=Close, Len=2, Code=0 (invalid)
 
  /* --- Batch 8: Combined Set (original Batch 6/7 + 4 new from user) --- */
  // H2 WINDOW_UPDATE frame (type 0x08) with 0 increment. Len 4, StreamID 0, Inc 0.
@@ -3953,15 +3884,14 @@ static uint8_t test_frame_h3_reserved_type_4byte_varint[] = { 0x80, 0x00, 0x00, 
 static uint8_t test_frame_ws_continuation_fin1_with_payload[] = { 0x80, 0x04, 'c','o','n','t' };
 // QUIC NEW_CONNECTION_ID with a very large RetirePriorTo value but small SequenceNumber
 static uint8_t test_frame_quic_ncid_large_retire_small_seq[] = { 0x18, 0x05, 0xBF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF, 0x08, 0xF1,0xF2,0xF3,0xF4,0xF5,0xF6,0xF7,0xF8, 0x91,0x92,0x93,0x94,0x95,0x96,0x97,0x98,0x99,0x9A,0x9B,0x9C,0x9D,0x9E,0x9F,0xA0 };
-+// QUIC frame type 0x21 (RFC 9000 reserved for extensions, potentially unhandled)
-+static uint8_t test_frame_quic_extension_0x21[] = { 0x21 };
-+// H3 frame type 0x2F (RFC 9114 reserved for extensions) with empty payload
-+static uint8_t test_frame_h3_extension_0x2F[] = { 0x2F, 0x00 };
-+// QUIC ACK frame with first ACK range having length 0, and then a Gap of 0, then another range of 0. (Ack Pkt N, N-1)
-+static uint8_t test_frame_quic_ack_double_zero_range[] = { 0x02, 0x0A, 0x00, 0x02, 0x00, 0x00, 0x00 };
-+// WebSocket frame with RSV1, RSV2, and RSV3 all set (highly unlikely to be negotiated)
-+static uint8_t test_frame_ws_all_rsv_set[] = { 0xF1, 0x04, 'd', 'a', 't', 'a' }; // FIN=1, RSV1-3=1, Opcode=Text
-+
+// QUIC frame type 0x21 (RFC 9000 reserved for extensions, potentially unhandled)
+static uint8_t test_frame_quic_extension_0x21[] = { 0x21 };
+// H3 frame type 0x2F (RFC 9114 reserved for extensions) with empty payload
+static uint8_t test_frame_h3_extension_0x2F[] = { 0x2F, 0x00 };
+// QUIC ACK frame with first ACK range having length 0, and then a Gap of 0, then another range of 0. (Ack Pkt N, N-1)
+static uint8_t test_frame_quic_ack_double_zero_range[] = { 0x02, 0x0A, 0x00, 0x02, 0x00, 0x00, 0x00 };
+// WebSocket frame with RSV1, RSV2, and RSV3 all set (highly unlikely to be negotiated)
+static uint8_t test_frame_ws_all_rsv_set[] = { 0xF1, 0x04, 'd', 'a', 't', 'a' }; // FIN=1, RSV1-3=1, Opcode=Text
 
  /* END OF JULES ADDED FRAMES */
 
