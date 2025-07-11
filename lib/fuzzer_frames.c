@@ -3938,12 +3938,6 @@ static uint8_t test_ws_frame_connection_close[] = {0x88, 0x00}; /* WebSocket Con
 static uint8_t test_ws_frame_ping[] = {0x89, 0x00};          /* WebSocket Ping Frame (FIN + Opcode 0x9) */
 static uint8_t test_ws_frame_pong[] = {0x8a, 0x00};          /* WebSocket Pong Frame (FIN + Opcode 0xA) */
 
-typedef struct {
-    const char* name;
-    const uint8_t* data;
-    size_t size;
-} fuzi_q_frames_t;
-
 fuzi_q_frames_t fuzi_q_frame_list[] = {
     FUZI_Q_ITEM("padding", test_frame_type_padding),
     FUZI_Q_ITEM("padding_zero_byte", test_frame_type_padding_zero_byte),
