@@ -3623,27 +3623,65 @@ static uint8_t test_padding_type_non_canonical_2byte[] = {
 /* START OF JULES ADDED FRAMES (BATCHES 1-8) */
 
 /* --- Batch 1: Unknown or Unassigned Frame Types --- */
+// QUIC frame type 0x20 (in private use range, but could be unassigned for this impl)
 static uint8_t test_frame_quic_unknown_0x20[] = { 0x20 };
+// QUIC frame type 0x3F (max 1-byte varint, likely unassigned) with short payload
+static uint8_t test_frame_quic_unknown_0x3f_payload[] = { 0x3F, 0x01, 0x02, 0x03 };
+// QUIC frame type 0x402A (2-byte varint, greased pattern, likely unassigned)
+static uint8_t test_frame_quic_unknown_greased_0x402a[] = { 0x40, 0x2A };
+// HTTP/3 reserved frame type 0x02 (from RFC9114 Table 2) with empty payload
 static uint8_t test_frame_h3_reserved_0x02[] = { 0x02, 0x00 };
+// HTTP/3 reserved frame type 0x06 (from RFC9114 Table 2) with empty payload
 static uint8_t test_frame_h3_reserved_0x06[] = { 0x06, 0x00 };
+// HTTP/3 frame type 0x21 (unassigned in RFC9114, but in reserved block 0x21-0x3F for extensions)
+static uint8_t test_frame_h3_unassigned_extension_0x21[] = { 0x21, 0x00 };
 
 /* --- Batch 1: Malformed Frame Lengths --- */
+// STREAM frame (0x0a: OFF=0,LEN=1,FIN=0), Len=0, but data is present
 static uint8_t test_frame_quic_stream_len0_with_data[] = { 0x0a, 0x01, 0x00, 'd', 'a', 't', 'a' };
+// STREAM frame (0x0a), Len=100, but data is "short" (5 bytes)
 static uint8_t test_frame_quic_stream_len_gt_data[] = { 0x0a, 0x02, 0x64, 's', 'h', 'o', 'r', 't' };
+// STREAM frame (0x0a), Len=2, but data is "longerdata" (10 bytes)
 static uint8_t test_frame_quic_stream_len_lt_data[] = { 0x0a, 0x03, 0x02, 'l', 'o', 'n', 'g', 'e', 'r', 'd', 'a', 't', 'a' };
+// CRYPTO frame (0x06), Len=0, but data is present
+static uint8_t test_frame_quic_crypto_len0_with_data[] = { 0x06, 0x00, 0x00, 'c', 'r', 'y', 'p', 't' };
+// NEW_TOKEN frame (0x07), Len=10, but token is "short" (5 bytes)
+static uint8_t test_frame_quic_new_token_len_gt_data[] = { 0x07, 0x0A, 's', 'h', 'o', 'r', 't'};
+// CONNECTION_CLOSE (0x1c), ReasonLen=10, but reason is "err" (3 bytes)
+static uint8_t test_frame_quic_conn_close_reason_len_gt_data[] = { 0x1c, 0x01, 0x00, 0x0A, 'e', 'r', 'r' };
 
 /* --- Batch 1: Invalid Frame Field Values --- */
+// MAX_STREAMS Bidi (0x12), value 0 (disallowing any new bidi streams by peer)
 static uint8_t test_frame_quic_max_streams_bidi_value0[] = { 0x12, 0x00 };
+// STOP_SENDING (0x05) for Stream 1, with a very large error code (2^62-1)
 static uint8_t test_frame_quic_stop_sending_large_error[] = { 0x05, 0x01, 0xBF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF };
+// MAX_DATA (0x10) with value 0
+static uint8_t test_frame_quic_max_data_value0_b1[] = { 0x10, 0x00 }; // Renamed to avoid conflict
+// ACK frame (0x02) with LargestAck=0, Delay=0, 1 Range, RangeLen=0 (acks only pkt 0)
+static uint8_t test_frame_quic_ack_largest0_delay0_1range0_b1[] = { 0x02, 0x00, 0x00, 0x01, 0x00 }; // Renamed
+// NEW_CONNECTION_ID (0x18) with RetirePriorTo > SequenceNumber
+static uint8_t test_frame_quic_ncid_retire_gt_seq_b1[] = { 0x18, 0x02, 0x05, 0x08, 0xD1,0xD2,0xD3,0xD4,0xD5,0xD6,0xD7,0xD8, 0xE1,0xE2,0xE3,0xE4,0xE5,0xE6,0xE7,0xE8,0xE9,0xEA,0xEB,0xEC,0xED,0xEE,0xEF,0xF0 }; // Renamed
 
 /* --- Batch 2: More Invalid Frame Field Values --- */
+// MAX_DATA (0x10) with value 0 - covered by test_frame_quic_max_data_value0_b1, keep one.
 static uint8_t test_frame_quic_max_data_value0[] = { 0x10, 0x00 };
+// ACK frame (0x02) with LargestAck=0, Delay=0, 1 Range, RangeLen=0 (acks only pkt 0) - covered by test_frame_quic_ack_largest0_delay0_1range0_b1, keep one.
 static uint8_t test_frame_quic_ack_largest0_delay0_1range0[] = { 0x02, 0x00, 0x00, 0x01, 0x00 };
+// ACK frame (0x02) with ACK Range Count = 0, but First ACK Range is set (valid per RFC 19.3)
 static uint8_t test_frame_quic_ack_range_count0_first_range_set[] = { 0x02, 0x0A, 0x00, 0x00, 0x05 };
+// H3 SETTINGS frame (type 0x04) with an unknown Setting ID (e.g. 0x7FFF, a large 2-byte varint) and value 0.
 static uint8_t test_frame_h3_settings_unknown_id[] = { 0x04, 0x03, 0x7F, 0xFF, 0x00 };
+// H3 SETTINGS frame (type 0x04) setting MAX_FIELD_SECTION_SIZE (ID 0x06) to 0.
 static uint8_t test_frame_h3_settings_max_field_section_size0[] = { 0x04, 0x02, 0x06, 0x00 };
+// MAX_STREAM_DATA (0x11) for Stream 1, with Max Stream Data = 0.
+static uint8_t test_frame_quic_max_stream_data_value0[] = { 0x11, 0x01, 0x00 };
+// CONNECTION_CLOSE (type 0x1c) with a reserved error code (e.g., 0x1A = PATH_CHALLENGE type)
+static uint8_t test_frame_quic_conn_close_reserved_error[] = { 0x1c, 0x1A, 0x00, 0x00 }; // Error 0x1A, Frame Type PADDING, ReasonLen 0
+// NEW_TOKEN (0x07) with Token Length = 0 (invalid according to RFC 19.7)
+static uint8_t test_frame_quic_new_token_zero_len_invalid[] = { 0x07, 0x00 };
 
 /* --- Batch 2: Padding Fuzzing --- */
+// PADDING frame (0x00) making up an entire large packet (e.g. 70 bytes of PADDING frames)
 static uint8_t test_frame_quic_padding_excessive_70bytes[] = {
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* 10 */
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* 20 */
@@ -3653,87 +3691,300 @@ static uint8_t test_frame_quic_padding_excessive_70bytes[] = {
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* 60 */
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00  /* 70 */
 };
+// PADDING frame followed by non-zero bytes (already covered by test_frame_padding_mixed_payload)
+// PADDING frame at the end of a packet that's not full (valid, but fuzzer might try this context)
+// A single PING frame followed by many PADDING frames (e.g. to reach MTU)
+static uint8_t test_frame_quic_ping_then_many_padding[60]; // Initialized in code
 
 /* --- Batch 2: Stream ID Fuzzing (static part) --- */
+// STREAM frame (0x0a) for Stream ID 0 (client-initiated bidi)
 static uint8_t test_frame_quic_stream_id0[] = { 0x0a, 0x00, 0x04, 't', 'e', 's', 't' };
+// MAX_STREAM_DATA (0x11) for a server-initiated unidirectional stream ID (e.g. ID 3 from client perspective)
+static uint8_t test_frame_quic_max_stream_data_server_uni[] = { 0x11, 0x03, 0x41, 0x00 }; /* Max data 256 */
+// RESET_STREAM (0x04) for a client-initiated unidirectional stream ID (e.g. ID 2 from server perspective)
+static uint8_t test_frame_quic_reset_stream_client_uni[] = { 0x04, 0x02, 0x00, 0x00 }; /* Error 0, Final Size 0 */
+// STOP_SENDING (0x05) for a stream ID that is too large (exceeds peer's MAX_STREAMS limit if known, or just a large number)
+static uint8_t test_frame_quic_stop_sending_large_stream_id[] = { 0x05, 0xBF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFE, 0x00 }; // Stream ID 2^62-2, Error 0.
+// STREAM frame (0x08) using a server-initiated stream ID from a client (e.g. ID 1)
+static uint8_t test_frame_quic_stream_client_uses_server_id[] = { 0x08, 0x01, 'b', 'a', 'd' };
+
 
 /* --- Batch 3: User Prioritized Frames (Part 1 - DATAGRAM) --- */
+// DATAGRAM type 0x30 (no length) but includes a varint that looks like a length, then data
 static uint8_t test_frame_datagram_type30_with_len_data_error[] = { 0x30, 0x04, 'd','a','t','a' };
+// DATAGRAM type 0x31 (with length) but is truncated before the length field
 static uint8_t test_frame_datagram_type31_missing_len_error[] = { 0x31 };
+// DATAGRAM type 0x31 (with length), length is 0, but data is present
 static uint8_t test_frame_datagram_type31_len_zero_with_data_error[] = { 0x31, 0x00, 'd','a','t','a' };
+// DATAGRAM type 0x31, length is huge, data is small (truncated content)
+static uint8_t test_frame_datagram_type31_len_huge_data_small[] = { 0x31, 0x80, 0x01, 0x00, 0x00, 't', 'i', 'n', 'y' }; /* Length 65536 */
+// DATAGRAM type 0x30 (no length) but packet is empty after type (valid empty datagram)
+static uint8_t test_frame_datagram_type30_empty_valid[] = { 0x30 };
+// DATAGRAM type 0x31 (with length), length is 0, no data (valid empty datagram)
+static uint8_t test_frame_datagram_type31_len0_empty_valid[] = { 0x31, 0x00 };
 
 /* --- Batch 3: User Prioritized Frames (Part 1 - H3 SETTINGS) --- */
+// H3 SETTINGS (type 0x04) with far too many ID/Value pairs (exceeds reasonable frame length)
+// Length is 254 (0xFE), followed by 127 pairs of (ID=1, Value=1)
 static uint8_t test_h3_settings_excessive_pairs[] = {
-    0x04, 0x80, 0x01, 0xFE,
-    0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01,
-    0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01,
-    0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01,
-    0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01,
-    0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01,
-    0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01,
-    0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01,
-    0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01,
-    0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01,
-    0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01,
-    0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01,
-    0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01
+    0x04, 0xFE,
+    0x01,0x01, 0x01,0x01, 0x01,0x01, 0x01,0x01, 0x01,0x01, 0x01,0x01, 0x01,0x01, 0x01,0x01, /* 8 pairs */
+    0x01,0x01, 0x01,0x01, 0x01,0x01, 0x01,0x01, 0x01,0x01, 0x01,0x01, 0x01,0x01, 0x01,0x01, /* 16 pairs */
+    0x01,0x01, 0x01,0x01, 0x01,0x01, 0x01,0x01, 0x01,0x01, 0x01,0x01, 0x01,0x01, 0x01,0x01, /* 24 pairs */
+    0x01,0x01, 0x01,0x01, 0x01,0x01, 0x01,0x01, 0x01,0x01, 0x01,0x01, 0x01,0x01, 0x01,0x01, /* 32 pairs */
+    0x01,0x01, 0x01,0x01, 0x01,0x01, 0x01,0x01, 0x01,0x01, 0x01,0x01, 0x01,0x01, 0x01,0x01, /* 40 pairs */
+    0x01,0x01, 0x01,0x01, 0x01,0x01, 0x01,0x01, 0x01,0x01, 0x01,0x01, 0x01,0x01, 0x01,0x01, /* 48 pairs */
+    0x01,0x01, 0x01,0x01, 0x01,0x01, 0x01,0x01, 0x01,0x01, 0x01,0x01, 0x01,0x01, 0x01,0x01, /* 56 pairs */
+    0x01,0x01, 0x01,0x01, 0x01,0x01, 0x01,0x01, 0x01,0x01, 0x01,0x01, 0x01,0x01, 0x01,0x01, /* 64 pairs */
+    0x01,0x01, 0x01,0x01, 0x01,0x01, 0x01,0x01, 0x01,0x01, 0x01,0x01, 0x01,0x01, 0x01,0x01, /* 72 pairs */
+    0x01,0x01, 0x01,0x01, 0x01,0x01, 0x01,0x01, 0x01,0x01, 0x01,0x01, 0x01,0x01, 0x01,0x01, /* 80 pairs */
+    0x01,0x01, 0x01,0x01, 0x01,0x01, 0x01,0x01, 0x01,0x01, 0x01,0x01, 0x01,0x01, 0x01,0x01, /* 88 pairs */
+    0x01,0x01, 0x01,0x01, 0x01,0x01, 0x01,0x01, 0x01,0x01, 0x01,0x01, 0x01,0x01, 0x01,0x01, /* 96 pairs */
+    0x01,0x01, 0x01,0x01, 0x01,0x01, 0x01,0x01, 0x01,0x01, 0x01,0x01, 0x01,0x01, 0x01,0x01, /* 104 pairs */
+    0x01,0x01, 0x01,0x01, 0x01,0x01, 0x01,0x01, 0x01,0x01, 0x01,0x01, 0x01,0x01, 0x01,0x01, /* 112 pairs */
+    0x01,0x01, 0x01,0x01, 0x01,0x01, 0x01,0x01, 0x01,0x01, 0x01,0x01, 0x01,0x01, 0x01,0x01, /* 120 pairs */
+    0x01,0x01, 0x01,0x01, 0x01,0x01, 0x01,0x01, 0x01,0x01, 0x01,0x01, 0x01,0x01, 0x01,0x01, /* 127 pairs */
 };
+// H3 SETTINGS frame with an unknown Setting ID (e.g., 0x7FFF)
+static uint8_t test_h3_settings_unknown_id_b3[] = { 0x04, 0x03, 0x7F, 0xFF, 0x00 }; // Renamed
++// H3 SETTINGS with duplicate setting ID
++static uint8_t test_h3_settings_duplicate_id[] = { 0x04, 0x04, 0x01, 0x0A, 0x01, 0x0B }; // ID 1=10, ID 1=11
++// H3 SETTINGS with a setting ID that requires a specific value range, but value is outside (e.g., hypothetical ID 0x20 requires value < 100, sent 1000)
++static uint8_t test_h3_settings_invalid_value_for_id[] = { 0x04, 0x03, 0x20, 0x83, 0xE8 }; // ID 0x20, Value 1000
 
-/* --- Batch 3: User Prioritized Frames (Part 2 - H3 ORIGIN & QUIC STREAM) --- */
+
+ /* --- Batch 3: User Prioritized Frames (Part 2 - H3 ORIGIN & QUIC STREAM) --- */
+ // H3 ORIGIN frame (type 0x0c) sent when ORIGIN extension was not negotiated
+ static uint8_t test_h3_origin_unnegotiated[] = { 0x0c, 0x14, 0x00, 0x12, 'h', 't', 't', 'p', ':', '/', '/', 'o', 'r', 'i', 'g', 'i', 'n', '.', 't', 'e', 's', 't' };
++// H3 ORIGIN frame with multiple Origin entries (invalid, only one allowed per RFC draft-ietf-httpbis-origin-frame)
++static uint8_t test_h3_origin_multiple_entries[] = { 0x0c, 0x2A, 0x00, 0x12, 'h','t','t','p',':','/','/','o','1','.','t','e','s','t', 0x00, 0x12, 'h','t','t','p',':','/','/','o','2','.','t','e','s','t' };
++// H3 ORIGIN frame with empty Origin-Entry (e.g. Length 0 for the ASCII Origin value)
++static uint8_t test_h3_origin_empty_entry[] = { 0x0c, 0x02, 0x00, 0x00 }; // Two Origin-Entries, both zero length
+ // QUIC STREAM frame with LEN bit set (e.g. 0x0A) but Length field is missing (truncated)
+ static uint8_t test_stream_len_bit_no_len_field[] = { 0x0A, 0x01 }; // Stream ID 1
+ // QUIC STREAM frame with OFF bit set (e.g. 0x0C) but Offset field is missing (truncated)
+ static uint8_t test_stream_off_bit_no_off_field[] = { 0x0C, 0x01 }; // Stream ID 1
+ // QUIC STREAM frame with LEN and FIN set (e.g. 0x0B), Length is 0, but data is present after frame.
+ static uint8_t test_stream_len_fin_zero_len_with_data[] = { 0x0B, 0x01, 0x00, 'e','x','t','r','a' };
++// QUIC STREAM frame, type 0x08 (no OFF, no LEN, no FIN), but packet ends immediately (empty stream data)
++static uint8_t test_stream_type08_empty_implicit_len[] = { 0x08, 0x04 }; // Stream ID 4
++// QUIC STREAM frame, type 0x0C (OFF, no LEN, no FIN), Offset present, but packet ends (empty stream data)
++static uint8_t test_stream_type0C_offset_empty_implicit_len[] = { 0x0C, 0x04, 0x40, 0x10 }; // Stream ID 4, Offset 16
+
+
+ /* --- Batch 3: User Prioritized Frames (Part 3 - QUIC STREAM type range & WebSocket) --- */
+ // Frame type just below STREAM range (e.g. 0x07 NEW_TOKEN) but formatted like a STREAM frame
+ static uint8_t test_frame_type_stream_range_just_below[] = {0x07, 0x01, 0x00, 0x04, 'd','a','t','a'}; // ID 1, Offset 0, Len 4
+ // Frame type PADDING (0x00) formatted like a STREAM frame (should be invalid)
+ static uint8_t test_frame_type_padding_as_stream[] = {0x00, 0x01, 0x00, 0x04, 'd','a','t','a'};
+ // Frame type at lower bound of STREAM (0x08)
+ static uint8_t test_frame_type_stream_range_lower_bound[] = {0x08, 0x01, 'd','a','t','a'}; // Implicit off 0, implicit len
+ // Frame type at upper bound of STREAM (0x0F)
+ static uint8_t test_frame_type_stream_range_upper_bound[] = {0x0F, 0x01, 0x00, 0x04, 'd','a','t','a'}; // ID 1, Offset 0, Len 4, FIN
+ // Frame type just above STREAM range (e.g. 0x10 MAX_DATA) but formatted like a STREAM frame
+ static uint8_t test_frame_type_stream_range_just_above[] = {0x10, 0x01, 0x00, 0x04, 'd','a','t','a'};
+ // WebSocket Control Frame (e.g. PING 0x89) with FIN bit = 0 (invalid for control frames)
+ static uint8_t test_ws_control_frame_fin_zero_invalid[] = { 0x09, 0x00 }; // PING, FIN=0, len=0
+ // WebSocket Text Frame (0x81 FIN=1) but RSV1 bit set (invalid if not negotiated)
+ static uint8_t test_ws_text_frame_rsv1_set_invalid[] = { 0xC1, 0x04, 't','e','s','t'}; // FIN=1, RSV1=1, Opcode=Text, len=4
+ // WebSocket Text Frame (0x01 FIN=0), then another Text Frame (0x01 FIN=0) instead of Continuation (0x00)
+ static uint8_t test_ws_text_fin0_then_text_continuation_part1[] = { 0x01, 0x04, 'p','a','r','t' }; // Text, FIN=0, "part"
+ static uint8_t test_ws_text_fin0_then_text_continuation_part2_invalid[] = { 0x01, 0x03, 't','w','o' }; // Text, FIN=0, "two" (invalid sequence)
++// WebSocket frame with payload length 126, but length field indicates more data than available
++static uint8_t test_ws_len126_data_truncated[] = { 0x81, 0x7E, 0x00, 0xFA, 's', 'h', 'o', 'r', 't' }; // Text, FIN=1, actual len 250, but only "short" provided
++// WebSocket frame with payload length 127 (extended 64-bit), but length field indicates more data than available
++static uint8_t test_ws_len127_data_truncated[] = { 0x81, 0x7F, 0x00,0x00,0x00,0x00,0x00,0x01,0x00,0x00, 's', 'm', 'a', 'l', 'l' }; // Text, FIN=1, actual len 65536
++
+
+ /* --- Batch 4: More Static Frames (as per plan before user specified Batch 8) --- */
+ // QUIC Unknown Frame Type (high value, e.g., 0x7FEE DEAD BEEF - uses max 2-byte varint for type)
+ // QUIC Unknown Frame Type (high value, e.g., 0x7FEE DEAD BEEF - uses max 2-byte varint for type)
+// DATAGRAM type 0x31 (with length) but is truncated before the length field
+static uint8_t test_frame_datagram_type31_missing_len_error[] = { 0x31 };
+// DATAGRAM type 0x31 (with length), length is 0, but data is present
+static uint8_t test_frame_datagram_type31_len_zero_with_data_error[] = { 0x31, 0x00, 'd','a','t','a' };
+// DATAGRAM type 0x31, length is huge, data is small (truncated content)
+static uint8_t test_frame_datagram_type31_len_huge_data_small[] = { 0x31, 0x80, 0x01, 0x00, 0x00, 't', 'i', 'n', 'y' }; /* Length 65536 */
+// DATAGRAM type 0x30 (no length) but packet is empty after type (valid empty datagram)
+static uint8_t test_frame_datagram_type30_empty_valid[] = { 0x30 };
+// DATAGRAM type 0x31 (with length), length is 0, no data (valid empty datagram)
+static uint8_t test_frame_datagram_type31_len0_empty_valid[] = { 0x31, 0x00 };
+
+/* --- Batch 3: User Prioritized Frames (Part 1 - H3 SETTINGS) --- */
+// H3 SETTINGS (type 0x04) with far too many ID/Value pairs (exceeds reasonable frame length)
+// Length is 254 (0xFE), followed by 127 pairs of (ID=1, Value=1)
+static uint8_t test_h3_settings_excessive_pairs[] = {
+    0x04, 0xFE,
+    0x01,0x01, 0x01,0x01, 0x01,0x01, 0x01,0x01, 0x01,0x01, 0x01,0x01, 0x01,0x01, 0x01,0x01, /* 8 pairs */
+    0x01,0x01, 0x01,0x01, 0x01,0x01, 0x01,0x01, 0x01,0x01, 0x01,0x01, 0x01,0x01, 0x01,0x01, /* 16 pairs */
+    0x01,0x01, 0x01,0x01, 0x01,0x01, 0x01,0x01, 0x01,0x01, 0x01,0x01, 0x01,0x01, 0x01,0x01, /* 24 pairs */
+    0x01,0x01, 0x01,0x01, 0x01,0x01, 0x01,0x01, 0x01,0x01, 0x01,0x01, 0x01,0x01, 0x01,0x01, /* 32 pairs */
+    0x01,0x01, 0x01,0x01, 0x01,0x01, 0x01,0x01, 0x01,0x01, 0x01,0x01, 0x01,0x01, 0x01,0x01, /* 40 pairs */
+    0x01,0x01, 0x01,0x01, 0x01,0x01, 0x01,0x01, 0x01,0x01, 0x01,0x01, 0x01,0x01, 0x01,0x01, /* 48 pairs */
+    0x01,0x01, 0x01,0x01, 0x01,0x01, 0x01,0x01, 0x01,0x01, 0x01,0x01, 0x01,0x01, 0x01,0x01, /* 56 pairs */
+    0x01,0x01, 0x01,0x01, 0x01,0x01, 0x01,0x01, 0x01,0x01, 0x01,0x01, 0x01,0x01, 0x01,0x01, /* 64 pairs */
+    0x01,0x01, 0x01,0x01, 0x01,0x01, 0x01,0x01, 0x01,0x01, 0x01,0x01, 0x01,0x01, 0x01,0x01, /* 72 pairs */
+    0x01,0x01, 0x01,0x01, 0x01,0x01, 0x01,0x01, 0x01,0x01, 0x01,0x01, 0x01,0x01, 0x01,0x01, /* 80 pairs */
+    0x01,0x01, 0x01,0x01, 0x01,0x01, 0x01,0x01, 0x01,0x01, 0x01,0x01, 0x01,0x01, 0x01,0x01, /* 88 pairs */
+    0x01,0x01, 0x01,0x01, 0x01,0x01, 0x01,0x01, 0x01,0x01, 0x01,0x01, 0x01,0x01, 0x01,0x01, /* 96 pairs */
+    0x01,0x01, 0x01,0x01, 0x01,0x01, 0x01,0x01, 0x01,0x01, 0x01,0x01, 0x01,0x01, 0x01,0x01, /* 104 pairs */
+    0x01,0x01, 0x01,0x01, 0x01,0x01, 0x01,0x01, 0x01,0x01, 0x01,0x01, 0x01,0x01, 0x01,0x01, /* 112 pairs */
+    0x01,0x01, 0x01,0x01, 0x01,0x01, 0x01,0x01, 0x01,0x01, 0x01,0x01, 0x01,0x01, 0x01,0x01, /* 120 pairs */
+    0x01,0x01, 0x01,0x01, 0x01,0x01, 0x01,0x01, 0x01,0x01, 0x01,0x01, 0x01,0x01, 0x01,0x01, /* 127 pairs */
+};
+// H3 SETTINGS frame with an unknown Setting ID (e.g., 0x7FFF)
+static uint8_t test_h3_settings_unknown_id_b3[] = { 0x04, 0x03, 0x7F, 0xFF, 0x00 }; // Renamed
+// H3 SETTINGS with duplicate setting ID
+static uint8_t test_h3_settings_duplicate_id[] = { 0x04, 0x04, 0x01, 0x0A, 0x01, 0x0B }; // ID 1=10, ID 1=11
+// H3 SETTINGS with a setting ID that requires a specific value range, but value is outside (e.g., hypothetical ID 0x20 requires value < 100, sent 1000)
+static uint8_t test_h3_settings_invalid_value_for_id[] = { 0x04, 0x03, 0x20, 0x83, 0xE8 }; // ID 0x20, Value 1000
+
+
+ /* --- Batch 3: User Prioritized Frames (Part 2 - H3 ORIGIN & QUIC STREAM) --- */
+// H3 ORIGIN frame (type 0x0c) sent when ORIGIN extension was not negotiated
 static uint8_t test_h3_origin_unnegotiated[] = { 0x0c, 0x14, 0x00, 0x12, 'h', 't', 't', 'p', ':', '/', '/', 'o', 'r', 'i', 'g', 'i', 'n', '.', 't', 'e', 's', 't' };
-static uint8_t test_stream_len_bit_no_len_field[] = { 0x0A, 0x01 };
-static uint8_t test_stream_off_bit_no_off_field[] = { 0x0C, 0x01 };
++// H3 ORIGIN frame with multiple Origin entries (invalid, only one allowed per RFC draft-ietf-httpbis-origin-frame)
++static uint8_t test_h3_origin_multiple_entries[] = { 0x0c, 0x2A, 0x00, 0x12, 'h','t','t','p',':','/','/','o','1','.','t','e','s','t', 0x00, 0x12, 'h','t','t','p',':','/','/','o','2','.','t','e','s','t' };
++// H3 ORIGIN frame with empty Origin-Entry (e.g. Length 0 for the ASCII Origin value)
++static uint8_t test_h3_origin_empty_entry[] = { 0x0c, 0x02, 0x00, 0x00 }; // Two Origin-Entries, both zero length
+// QUIC STREAM frame with LEN bit set (e.g. 0x0A) but Length field is missing (truncated)
+static uint8_t test_stream_len_bit_no_len_field[] = { 0x0A, 0x01 }; // Stream ID 1
+// QUIC STREAM frame with OFF bit set (e.g. 0x0C) but Offset field is missing (truncated)
+static uint8_t test_stream_off_bit_no_off_field[] = { 0x0C, 0x01 }; // Stream ID 1
+// QUIC STREAM frame with LEN and FIN set (e.g. 0x0B), Length is 0, but data is present after frame.
 static uint8_t test_stream_len_fin_zero_len_with_data[] = { 0x0B, 0x01, 0x00, 'e','x','t','r','a' };
++// QUIC STREAM frame, type 0x08 (no OFF, no LEN, no FIN), but packet ends immediately (empty stream data)
++static uint8_t test_stream_type08_empty_implicit_len[] = { 0x08, 0x04 }; // Stream ID 4
++// QUIC STREAM frame, type 0x0C (OFF, no LEN, no FIN), Offset present, but packet ends (empty stream data)
++static uint8_t test_stream_type0C_offset_empty_implicit_len[] = { 0x0C, 0x04, 0x40, 0x10 }; // Stream ID 4, Offset 16
 
-/* --- Batch 3: User Prioritized Frames (Part 3 - QUIC STREAM type range & WebSocket) --- */
-static uint8_t test_frame_type_stream_range_just_below[] = {0x07, 0x01, 'd','a','t','a'};
-static uint8_t test_frame_type_stream_range_lower_bound[] = {0x08, 0x01, 'd','a','t','a'};
-static uint8_t test_frame_type_stream_range_upper_bound[] = {0x0F, 0x01, 0x00, 0x04, 'd','a','t','a'};
-static uint8_t test_frame_type_stream_range_just_above[] = {0x10, 0x01, 'd','a','t','a'};
-static uint8_t test_ws_control_frame_fin_zero_invalid[] = { 0x09, 0x00 };
-static uint8_t test_ws_text_fin0_then_text_continuation_part1[] = { 0x01, 0x04, 'p','a','r','t' };
-static uint8_t test_ws_text_fin0_then_text_continuation_part2_invalid[] = { 0x01, 0x03, 't','w','o' };
 
-/* --- Batch 4: More Static Frames (as per plan before user specified Batch 8) --- */
+ /* --- Batch 3: User Prioritized Frames (Part 3 - QUIC STREAM type range & WebSocket) --- */
+// Frame type just below STREAM range (e.g. 0x07 NEW_TOKEN) but formatted like a STREAM frame
+static uint8_t test_frame_type_stream_range_just_below[] = {0x07, 0x01, 0x00, 0x04, 'd','a','t','a'}; // ID 1, Offset 0, Len 4
+// Frame type PADDING (0x00) formatted like a STREAM frame (should be invalid)
+static uint8_t test_frame_type_padding_as_stream[] = {0x00, 0x01, 0x00, 0x04, 'd','a','t','a'};
+// Frame type at lower bound of STREAM (0x08)
+static uint8_t test_frame_type_stream_range_lower_bound[] = {0x08, 0x01, 'd','a','t','a'}; // Implicit off 0, implicit len
+// Frame type at upper bound of STREAM (0x0F)
+static uint8_t test_frame_type_stream_range_upper_bound[] = {0x0F, 0x01, 0x00, 0x04, 'd','a','t','a'}; // ID 1, Offset 0, Len 4, FIN
+// Frame type just above STREAM range (e.g. 0x10 MAX_DATA) but formatted like a STREAM frame
+static uint8_t test_frame_type_stream_range_just_above[] = {0x10, 0x01, 0x00, 0x04, 'd','a','t','a'};
+// WebSocket Control Frame (e.g. PING 0x89) with FIN bit = 0 (invalid for control frames)
+static uint8_t test_ws_control_frame_fin_zero_invalid[] = { 0x09, 0x00 }; // PING, FIN=0, len=0
+// WebSocket Text Frame (0x81 FIN=1) but RSV1 bit set (invalid if not negotiated)
+static uint8_t test_ws_text_frame_rsv1_set_invalid[] = { 0xC1, 0x04, 't','e','s','t'}; // FIN=1, RSV1=1, Opcode=Text, len=4
+// WebSocket Text Frame (0x01 FIN=0), then another Text Frame (0x01 FIN=0) instead of Continuation (0x00)
+static uint8_t test_ws_text_fin0_then_text_continuation_part1[] = { 0x01, 0x04, 'p','a','r','t' }; // Text, FIN=0, "part"
+static uint8_t test_ws_text_fin0_then_text_continuation_part2_invalid[] = { 0x01, 0x03, 't','w','o' }; // Text, FIN=0, "two" (invalid sequence)
++// WebSocket frame with payload length 126, but length field indicates more data than available
++static uint8_t test_ws_len126_data_truncated[] = { 0x81, 0x7E, 0x00, 0xFA, 's', 'h', 'o', 'r', 't' }; // Text, FIN=1, actual len 250, but only "short" provided
++// WebSocket frame with payload length 127 (extended 64-bit), but length field indicates more data than available
++static uint8_t test_ws_len127_data_truncated[] = { 0x81, 0x7F, 0x00,0x00,0x00,0x00,0x00,0x01,0x00,0x00, 's', 'm', 'a', 'l', 'l' }; // Text, FIN=1, actual len 65536
++
+
+ /* --- Batch 4: More Static Frames (as per plan before user specified Batch 8) --- */
+ // QUIC Unknown Frame Type (high value, e.g., 0x7FEE DEAD BEEF - uses max 2-byte varint for type)
+// QUIC Unknown Frame Type (high value, e.g., 0x7FEE DEAD BEEF - uses max 2-byte varint for type)
 static uint8_t test_frame_quic_unknown_frame_high_value[] = { 0x7F, 0xEE, 0xDE, 0xAD, 0xBE, 0xEF };
+// H3 Reserved Frame Type 0x08 (from RFC9114 Table 2) with empty payload
 static uint8_t test_frame_h3_reserved_frame_0x08[] = { 0x08, 0x00 };
+// H3 Unassigned Type (e.g., 0x4040 - 2-byte varint) with empty payload
 static uint8_t test_frame_h3_unassigned_type_0x4040[] = { 0x40, 0x40, 0x00 };
+// WebSocket Reserved Control Opcode (e.g. 0x8B - FIN + Opcode 0xB)
 static uint8_t test_frame_ws_reserved_control_0x0B[] = { 0x8B, 0x00 };
+// WebSocket Reserved Non-Control Opcode (e.g. 0x83 - FIN + Opcode 0x3)
 static uint8_t test_frame_ws_reserved_non_control_0x03[] = { 0x83, 0x00 };
-static uint8_t test_frame_h3_headers_incomplete_qpack[] = { 0x01, 0x05, 0x00, 0x00 };
-static uint8_t test_frame_ws_ping_payload_gt_125[] = { 0x89, 0x7E, 0x00, 0x7E, 0xFF };
+// H3 HEADERS frame (type 0x01) with incomplete QPACK data (e.g. length mismatch or truncated instruction)
+static uint8_t test_frame_h3_headers_incomplete_qpack[] = { 0x01, 0x05, 0x00, 0x00 }; // Len 5, but only 2 bytes of QPACK placeholder
+// WebSocket PING frame (0x89) with payload length > 125 (invalid for PING)
+static uint8_t test_frame_ws_ping_payload_gt_125[] = { 0x89, 0x7E, 0x00, 0x7E, 0xFF }; // PING, FIN=1, len=126, one byte of payload
+// QUIC MAX_STREAMS Uni (0x13), value 0
 static uint8_t test_frame_quic_max_streams_uni_value0[] = { 0x13, 0x00 };
-static uint8_t test_frame_quic_ncid_short_token[] = { 0x18, 0x01, 0x00, 0x08, 0xA1, 0xA2, 0xA3, 0xA4, 0xA5, 0xA6, 0xA7, 0xA8, 0xB1, 0xB2, 0xB3, 0xB4, 0xB5, 0xB6, 0xB7, 0xB8 };
-static uint8_t test_frame_quic_ncid_zero_len_cid[] = { 0x18, 0x02, 0x00, 0x00, 0xC1, 0xC2, 0xC3, 0xC4, 0xC5, 0xC6, 0xC7, 0xC8, 0xC9, 0xCA, 0xCB, 0xCC, 0xCD, 0xCE, 0xCF, 0xD0 };
+// QUIC NEW_CONNECTION_ID (0x18) with a very short token (e.g., 8 bytes instead of 16)
+static uint8_t test_frame_quic_ncid_short_token[] = { 0x18, 0x01, 0x00, 0x08, 0xA1,0xA2,0xA3,0xA4,0xA5,0xA6,0xA7,0xA8, 0xB1,0xB2,0xB3,0xB4,0xB5,0xB6,0xB7,0xB8 }; // Token is only 8 bytes
+// QUIC NEW_CONNECTION_ID (0x18) with CID length 0 (invalid)
+static uint8_t test_frame_quic_ncid_zero_len_cid[] = { 0x18, 0x02, 0x00, 0x00, 0xC1,0xC2,0xC3,0xC4,0xC5,0xC6,0xC7,0xC8,0xC9,0xCA,0xCB,0xCC,0xCD,0xCE,0xCF,0xD0 };
++// QUIC PATH_CHALLENGE (0x1a) with data all zeros
++static uint8_t test_frame_quic_path_challenge_all_zero_data_b4[] = { 0x1a, 0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00 }; // Renamed
++// QUIC PATH_RESPONSE (0x1b) with data mismatching a typical challenge
++static uint8_t test_frame_quic_path_response_mismatch_data_b4[] = { 0x1b, 0x11,0x22,0x33,0x44,0x55,0x66,0x77,0x88 }; // Renamed
++
 
-/* --- Batch 5: Further Static Frames (as per plan before user specified Batch 8) --- */
+ /* --- Batch 5: Further Static Frames (as per plan before user specified Batch 8) --- */
+// QUIC Unknown Frame Type (greased 0x2A type from RFC9000 Sec 15) with some payload
 static uint8_t test_frame_quic_unknown_frame_grease_0x2A[] = { 0x2A, 0x01, 0x02, 0x03, 0x04 };
+// H3 Reserved Frame Type 0x09 (from RFC9114 Table 2) with empty payload
 static uint8_t test_frame_h3_reserved_frame_0x09[] = { 0x09, 0x00 };
+// WebSocket Control Frame Opcode 0x0C (invalid) with FIN=1
 static uint8_t test_frame_ws_control_frame_0x0C_invalid[] = { 0x8C, 0x00 };
-static uint8_t test_frame_quic_crypto_len_gt_data[] = { 0x06, 0x00, 0x64, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0A };
-static uint8_t test_frame_h3_push_promise_incomplete_payload[] = { 0x05, 0x0A, 0x01, 0x00, 0x00 };
-static uint8_t test_frame_quic_retire_connection_id_large_seq[] = { 0x19, 0xBF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF };
-static uint8_t test_frame_h3_goaway_large_id[] = { 0x07, 0x08, 0xBF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF };
-static uint8_t test_frame_quic_ncid_retire_gt_seq[] = { 0x18, 0x02, 0x05, 0x08, 0xD1, 0xD2, 0xD3, 0xD4, 0xD5, 0xD6, 0xD7, 0xD8, 0xE1, 0xE2, 0xE3, 0xE4, 0xE5, 0xE6, 0xE7, 0xE8, 0xE9, 0xEA, 0xEB, 0xEC, 0xED, 0xEE, 0xEF, 0xF0 };
+// QUIC CRYPTO frame (0x06) with length > actual crypto data in packet
+static uint8_t test_frame_quic_crypto_len_gt_data_b5[] = { 0x06, 0x00, 0x64, 0x01,0x02,0x03,0x04,0x05,0x06,0x07,0x08,0x09,0x0A }; // Renamed, Len 100, Data 10 bytes
+// H3 PUSH_PROMISE frame (type 0x05) with incomplete payload (e.g. missing Push ID or header block)
+static uint8_t test_frame_h3_push_promise_incomplete_payload[] = { 0x05, 0x0A, 0x01, 0x00, 0x00 }; // Len 10, Push ID 1, then truncated QPACK
+// QUIC RETIRE_CONNECTION_ID (0x19) with a very large sequence number (2^62-1)
+static uint8_t test_frame_quic_retire_connection_id_large_seq[] = { 0x19, 0xBF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF };
+// H3 GOAWAY frame (type 0x07) with a very large Stream/Request ID (2^62-1)
+static uint8_t test_frame_h3_goaway_large_id[] = { 0x07, 0x08, 0xBF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF }; // Len 8 for ID
+// QUIC NEW_CONNECTION_ID (0x18) with RetirePriorTo > SequenceNumber (duplicate of _b1 for systematic inclusion)
+static uint8_t test_frame_quic_ncid_retire_gt_seq_b5[] = { 0x18, 0x02, 0x05, 0x08, 0xD1,0xD2,0xD3,0xD4,0xD5,0xD6,0xD7,0xD8, 0xE1,0xE2,0xE3,0xE4,0xE5,0xE6,0xE7,0xE8,0xE9,0xEA,0xEB,0xEC,0xED,0xEE,0xEF,0xF0 }; // Renamed
+// QUIC PATH_CHALLENGE (0x1a) frame truncated (empty data)
 static uint8_t test_frame_quic_path_challenge_empty[] = { 0x1a };
+// QUIC PATH_RESPONSE (0x1b) frame truncated (empty data)
 static uint8_t test_frame_quic_path_response_empty[] = { 0x1b };
++// QUIC ACK frame (0x02) with ACK Delay encoded using max varint (8 bytes)
++static uint8_t test_frame_quic_ack_delay_max_varint[] = { 0x02, 0x0A, 0xC0,0x00,0x00,0x00,0x00,0x00,0x00,0x01, 0x01, 0x00 }; // LargestAck 10, Delay 1 (8-byte), RangeCount 1, FirstRange 0
++// QUIC STREAM frame (0x0F, all bits set) with StreamID, Offset, Length all max varint values
++static uint8_t test_frame_quic_stream_all_fields_max_varint[] = {
++    0x0F,                                                               // Type
++    0xBF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,                            // Stream ID (2^62-1)
++    0xBF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,                            // Offset (2^62-1)
++    0xBF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFD,                            // Length (2^62-3 to avoid total overflow with data)
++    'd', 'a', 't', 'a'                                                  // Data (4 bytes)
++};
++// H3 DATA frame (type 0x00) with length 0, but payload present
++static uint8_t test_frame_h3_data_len0_with_payload[] = { 0x00, 0x00, 0x01, 0x02, 0x03 };
++// WebSocket Close frame (0x88) with invalid close code (e.g. 0)
++static uint8_t test_frame_ws_close_invalid_code[] = { 0x88, 0x02, 0x00, 0x00 }; // FIN=1, Opcode=Close, Len=2, Code=0 (invalid)
++
 
-/* --- Batch 8: Combined Set (original Batch 6/7 + 4 new from user) --- */
-static uint8_t test_frame_h2_window_update_increment0_b7[] = { 0x00, 0x00, 0x04, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
-static uint8_t test_frame_quic_conn_close_transport_app_err_code_b7[] = { 0x1c, 0x41, 0x01, 0x08, 0x00 };
-static uint8_t test_frame_h3_max_push_id_value0_b7[] = { 0x0D, 0x01, 0x00 };
-static uint8_t test_frame_quic_ncid_cid_len_gt_pico_max_b7[] = { 0x18, 0x04, 0x00, 21, 0xCC, 0xCC, 0xCC, 0xCC, 0xCC, 0xCC, 0xCC, 0xCC, 0xCC, 0xCC, 0xCC, 0xCC, 0xCC, 0xCC, 0xCC, 0xCC, 0xCC, 0xCC, 0xCC, 0xCC, 0xCC, 0xBB, 0xBB, 0xBB, 0xBB, 0xBB, 0xBB, 0xBB, 0xBB, 0xBB, 0xBB, 0xBB, 0xBB, 0xBB, 0xBB, 0xBB, 0xBB };
-static uint8_t test_frame_ws_text_rsv2_set[] = { 0xA1, 0x04, 't','e','s','t' };
-static uint8_t test_frame_ws_text_rsv3_set[] = { 0x91, 0x04, 't','e','s','t' };
-static uint8_t test_frame_quic_ack_non_ecn_with_ecn_counts_b7[] = { 0x02, 0x0A, 0x00, 0x01, 0x00, 0x01, 0x01, 0x01 };
-static uint8_t test_frame_quic_greased_type_0x5BEE_with_payload[] = { 0x5B, 0xEE, 0x01, 0x02, 0x03, 0x04 };
-static uint8_t test_frame_h3_reserved_type_4byte_varint[] = { 0x80, 0x00, 0x00, 0x20, 0x00 };
+ /* --- Batch 8: Combined Set (original Batch 6/7 + 4 new from user) --- */
+ // H2 WINDOW_UPDATE frame (type 0x08) with 0 increment. Len 4, StreamID 0, Inc 0.
+// H2 WINDOW_UPDATE frame (type 0x08) with 0 increment. Len 4, StreamID 0, Inc 0.
+static uint8_t test_frame_h2_window_update_increment0_b7[] = { 0x00, 0x00, 0x04, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 }; // This is not a QUIC frame, but H2 frame payload. Assuming it's wrapped in QUIC STREAM.
+// QUIC CONNECTION_CLOSE (type 0x1c) with an application error code (e.g., 0x0101 from app space)
+static uint8_t test_frame_quic_conn_close_transport_app_err_code_b7[] = { 0x1c, 0x41, 0x01, 0x08, 0x00 }; // Error 0x101 (like app), Frame Type STREAM(0x08), ReasonLen 0
+// H3 MAX_PUSH_ID (type 0x0D) with value 0
+static uint8_t test_frame_h3_max_push_id_value0_b7[] = { 0x0D, 0x01, 0x00 }; // Len 1, ID 0
+// QUIC NEW_CONNECTION_ID (0x18) with CID length > 20 (e.g. 21)
+static uint8_t test_frame_quic_ncid_cid_len_gt_pico_max_b7[] = { 0x18, 0x04, 0x00, 21, 0xCC,0xCC,0xCC,0xCC,0xCC,0xCC,0xCC,0xCC,0xCC,0xCC,0xCC,0xCC,0xCC,0xCC,0xCC,0xCC,0xCC,0xCC,0xCC,0xCC,0xCC, 0xBB,0xBB,0xBB,0xBB,0xBB,0xBB,0xBB,0xBB,0xBB,0xBB,0xBB,0xBB,0xBB,0xBB,0xBB,0xBB };
+// WebSocket Text Frame with RSV2 bit set (invalid if not negotiated)
+static uint8_t test_frame_ws_text_rsv2_set[] = { 0xA1, 0x04, 't','e','s','t' }; // FIN=1, RSV2=1, Opcode=Text
+// WebSocket Text Frame with RSV3 bit set (invalid if not negotiated)
+static uint8_t test_frame_ws_text_rsv3_set[] = { 0x91, 0x04, 't','e','s','t' }; // FIN=1, RSV3=1, Opcode=Text
+// QUIC ACK frame type 0x02 (no ECN) but with ECN count fields present (malformed)
+static uint8_t test_frame_quic_ack_non_ecn_with_ecn_counts_b7[] = { 0x02, 0x0A, 0x00, 0x01, 0x00, 0x01, 0x01, 0x01 }; // LargestAck 10, Delay 0, RangeCount 1, FirstRange 0, then ECT0=1, ECT1=1, CE=1
+// QUIC Greased Frame Type (e.g. 0x5BEE from RFC9000 Sec 15 pattern 0x?a?a?a?a + 0x21, here 0x5BEE = 42*N+27 for N=1450, not exactly greased but using a high value for test)
+static uint8_t test_frame_quic_greased_type_0x5BEE_with_payload[] = { 0x5B, 0xEE, 0x01, 0x02, 0x03, 0x04 }; // Type 0x5BEE, then payload
+// H3 Reserved Frame Type encoded with 4-byte varint (e.g. 0x80000020)
+static uint8_t test_frame_h3_reserved_type_4byte_varint[] = { 0x80, 0x00, 0x00, 0x20, 0x00 }; // Type 0x20 (hypothetical reserved), Len 0
+// WebSocket Continuation Frame (opcode 0x00) with FIN=1 (valid, but can be fuzzed for interaction)
 static uint8_t test_frame_ws_continuation_fin1_with_payload[] = { 0x80, 0x04, 'c','o','n','t' };
-static uint8_t test_frame_quic_ncid_large_retire_small_seq[] = { 0x18, 0x05, 0xBF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x08, 0xF1, 0xF2, 0xF3, 0xF4, 0xF5, 0xF6, 0xF7, 0xF8, 0x91, 0x92, 0x93, 0x94, 0x95, 0x96, 0x97, 0x98, 0x99, 0x9A, 0x9B, 0x9C, 0x9D, 0x9E, 0x9F, 0xA0 };
+// QUIC NEW_CONNECTION_ID with a very large RetirePriorTo value but small SequenceNumber
+static uint8_t test_frame_quic_ncid_large_retire_small_seq[] = { 0x18, 0x05, 0xBF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF, 0x08, 0xF1,0xF2,0xF3,0xF4,0xF5,0xF6,0xF7,0xF8, 0x91,0x92,0x93,0x94,0x95,0x96,0x97,0x98,0x99,0x9A,0x9B,0x9C,0x9D,0x9E,0x9F,0xA0 };
++// QUIC frame type 0x21 (RFC 9000 reserved for extensions, potentially unhandled)
++static uint8_t test_frame_quic_extension_0x21[] = { 0x21 };
++// H3 frame type 0x2F (RFC 9114 reserved for extensions) with empty payload
++static uint8_t test_frame_h3_extension_0x2F[] = { 0x2F, 0x00 };
++// QUIC ACK frame with first ACK range having length 0, and then a Gap of 0, then another range of 0. (Ack Pkt N, N-1)
++static uint8_t test_frame_quic_ack_double_zero_range[] = { 0x02, 0x0A, 0x00, 0x02, 0x00, 0x00, 0x00 };
++// WebSocket frame with RSV1, RSV2, and RSV3 all set (highly unlikely to be negotiated)
++static uint8_t test_frame_ws_all_rsv_set[] = { 0xF1, 0x04, 'd', 'a', 't', 'a' }; // FIN=1, RSV1-3=1, Opcode=Text
++
 
-/* END OF JULES ADDED FRAMES */
+ /* END OF JULES ADDED FRAMES */
 
-/* RFC 9204 (QPACK Instructions) Placeholders */
+ /* RFC 9204 (QPACK Instructions) Placeholders */
 /* Encoder Instructions */
 static uint8_t test_qpack_enc_set_dynamic_table_capacity[] = {0x20}; /* Placeholder: Set Dynamic Table Capacity (e.g., 001xxxxx) */
 static uint8_t test_qpack_enc_insert_with_name_ref[] = {0x80}; /* Placeholder: Insert With Name Reference (Indexed Name, e.g., 1xxxxxxx) */
@@ -4696,6 +4947,137 @@ fuzi_q_frames_t fuzi_q_frame_list[] = {
     FUZI_Q_ITEM("test_ws_frame_binary", test_ws_frame_binary),
     FUZI_Q_ITEM("test_ws_frame_text", test_ws_frame_text),
     FUZI_Q_ITEM("test_ws_frame_continuation", test_ws_frame_continuation),
+
+    /* START OF JULES ADDED FUZI_Q_ITEM ENTRIES (BATCHES 1-8) */
+
+    /* --- Batch 1: Unknown or Unassigned Frame Types --- */
+    FUZI_Q_ITEM("quic_unknown_frame_0x20", test_frame_quic_unknown_0x20),
+    FUZI_Q_ITEM("quic_unknown_0x3f_payload", test_frame_quic_unknown_0x3f_payload),
+    FUZI_Q_ITEM("quic_unknown_greased_0x402a", test_frame_quic_unknown_greased_0x402a),
+    FUZI_Q_ITEM("h3_reserved_frame_0x02", test_frame_h3_reserved_0x02),
+    FUZI_Q_ITEM("h3_reserved_frame_0x06", test_frame_h3_reserved_0x06),
+    FUZI_Q_ITEM("h3_unassigned_extension_0x21", test_frame_h3_unassigned_extension_0x21),
+
+    /* --- Batch 1: Malformed Frame Lengths --- */
+    FUZI_Q_ITEM("quic_stream_len0_with_data", test_frame_quic_stream_len0_with_data),
+    FUZI_Q_ITEM("quic_stream_len_gt_data", test_frame_quic_stream_len_gt_data),
+    FUZI_Q_ITEM("quic_stream_len_lt_data", test_frame_quic_stream_len_lt_data),
+    FUZI_Q_ITEM("quic_crypto_len0_with_data", test_frame_quic_crypto_len0_with_data),
+    FUZI_Q_ITEM("quic_new_token_len_gt_data", test_frame_quic_new_token_len_gt_data),
+    FUZI_Q_ITEM("quic_conn_close_reason_len_gt_data", test_frame_quic_conn_close_reason_len_gt_data),
+
+    /* --- Batch 1: Invalid Frame Field Values --- */
+    FUZI_Q_ITEM("quic_max_streams_bidi_value0", test_frame_quic_max_streams_bidi_value0),
+    FUZI_Q_ITEM("quic_stop_sending_large_error", test_frame_quic_stop_sending_large_error),
+    FUZI_Q_ITEM("quic_max_data_value0_b1", test_frame_quic_max_data_value0_b1),
+    FUZI_Q_ITEM("quic_ack_largest0_delay0_1range0_b1", test_frame_quic_ack_largest0_delay0_1range0_b1),
+    FUZI_Q_ITEM("quic_ncid_retire_gt_seq_b1", test_frame_quic_ncid_retire_gt_seq_b1),
+
+    /* --- Batch 2: More Invalid Frame Field Values --- */
+    FUZI_Q_ITEM("quic_max_data_value0", test_frame_quic_max_data_value0),
+    FUZI_Q_ITEM("quic_ack_largest0_delay0_1range0", test_frame_quic_ack_largest0_delay0_1range0),
+    FUZI_Q_ITEM("quic_ack_range_count0_first_range_set", test_frame_quic_ack_range_count0_first_range_set),
+    FUZI_Q_ITEM("h3_settings_unknown_id", test_frame_h3_settings_unknown_id),
+    FUZI_Q_ITEM("h3_settings_max_field_section_size0", test_frame_h3_settings_max_field_section_size0),
+    FUZI_Q_ITEM("quic_max_stream_data_value0", test_frame_quic_max_stream_data_value0),
+    FUZI_Q_ITEM("quic_conn_close_reserved_error", test_frame_quic_conn_close_reserved_error),
+    FUZI_Q_ITEM("quic_new_token_zero_len_invalid", test_frame_quic_new_token_zero_len_invalid),
+
+    /* --- Batch 2: Padding Fuzzing --- */
+    FUZI_Q_ITEM("quic_padding_excessive_70bytes", test_frame_quic_padding_excessive_70bytes),
+    FUZI_Q_ITEM("quic_ping_then_many_padding", test_frame_quic_ping_then_many_padding),
+
+    /* --- Batch 2: Stream ID Fuzzing (static part) --- */
+    FUZI_Q_ITEM("quic_stream_id0", test_frame_quic_stream_id0),
+    FUZI_Q_ITEM("quic_max_stream_data_server_uni", test_frame_quic_max_stream_data_server_uni),
+    FUZI_Q_ITEM("quic_reset_stream_client_uni", test_frame_quic_reset_stream_client_uni),
+    FUZI_Q_ITEM("quic_stop_sending_large_stream_id", test_frame_quic_stop_sending_large_stream_id),
+    FUZI_Q_ITEM("quic_stream_client_uses_server_id", test_frame_quic_stream_client_uses_server_id),
+
+    /* --- Batch 3: User Prioritized Frames (Part 1 - DATAGRAM) --- */
+    FUZI_Q_ITEM("datagram_type30_with_len_data_error", test_frame_datagram_type30_with_len_data_error),
+    FUZI_Q_ITEM("datagram_type31_missing_len_error", test_frame_datagram_type31_missing_len_error),
+    FUZI_Q_ITEM("datagram_type31_len_zero_with_data_error", test_frame_datagram_type31_len_zero_with_data_error),
+    FUZI_Q_ITEM("datagram_type31_len_huge_data_small", test_frame_datagram_type31_len_huge_data_small),
+    FUZI_Q_ITEM("datagram_type30_empty_valid", test_frame_datagram_type30_empty_valid),
+    FUZI_Q_ITEM("datagram_type31_len0_empty_valid", test_frame_datagram_type31_len0_empty_valid),
+
+    /* --- Batch 3: User Prioritized Frames (Part 1 - H3 SETTINGS) --- */
+    FUZI_Q_ITEM("h3_settings_excessive_pairs", test_h3_settings_excessive_pairs),
+    FUZI_Q_ITEM("h3_settings_unknown_id_b3", test_h3_settings_unknown_id_b3),
+    FUZI_Q_ITEM("h3_settings_duplicate_id", test_h3_settings_duplicate_id),
+    FUZI_Q_ITEM("h3_settings_invalid_value_for_id", test_h3_settings_invalid_value_for_id),
+
+    /* --- Batch 3: User Prioritized Frames (Part 2 - H3 ORIGIN & QUIC STREAM) --- */
+    FUZI_Q_ITEM("h3_origin_unnegotiated", test_h3_origin_unnegotiated),
+    FUZI_Q_ITEM("h3_origin_multiple_entries", test_h3_origin_multiple_entries),
+    FUZI_Q_ITEM("h3_origin_empty_entry", test_h3_origin_empty_entry),
+    FUZI_Q_ITEM("stream_len_bit_no_len_field", test_stream_len_bit_no_len_field),
+    FUZI_Q_ITEM("stream_off_bit_no_off_field", test_stream_off_bit_no_off_field),
+    FUZI_Q_ITEM("stream_len_fin_zero_len_with_data", test_stream_len_fin_zero_len_with_data),
+    FUZI_Q_ITEM("stream_type08_empty_implicit_len", test_stream_type08_empty_implicit_len),
+    FUZI_Q_ITEM("stream_type0C_offset_empty_implicit_len", test_stream_type0C_offset_empty_implicit_len),
+
+    /* --- Batch 3: User Prioritized Frames (Part 3 - QUIC STREAM type range & WebSocket) --- */
+    FUZI_Q_ITEM("type_stream_range_just_below", test_frame_type_stream_range_just_below),
+    FUZI_Q_ITEM("type_padding_as_stream", test_frame_type_padding_as_stream),
+    FUZI_Q_ITEM("type_stream_range_lower_bound", test_frame_type_stream_range_lower_bound),
+    FUZI_Q_ITEM("type_stream_range_upper_bound", test_frame_type_stream_range_upper_bound),
+    FUZI_Q_ITEM("type_stream_range_just_above", test_frame_type_stream_range_just_above),
+    FUZI_Q_ITEM("ws_control_frame_fin_zero_invalid", test_ws_control_frame_fin_zero_invalid),
+    FUZI_Q_ITEM("ws_text_frame_rsv1_set_invalid", test_ws_text_frame_rsv1_set_invalid),
+    FUZI_Q_ITEM("ws_text_fin0_then_text_continuation_part1", test_ws_text_fin0_then_text_continuation_part1),
+    FUZI_Q_ITEM("ws_text_fin0_then_text_continuation_part2_invalid", test_ws_text_fin0_then_text_continuation_part2_invalid),
+    FUZI_Q_ITEM("ws_len126_data_truncated", test_ws_len126_data_truncated),
+    FUZI_Q_ITEM("ws_len127_data_truncated", test_ws_len127_data_truncated),
+
+    /* --- Batch 4: More Static Frames --- */
+    FUZI_Q_ITEM("quic_unknown_frame_high_value", test_frame_quic_unknown_frame_high_value),
+    FUZI_Q_ITEM("h3_reserved_frame_0x08", test_frame_h3_reserved_frame_0x08),
+    FUZI_Q_ITEM("h3_unassigned_type_0x4040", test_frame_h3_unassigned_type_0x4040),
+    FUZI_Q_ITEM("ws_reserved_control_0x0B", test_frame_ws_reserved_control_0x0B),
+    FUZI_Q_ITEM("ws_reserved_non_control_0x03", test_frame_ws_reserved_non_control_0x03),
+    FUZI_Q_ITEM("h3_headers_incomplete_qpack", test_frame_h3_headers_incomplete_qpack),
+    FUZI_Q_ITEM("ws_ping_payload_gt_125", test_frame_ws_ping_payload_gt_125),
+    FUZI_Q_ITEM("quic_max_streams_uni_value0", test_frame_quic_max_streams_uni_value0),
+    FUZI_Q_ITEM("quic_ncid_short_token", test_frame_quic_ncid_short_token),
+    FUZI_Q_ITEM("quic_ncid_zero_len_cid", test_frame_quic_ncid_zero_len_cid),
+    FUZI_Q_ITEM("quic_path_challenge_all_zero_data_b4", test_frame_quic_path_challenge_all_zero_data_b4),
+    FUZI_Q_ITEM("quic_path_response_mismatch_data_b4", test_frame_quic_path_response_mismatch_data_b4),
+
+    /* --- Batch 5: Further Static Frames --- */
+    FUZI_Q_ITEM("quic_unknown_frame_grease_0x2A", test_frame_quic_unknown_frame_grease_0x2A),
+    FUZI_Q_ITEM("h3_reserved_frame_0x09", test_frame_h3_reserved_frame_0x09),
+    FUZI_Q_ITEM("ws_control_frame_0x0C_invalid", test_frame_ws_control_frame_0x0C_invalid),
+    FUZI_Q_ITEM("quic_crypto_len_gt_data_b5", test_frame_quic_crypto_len_gt_data_b5),
+    FUZI_Q_ITEM("h3_push_promise_incomplete_payload", test_frame_h3_push_promise_incomplete_payload),
+    FUZI_Q_ITEM("quic_retire_connection_id_large_seq", test_frame_quic_retire_connection_id_large_seq),
+    FUZI_Q_ITEM("h3_goaway_large_id", test_frame_h3_goaway_large_id),
+    FUZI_Q_ITEM("quic_ncid_retire_gt_seq_b5", test_frame_quic_ncid_retire_gt_seq_b5),
+    FUZI_Q_ITEM("quic_path_challenge_empty", test_frame_quic_path_challenge_empty),
+    FUZI_Q_ITEM("quic_path_response_empty", test_frame_quic_path_response_empty),
+    FUZI_Q_ITEM("quic_ack_delay_max_varint", test_frame_quic_ack_delay_max_varint),
+    FUZI_Q_ITEM("quic_stream_all_fields_max_varint", test_frame_quic_stream_all_fields_max_varint),
+    FUZI_Q_ITEM("h3_data_len0_with_payload", test_frame_h3_data_len0_with_payload),
+    FUZI_Q_ITEM("ws_close_invalid_code", test_frame_ws_close_invalid_code),
+
+    /* --- Batch 8: Combined Set (original Batch 6/7 + 4 new from user) --- */
+    FUZI_Q_ITEM("h2_window_update_increment0_b7", test_frame_h2_window_update_increment0_b7),
+    FUZI_Q_ITEM("quic_conn_close_transport_app_err_code_b7", test_frame_quic_conn_close_transport_app_err_code_b7),
+    FUZI_Q_ITEM("h3_max_push_id_value0_b7", test_frame_h3_max_push_id_value0_b7),
+    FUZI_Q_ITEM("quic_ncid_cid_len_gt_pico_max_b7", test_frame_quic_ncid_cid_len_gt_pico_max_b7),
+    FUZI_Q_ITEM("ws_text_rsv2_set", test_frame_ws_text_rsv2_set),
+    FUZI_Q_ITEM("ws_text_rsv3_set", test_frame_ws_text_rsv3_set),
+    FUZI_Q_ITEM("quic_ack_non_ecn_with_ecn_counts_b7", test_frame_quic_ack_non_ecn_with_ecn_counts_b7),
+    FUZI_Q_ITEM("quic_greased_type_0x5BEE_with_payload", test_frame_quic_greased_type_0x5BEE_with_payload),
+    FUZI_Q_ITEM("h3_reserved_type_4byte_varint", test_frame_h3_reserved_type_4byte_varint),
+    FUZI_Q_ITEM("ws_continuation_fin1_with_payload", test_frame_ws_continuation_fin1_with_payload),
+    FUZI_Q_ITEM("quic_ncid_large_retire_small_seq", test_frame_quic_ncid_large_retire_small_seq),
+    FUZI_Q_ITEM("quic_extension_0x21", test_frame_quic_extension_0x21),
+    FUZI_Q_ITEM("h3_extension_0x2F", test_frame_h3_extension_0x2F),
+    FUZI_Q_ITEM("quic_ack_double_zero_range", test_frame_quic_ack_double_zero_range),
+    FUZI_Q_ITEM("ws_all_rsv_set", test_frame_ws_all_rsv_set),
+
     /* HTTP/2 and HPACK Frame Types */
     FUZI_Q_ITEM("test_h2_frame_type_altsvc", test_h2_frame_type_altsvc),
     FUZI_Q_ITEM("test_hpack_dynamic_table_size_update", test_hpack_dynamic_table_size_update),
