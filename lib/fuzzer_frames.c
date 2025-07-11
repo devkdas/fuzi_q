@@ -4004,6 +4004,25 @@ static uint8_t test_frame_quic_new_token_overflow[] = { 0x07, 0xFF, 0xFF, 0x01 }
 // ACK with suspicious timing patterns
 static uint8_t test_frame_quic_ack_timing_suspicious[] = { 0x02, 0xFF, 0xFF, 0xFF, 0xFF, 0x01, 0x00 };
 
+// Additional missing test cases referenced in FUZI_Q_ITEM array
+static uint8_t test_quic_conn_close_missing_error[] = { 0x1c }; // CONNECTION_CLOSE with missing error code
+static uint8_t test_quic_ack_bad_range[] = { 0x02, 0x05, 0x00, 0x01, 0x10 }; // ACK with invalid range
+static uint8_t test_quic_reset_zero_error[] = { 0x04, 0x01, 0x00, 0x00 }; // RESET_STREAM with error 0
+static uint8_t test_quic_crypto_big_offset[] = { 0x06, 0xBF, 0xFF, 0xFF, 0xFF, 0x04, 't', 'e', 's', 't' }; // CRYPTO with large offset
+static uint8_t test_quic_new_token_empty[] = { 0x07, 0x00 }; // NEW_TOKEN with zero length
+static uint8_t test_quic_stream_id_zero[] = { 0x08, 0x00, 'z', 'e', 'r', 'o' }; // STREAM with ID 0
+static uint8_t test_quic_max_data_zero[] = { 0x10, 0x00 }; // MAX_DATA with value 0
+static uint8_t test_quic_max_streams_huge[] = { 0x12, 0xFF, 0xFF, 0xFF, 0xFF }; // MAX_STREAMS with huge value
+static uint8_t test_quic_ncid_bad_seq[] = { 0x18, 0xFF, 0x00, 0x08, 0xAA,0xAA,0xAA,0xAA,0xAA,0xAA,0xAA,0xAA, 0xBB,0xBB,0xBB,0xBB,0xBB,0xBB,0xBB,0xBB,0xBB,0xBB,0xBB,0xBB,0xBB,0xBB,0xBB,0xBB }; // NEW_CONNECTION_ID with bad sequence
+static uint8_t test_quic_retire_seq_zero[] = { 0x19, 0x00 }; // RETIRE_CONNECTION_ID with sequence 0
+static uint8_t test_quic_path_challenge_predictable[] = { 0x1a, 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07 }; // PATH_CHALLENGE with predictable data
+static uint8_t test_quic_reserved_frame_type[] = { 0x1f }; // Reserved frame type
+static uint8_t test_quic_stream_len_mismatch[] = { 0x0a, 0x01, 0x05, 'x', 'y' }; // STREAM with length mismatch
+static uint8_t test_quic_ack_future[] = { 0x02, 0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0x01, 0x00 }; // ACK for future packet
+static uint8_t test_quic_datagram_bad_len[] = { 0x30, 0x10, 'x' }; // DATAGRAM with bad length
+static uint8_t test_quic_stream_noncanon_varint[] = { 0x08, 0x40, 0x01, 't', 'e', 's', 't' }; // STREAM with non-canonical varint
+static uint8_t test_quic_conn_close_bad_frame_ref[] = { 0x1c, 0x01, 0xFF, 0x00 }; // CONNECTION_CLOSE with bad frame reference
+
  /* RFC 9204 (QPACK Instructions) Placeholders */
 /* Encoder Instructions */
 static uint8_t test_qpack_enc_set_dynamic_table_capacity[] = {0x20}; /* Placeholder: Set Dynamic Table Capacity (e.g., 001xxxxx) */
