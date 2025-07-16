@@ -7360,6 +7360,31 @@ fuzi_q_frames_t fuzi_q_frame_list[] = {
     FUZI_Q_ITEM("rfc9297_http_datagram_context_confusion", test_frame_rfc9297_http_datagram_context_confusion),
     FUZI_Q_ITEM("rfc9297_datagram_flow_id_collision", test_frame_rfc9297_datagram_flow_id_collision),
     
+    /* Additional missing RFC frames causing compilation errors */
+    FUZI_Q_ITEM("rfc3261_sip_uri_overflow", test_frame_rfc3261_sip_uri_overflow),
+    FUZI_Q_ITEM("rfc3261_sip_header_injection", test_frame_rfc3261_sip_header_injection),
+    FUZI_Q_ITEM("rfc3261_sip_message_smuggling", test_frame_rfc3261_sip_message_smuggling),
+    FUZI_Q_ITEM("rfc5321_smtp_command_injection", test_frame_rfc5321_smtp_command_injection),
+    FUZI_Q_ITEM("rfc5321_smtp_relay_attack", test_frame_rfc5321_smtp_relay_attack),
+    FUZI_Q_ITEM("rfc1939_pop3_buffer_overflow", test_frame_rfc1939_pop3_buffer_overflow),
+    FUZI_Q_ITEM("rfc1939_pop3_command_injection", test_frame_rfc1939_pop3_command_injection),
+    FUZI_Q_ITEM("rfc3501_imap_literal_attack", test_frame_rfc3501_imap_literal_attack),
+    FUZI_Q_ITEM("rfc3501_imap_command_continuation", test_frame_rfc3501_imap_command_continuation),
+    FUZI_Q_ITEM("rfc959_ftp_port_command_hijack", test_frame_rfc959_ftp_port_command_hijack),
+    FUZI_Q_ITEM("rfc959_ftp_pasv_response_spoof", test_frame_rfc959_ftp_pasv_response_spoof),
+    FUZI_Q_ITEM("rfc854_telnet_option_negotiation", test_frame_rfc854_telnet_option_negotiation),
+    FUZI_Q_ITEM("rfc854_telnet_command_injection", test_frame_rfc854_telnet_command_injection),
+    FUZI_Q_ITEM("rfc793_tcp_sequence_prediction", test_frame_rfc793_tcp_sequence_prediction),
+    FUZI_Q_ITEM("rfc793_tcp_connection_hijack", test_frame_rfc793_tcp_connection_hijack),
+    FUZI_Q_ITEM("rfc4880_pgp_key_substitution", test_frame_rfc4880_pgp_key_substitution),
+    FUZI_Q_ITEM("rfc4880_pgp_signature_forge", test_frame_rfc4880_pgp_signature_forge),
+    FUZI_Q_ITEM("rfc3986_uri_scheme_confusion", test_frame_rfc3986_uri_scheme_confusion),
+    FUZI_Q_ITEM("rfc3986_uri_authority_bypass", test_frame_rfc3986_uri_authority_bypass),
+    FUZI_Q_ITEM("rfc2045_mime_boundary_attack", test_frame_rfc2045_mime_boundary_attack),
+    FUZI_Q_ITEM("rfc2045_mime_header_injection", test_frame_rfc2045_mime_header_injection),
+    FUZI_Q_ITEM("rfc3339_datetime_overflow", test_frame_rfc3339_datetime_overflow),
+    FUZI_Q_ITEM("rfc3339_timezone_confusion", test_frame_rfc3339_timezone_confusion),
+
     /* === EXTENDED RFC-SPECIFIC ATTACK VECTORS FUZI_Q_ITEM ENTRIES === */
     
     /* RFC 2119/8174 - Requirement Level Violations */
