@@ -1112,27 +1112,11 @@ static uint8_t test_frame_cmd_injection_backtick[] = { 0x08, 0x56, 'C', 'M', 'D'
 /* Path Traversal Attacks */
 static uint8_t test_frame_path_traversal_basic[] = { 0x08, 0x57, 'P', 'A', 'T', 'H', '_', 'T', 'R', 'A', 'V' };
 static uint8_t test_frame_path_traversal_encoded[] = { 0x08, 0x58, 'P', 'A', 'T', 'H', '_', 'E', 'N', 'C' };
-static uint8_t test_frame_sql_union_attack[] = { 0x08, 0x51, '\'', ' ', 'U', 'N', 'I', 'O', 'N', ' ', 'S', 'E', 'L', 'E', 'C', 'T' };
-static uint8_t test_frame_sql_blind_injection[] = { 0x08, 0x52, '\'', ' ', 'A', 'N', 'D', ' ', 'S', 'L', 'E', 'E', 'P', '(', '5', ')', ' ', '-', '-' };
 
-/* XSS Attack Payloads */
-static uint8_t test_frame_xss_script_tag[] = { 0x08, 0x53, '<', 's', 'c', 'r', 'i', 'p', 't', '>', 'a', 'l', 'e', 'r', 't', '(', '1', ')', '<', '/', 's', 'c', 'r', 'i', 'p', 't', '>' };
-static uint8_t test_frame_xss_img_onerror[] = { 0x08, 0x54, '<', 'i', 'm', 'g', ' ', 's', 'r', 'c', '=', 'x', ' ', 'o', 'n', 'e', 'r', 'r', 'o', 'r', '=', 'a', 'l', 'e', 'r', 't', '(', '1', ')', '>' };
-
-/* Command Injection Patterns */
-static uint8_t test_frame_cmd_injection_pipe[] = { 0x08, 0x55, ';', ' ', 'c', 'a', 't', ' ', '/', 'e', 't', 'c', '/', 'p', 'a', 's', 's', 'w', 'd' };
-static uint8_t test_frame_cmd_injection_backtick[] = { 0x08, 0x56, '`', 'i', 'd', '`' };
-
-/* Path Traversal Attacks */
-static uint8_t test_frame_path_traversal_basic[] = { 0x08, 0x57, '.', '.', '/', '.', '.', '/', '.', '.', '/', 'e', 't', 'c', '/', 'p', 'a', 's', 's', 'w', 'd' };
-static uint8_t test_frame_path_traversal_encoded[] = { 0x08, 0x58, '%', '2', 'e', '%', '2', 'e', '%', '2', 'f', '%', '2', 'e', '%', '2', 'e', '%', '2', 'f', 'e', 't', 'c', '%', '2', 'f', 'p', 'a', 's', 's', 'w', 'd' };
-
-/* LDAP Injection */
-static uint8_t test_frame_ldap_injection[] = { 0x08, 0x59, '*', ')', '(', 'o', 'b', 'j', 'e', 'c', 't', 'C', 'l', 'a', 's', 's', '=', '*' };
 
 /* SSRF Attacks */
 static uint8_t test_frame_ssrf_localhost[] = { 0x08, 0x5A, 'h', 't', 't', 'p', ':', '/', '/', '1', '2', '7', '.', '0', '.', '0', '.', '1', ':', '2', '2' };
-static uint8_t test_frame_ss
+static uint8_t test_frame_ssrf_metadata[] = { 0x08, 0x5B, 'S', 'S', 'R', 'F', '_', 'M', 'E', 'T', 'A' };
 static uint8_t test_frame_csrf_attack[] = { 0x08, 0x42, 'c', 's', 'r', 'f', '_', 'a', 't', 't', 'a', 'c', 'k' };
 static uint8_t test_frame_clickjacking[] = { 0x08, 0x43, 'c', 'l', 'i', 'c', 'k', 'j', 'a', 'c', 'k', 'i', 'n', 'g' };
 static uint8_t test_frame_dom_clobbering[] = { 0x08, 0x44, 'd', 'o', 'm', '_', 'c', 'l', 'o', 'b', 'b', 'e', 'r' };
@@ -1285,19 +1269,17 @@ static uint8_t test_frame_uefi_bootkit[] = { 0x08, 0x80, 'U', 'E', 'F', 'I', '_'
 static uint8_t test_frame_smc_vulnerability[] = { 0x08, 0x81, 'S', 'M', 'C', '_', 'V', 'U', 'L', 'N' };
 static uint8_t test_frame_tpm_bypass[] = { 0x08, 0x82, 'T', 'P', 'M', '_', 'B', 'Y', 'P', 'A', 'S', 'S' };
 
+```
 /* === NEXT-GENERATION ATTACK VECTORS === */
+
+/* Additional missing definitions */
+static uint8_t test_frame_xxe_attack[] = { 0x08, 0x70, 'X', 'X', 'E', '_', 'A', 'T', 'T', 'A', 'C', 'K' };
 
 /* Advanced IoT Ecosystem Attacks */
 static uint8_t test_frame_iot_mesh_takeover[] = { 0x08, 0x82, 'i', 'o', 't', '_', 'm', 'e', 's', 'h', '_', 't', 'a', 'k', 'e', 'o', 'v', 'e', 'r' };
 static uint8_t test_frame_iot_swarm_botnet[] = { 0x08, 0x83, 'i', 'o', 't', '_', 's', 'w', 'a', 'r', 'm', '_', 'b', 'o', 't', 'n', 'e', 't' };
 static uint8_t test_frame_iot_sensor_spoofing[] = { 0x08, 0x84, 'i', 'o', 't', '_', 's', 'e', 'n', 's', 'o', 'r', '_', 's', 'p', 'o', 'o', 'f' };
-static uint8_t test_frame_iot_firmware_backdoor[] = { 0x08, 0x85, 'i', 'o', 't', '_', 'f', 'w', '_', 'b', 'a', 'c', 'k', 'd', 'o', 'o', 'r' };
-
-/* Advanced Cloud-Native Attacks */
-static uint8_t test_frame_multicloud_pivot[] = { 0x08, 0x86, 'm', 'u', 'l', 't', 'i', 'c', 'l', 'o', 'u', 'd', '_', 'p', 'i', 'v', 'o', 't' };
-static uint8_t test_frame_cloud_workload_injection[] = { 0x08, 0x87, 'c', 'l', 'o', 'u', 'd', '_', 'w', 'o', 'r', 'k', 'l', 'o', 'a', 'd' };
-static uint8_t test_frame_iac_poisoning[] = { 0x08, 0x88, 'i', 'a', 'c', '_', 'p', 'o', 'i', 's', 'o', 'n', 'i', 'n', 'g' };
-static uint8_t test_frame_cloud_metadata_abuse[] = { 0x08, 0x89, 'c', 'l', 'o', 'u', 'd', '_', 'm', 'e', 't', 'a', 'd', 'a', 't', 'a' };
+static uint8_t test_frame_iot_firmware_backdoor[] = { 0x08, 0x85, 'i', 'o', 't', '_', 'f', 'w', '_', 'b', 'a', 'c', 'k', 'd
 
 /* Financial Technology Attacks */
 static uint8_t test_frame_cbdc_attack[] = { 0x08, 0x8A, 'c', 'b', 'd', 'c', '_', 'a', 't', 't', 'a', 'c', 'k' };
