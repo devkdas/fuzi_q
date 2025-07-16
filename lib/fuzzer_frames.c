@@ -5216,6 +5216,20 @@ static uint8_t test_quic_max_streams_huge[] = { 0x12, 0xFF, 0xFF, 0xFF, 0xFF }; 
 static uint8_t test_quic_ncid_bad_seq[] = { 0x18, 0xFF, 0x00, 0x08, 0xAA,0xAA,0xAA,0xAA,0xAA,0xAA,0xAA,0xAA, 0xBB,0xBB,0xBB,0xBB,0xBB,0xBB,0xBB,0xBB,0xBB,0xBB,0xBB,0xBB,0xBB,0xBB,0xBB,0xBB }; // NEW_CONNECTION_ID with bad sequence
 static uint8_t test_quic_retire_seq_zero[] = { 0x19, 0x00 }; // RETIRE_CONNECTION_ID with sequence 0
 static uint8_t test_quic_path_challenge_predictable[] = { 0x1a, 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07 }; // PATH_CHALLENGE with predictable data
+
+// Additional QUIC negative test cases that were missing
+static uint8_t test_quic_reserved_frame_type[] = { 0x1f }; // Reserved frame type
+static uint8_t test_quic_stream_len_mismatch[] = { 0x0a, 0x01, 0x05, 'x', 'y' }; // STREAM with length mismatch
+static uint8_t test_quic_ack_future[] = { 0x02, 0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0x01, 0x00 }; // ACK for future packet
+static uint8_t test_quic_datagram_bad_len[] = { 0x30, 0x10, 'x' }; // DATAGRAM with bad length
+static uint8_t test_quic_stream_noncanon_varint[] = { 0x08, 0x40, 0x01, 't', 'e', 's', 't' }; // STREAM with non-canonical varint
+static uint8_t test_quic_conn_close_bad_frame_ref[] = { 0x1c, 0x01, 0xFF, 0x00 }; // CONNECTION_CLOSE with bad frame reference
+
+/* RFC 9204 (QPACK Instructions) Placeholders */
+/* Encoder Instructions */
+static uint8_t test_qpack_enc_set_dynamic_table_capacity[] = {0x20}; /* Placeholder: Set Dynamic Table Capacity (e.g., 001xxxxx) */
+static uint8_t test_qpack_enc_insert_with_name_ref[] = {0x80}; /* Placeholder: Insert With Name Reference (Indexed Name, e.g., 1xxxxxxx) */
+static uint8_t test_qpack_enc_insert_without_name_ref[] = {0x40}; /* Placeholder: Insert Without Name Reference (e.g., 0100xxxx) */
 static uint8_t test_qpack_enc_duplicate[] = {0x00}; /* Placeholder: Duplicate (e.g., 000xxxxx) */
 
 /* Decoder Instructions (as per prompt, acknowledging potential mismatch with RFC for "Set Dynamic Table Capacity") */
