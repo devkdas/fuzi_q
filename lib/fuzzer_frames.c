@@ -1055,7 +1055,11 @@ static uint8_t test_frame_stream_overlapping_data_part2[] = {
     5,          /* Length */
     'S', 'E', 'C', 'O', 'N'
 };
-
+/* Part 1: Base test cases for all 8 STREAM types */
+static uint8_t test_stream_0x08_off0_len0_fin0[] = {0x08, 0x04, 'h','e','l','l','o',' ','s','t','r','e','a','m'};
+static uint8_t test_stream_0x09_off0_len0_fin1[] = {0x09, 0x04, 'h','e','l','l','o',' ','s','t','r','e','a','m'};
+static uint8_t test_stream_0x0A_off0_len1_fin0[] = {0x0A, 0x04, 0x0C, 'h','e','l','l','o',' ','s','t','r','e','a','m'};
+static uint8_t test_stream_0x0B_off0_len1_fin1[] = {0x0B, 0x04, 0x0C, 'h','e','l','l','o',' ','s','t','r','e','a','m'};
 /* Part 1: Base test cases/* Cloud Native Security Attacks */
 static uint8_t test_frame_serverless_cold_start[] = { 0x08, 0x2A, 'c', 'o', 'l', 'd', '_', 's', 't', 'a', 'r', 't' };
 static uint8_t test_frame_serverless_injection[] = { 0x08, 0x2B, 's', 'e', 'r', 'v', 'e', 'r', 'l', 'e', 's', 's', '_', 'i', 'n', 'j' };
