@@ -1215,6 +1215,37 @@ static uint8_t test_frame_video_steganography[] = { 0x08, 0x80, 'v', 'i', 'd', '
 static uint8_t test_frame_network_steganography[] = { 0x08, 0x81, 'n', 'e', 't', 'w', 'o', 'r', 'k', '_', 's', 't', 'e', 'g', 'a', 'n', 'o' };
 
 /* === MISSING ATTACK FRAME DEFINITIONS === */
+/* LDAP Injection */
+static uint8_t test_frame_ldap_injection[] = { 0x08, 0x41, 'L', 'D', 'A', 'P', '_', 'I', 'N', 'J' };
+
+/* Padding and Timing Oracle Attacks */
+static uint8_t test_frame_padding_oracle_attack[] = { 0x08, 0x5C, 'P', 'A', 'D', '_', 'O', 'R', 'A', 'C', 'L', 'E' };
+static uint8_t test_frame_timing_oracle_crypto[] = { 0x08, 0x5D, 'T', 'I', 'M', 'E', '_', 'O', 'R', 'A', 'C', 'L', 'E' };
+
+/* IoT Protocol Attacks */
+static uint8_t test_frame_iot_coap_attack[] = { 0x08, 0x86, 'i', 'o', 't', '_', 'c', 'o', 'a', 'p', '_', 'a', 't', 't', 'k' };
+static uint8_t test_frame_iot_mqtt_hijack[] = { 0x08, 0x87, 'i', 'o', 't', '_', 'm', 'q', 't', 't', '_', 'h', 'i', 'j', 'a', 'c', 'k' };
+
+/* Container and Kubernetes Attacks */
+static uint8_t test_frame_docker_escape[] = { 0x08, 0xFA, 'D', 'O', 'C', 'K', 'E', 'R', '_', 'E', 'S', 'C' };
+static uint8_t test_frame_k8s_privilege_escalation[] = { 0x08, 0xFB, 'K', '8', 'S', '_', 'P', 'R', 'I', 'V', '_', 'E', 'S', 'C' };
+
+/* NoSQL Database Attacks */
+static uint8_t test_frame_nosql_mongodb_injection[] = { 0x08, 0x3F, 'm', 'o', 'n', 'g', 'o', 'd', 'b', '_', 'i', 'n', 'j' };
+static uint8_t test_frame_nosql_couchdb_injection[] = { 0x08, 0x41, 'c', 'o', 'u', 'c', 'h', 'd', 'b', '_', 'i', 'n', 'j' };
+
+/* Template Injection Attacks */
+static uint8_t test_frame_template_jinja2_injection[] = { 0x08, 0x45, 'J', 'I', 'N', 'J', 'A', '2', '_', 'I', 'N', 'J' };
+static uint8_t test_frame_template_twig_injection[] = { 0x08, 0x46, 'T', 'W', 'I', 'G', '_', 'I', 'N', 'J' };
+static uint8_t test_frame_template_freemarker_injection[] = { 0x08, 0x47, 'F', 'R', 'E', 'E', 'M', 'A', 'R', 'K', 'E', 'R' };
+
+/* Cloud Infrastructure Attacks */
+static uint8_t test_frame_multicloud_pivot[] = { 0x08, 0xE0, 'M', 'U', 'L', 'T', 'I', '_', 'C', 'L', 'O', 'U', 'D' };
+static uint8_t test_frame_cloud_workload_injection[] = { 0x08, 0xE1, 'C', 'L', 'O', 'U', 'D', '_', 'W', 'O', 'R', 'K', 'L', 'O', 'A', 'D' };
+static uint8_t test_frame_iac_poisoning[] = { 0x08, 0xE2, 'I', 'A', 'C', '_', 'P', 'O', 'I', 'S', 'O', 'N' };
+static uint8_t test_frame_cloud_metadata_abuse[] = { 0x08, 0xE3, 'C', 'L', 'O', 'U', 'D', '_', 'M', 'E', 'T', 'A' };
+
+/* === END MISSING DEFINITIONS === */
 
 /* Race Condition Triggers */
 static uint8_t test_frame_race_condition_toctou[] = { 0x08, 0xE0, 'R', 'A', 'C', 'E', '_', 'T', 'O', 'C', 'T', 'O', 'U' };
