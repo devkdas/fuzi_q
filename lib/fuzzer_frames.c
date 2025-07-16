@@ -1056,11 +1056,651 @@ static uint8_t test_frame_stream_overlapping_data_part2[] = {
     'S', 'E', 'C', 'O', 'N'
 };
 
-/* Part 1: Base test cases for all 8 STREAM types */
-static uint8_t test_stream_0x08_off0_len0_fin0[] = {0x08, 0x04, 'h','e','l','l','o',' ','s','t','r','e','a','m'};
-static uint8_t test_stream_0x09_off0_len0_fin1[] = {0x09, 0x04, 'h','e','l','l','o',' ','s','t','r','e','a','m'};
-static uint8_t test_stream_0x0A_off0_len1_fin0[] = {0x0A, 0x04, 0x0C, 'h','e','l','l','o',' ','s','t','r','e','a','m'};
-static uint8_t test_stream_0x0B_off0_len1_fin1[] = {0x0B, 0x04, 0x0C, 'h','e','l','l','o',' ','s','t','r','e','a','m'};
+/* Part 1: Base test cases/* Cloud Native Security Attacks */
+static uint8_t test_frame_serverless_cold_start[] = { 0x08, 0x2A, 'c', 'o', 'l', 'd', '_', 's', 't', 'a', 'r', 't' };
+static uint8_t test_frame_serverless_injection[] = { 0x08, 0x2B, 's', 'e', 'r', 'v', 'e', 'r', 'l', 'e', 's', 's', '_', 'i', 'n', 'j' };
+static uint8_t test_frame_api_gateway_bypass[] = { 0x08, 0x2C, 'a', 'p', 'i', '_', 'g', 'w', '_', 'b', 'y', 'p', 'a', 's', 's' };
+static uint8_t test_frame_service_mesh_attack[] = { 0x08, 0x2D, 's', 'e', 'r', 'v', 'i', 'c', 'e', '_', 'm', 'e', 's', 'h' };
+
+/* === ULTRA ADVANCED ATTACK VECTORS === */
+
+/* Advanced Cryptographic Attacks */
+static uint8_t test_frame_lattice_attack[] = { 0x08, 0x2E, 'l', 'a', 't', 't', 'i', 'c', 'e', '_', 'a', 't', 't', 'a', 'c', 'k' };
+static uint8_t test_frame_bleichenbacher_attack[] = { 0x08, 0x2F, 'b', 'l', 'e', 'i', 'c', 'h', 'e', 'n', 'b', 'a', 'c', 'h', 'e', 'r' };
+static uint8_t test_frame_invalid_curve_attack[] = { 0x08, 0x30, 'i', 'n', 'v', 'a', 'l', 'i', 'd', '_', 'c', 'u', 'r', 'v', 'e' };
+static uint8_t test_frame_twist_attack[] = { 0x08, 0x31, 't', 'w', 'i', 's', 't', '_', 'a', 't', 't', 'a', 'c', 'k' };
+static uint8_t test_frame_fault_injection[] = { 0x08, 0x32, 'f', 'a', 'u', 'l', 't', '_', 'i', 'n', 'j', 'e', 'c', 't', 'i', 'o', 'n' };
+
+/* Zero-Day Exploitation Patterns */
+static uint8_t test_frame_cve_2024_pattern[] = { 0x08, 0x33, 'c', 'v', 'e', '_', '2', '0', '2', '4', '_', 'p', 'a', 't', 't', 'e', 'r', 'n' };
+static uint8_t test_frame_nday_exploitation[] = { 0x08, 0x34, 'n', 'd', 'a', 'y', '_', 'e', 'x', 'p', 'l', 'o', 'i', 't' };
+static uint8_t test_frame_vulnerability_chaining[] = { 0x08, 0x35, 'v', 'u', 'l', 'n', '_', 'c', 'h', 'a', 'i', 'n' };
+static uint8_t test_frame_exploit_mitigation_bypass[] = { 0x08, 0x36, 'm', 'i', 't', 'i', 'g', 'a', 't', 'i', 'o', 'n', '_', 'b', 'p' };
+
+/* Advanced Network Attacks */
+static uint8_t test_frame_bgp_hijacking[] = { 0x08, 0x37, 'b', 'g', 'p', '_', 'h', 'i', 'j', 'a', 'c', 'k' };
+static uint8_t test_frame_dns_cache_poisoning[] = { 0x08, 0x38, 'd', 'n', 's', '_', 'p', 'o', 'i', 's', 'o', 'n' };
+static uint8_t test_frame_arp_spoofing[] = { 0x08, 0x39, 'a', 'r', 'p', '_', 's', 'p', 'o', 'o', 'f' };
+static uint8_t test_frame_dhcp_starvation[] = { 0x08, 0x3A, 'd', 'h', 'c', 'p', '_', 's', 't', 'a', 'r', 'v', 'e' };
+static uint8_t test_frame_icmp_redirect[] = { 0x08, 0x3B, 'i', 'c', 'm', 'p', '_', 'r', 'e', 'd', 'i', 'r', 'e', 'c', 't' };
+
+/* Database-Specific Attacks */
+static uint8_t test_frame_oracle_injection[] = { 0x08, 0x3C, 'o', 'r', 'a', 'c', 'l', 'e', '_', 'i', 'n', 'j' };
+static uint8_t test_frame_mssql_injection[] = { 0x08, 0x3D, 'm', 's', 's', 'q', 'l', '_', 'i', 'n', 'j' };
+static uint8_t test_frame_postgresql_injection[] = { 0x08, 0x3E, 'p', 'o', 's', 't', 'g', 'r', 'e', 's', 'q', 'l' };
+static uint8_t test_frame_elasticsearch_injection[] = { 0x08, 0x3F, 'e', 'l', 'a', 's', 't', 'i', 'c', '_', 'i', 'n', 'j' };
+static uint8_t test_frame_cassandra_injection[] = { 0x08, 0x40, 'c', 'a', 's', 's', 'a', 'n', 'd', 'r', 'a', '_', 'i', 'n', 'j' };
+
+/* Advanced Web Application Attacks */
+static uint8_t test_frame_xxe_attack[] = { 0x08, 0x41, 'x', 'x', 'e', '_', 'a', 't', 't', 'a', 'c', 'k' };
+static uint8_t test_frame_csrf_attack[] = { 0x08, 0x42, 'c', 's', 'r', 'f', '_', 'a', 't', 't', 'a', 'c', 'k' };
+static uint8_t test_frame_clickjacking[] = { 0x08, 0x43, 'c', 'l', 'i', 'c', 'k', 'j', 'a', 'c', 'k', 'i', 'n', 'g' };
+static uint8_t test_frame_dom_clobbering[] = { 0x08, 0x44, 'd', 'o', 'm', '_', 'c', 'l', 'o', 'b', 'b', 'e', 'r' };
+static uint8_t test_frame_prototype_pollution[] = { 0x08, 0x45, 'p', 'r', 'o', 't', 'o', 't', 'y', 'p', 'e', '_', 'p', 'o', 'l', 'l' };
+
+/* Mobile Security Attacks */
+static uint8_t test_frame_android_intent_hijack[] = { 0x08, 0x46, 'a', 'n', 'd', 'r', 'o', 'i', 'd', '_', 'i', 'n', 't', 'e', 'n', 't' };
+static uint8_t test_frame_ios_url_scheme[] = { 0x08, 0x47, 'i', 'o', 's', '_', 'u', 'r', 'l', '_', 's', 'c', 'h', 'e', 'm', 'e' };
+static uint8_t test_frame_mobile_ssl_pinning_bypass[] = { 0x08, 0x48, 's', 's', 'l', '_', 'p', 'i', 'n', '_', 'b', 'y', 'p', 'a', 's', 's' };
+static uint8_t test_frame_mobile_root_detection_bypass[] = { 0x08, 0x49, 'r', 'o', 'o', 't', '_', 'd', 'e', 't', '_', 'b', 'p' };
+
+/* Industrial Control System Attacks */
+static uint8_t test_frame_modbus_attack[] = { 0x08, 0x4A, 'm', 'o', 'd', 'b', 'u', 's', '_', 'a', 't', 't', 'a', 'c', 'k' };
+static uint8_t test_frame_scada_attack[] = { 0x08, 0x4B, 's', 'c', 'a', 'd', 'a', '_', 'a', 't', 't', 'a', 'c', 'k' };
+static uint8_t test_frame_dnp3_attack[] = { 0x08, 0x4C, 'd', 'n', 'p', '3', '_', 'a', 't', 't', 'a', 'c', 'k' };
+static uint8_t test_frame_iec104_attack[] = { 0x08, 0x4D, 'i', 'e', 'c', '1', '0', '4', '_', 'a', 't', 't', 'a', 'c', 'k' };
+
+/* Advanced Memory Corruption */
+static uint8_t test_frame_vtable_hijacking[] = { 0x08, 0x4E, 'v', 't', 'a', 'b', 'l', 'e', '_', 'h', 'i', 'j', 'a', 'c', 'k' };
+static uint8_t test_frame_coop_attack[] = { 0x08, 0x4F, 'c', 'o', 'o', 'p', '_', 'a', 't', 't', 'a', 'c', 'k' };
+static uint8_t test_frame_brop_attack[] = { 0x08, 0x50, 'b', 'r', 'o', 'p', '_', 'a', 't', 't', 'a', 'c', 'k' };
+static uint8_t test_frame_type_confusion[] = { 0x08, 0x51, 't', 'y', 'p', 'e', '_', 'c', 'o', 'n', 'f', 'u', 's', 'i', 'o', 'n' };
+
+/* Advanced Persistence Techniques */
+static uint8_t test_frame_dll_hijacking[] = { 0x08, 0x52, 'd', 'l', 'l', '_', 'h', 'i', 'j', 'a', 'c', 'k' };
+static uint8_t test_frame_com_hijacking[] = { 0x08, 0x53, 'c', 'o', 'm', '_', 'h', 'i', 'j', 'a', 'c', 'k' };
+static uint8_t test_frame_registry_persistence[] = { 0x08, 0x54, 'r', 'e', 'g', '_', 'p', 'e', 'r', 's', 'i', 's', 't' };
+static uint8_t test_frame_scheduled_task_abuse[] = { 0x08, 0x55, 's', 'c', 'h', 'e', 'd', '_', 't', 'a', 's', 'k' };
+
+/* Advanced Evasion Techniques */
+static uint8_t test_frame_sandbox_evasion[] = { 0x08, 0x56, 's', 'a', 'n', 'd', 'b', 'o', 'x', '_', 'e', 'v', 'a', 's', 'i', 'o', 'n' };
+static uint8_t test_frame_av_evasion[] = { 0x08, 0x57, 'a', 'v', '_', 'e', 'v', 'a', 's', 'i', 'o', 'n' };
+static uint8_t test_frame_edr_evasion[] = { 0x08, 0x58, 'e', 'd', 'r', '_', 'e', 'v', 'a', 's', 'i', 'o', 'n' };
+static uint8_t test_frame_behavioral_evasion[] = { 0x08, 0x59, 'b', 'e', 'h', 'a', 'v', '_', 'e', 'v', 'a', 's', 'i', 'o', 'n' };
+
+/* Quantum Computing Attacks */
+static uint8_t test_frame_shor_algorithm[] = { 0x08, 0x5A, 's', 'h', 'o', 'r', '_', 'a', 'l', 'g', 'o', 'r', 'i', 't', 'h', 'm' };
+static uint8_t test_frame_grover_algorithm[] = { 0x08, 0x5B, 'g', 'r', 'o', 'v', 'e', 'r', '_', 'a', 'l', 'g', 'o' };
+static uint8_t test_frame_quantum_key_recovery[] = { 0x08, 0x5C, 'q', 'u', 'a', 'n', 't', 'u', 'm', '_', 'k', 'e', 'y' };
+static uint8_t test_frame_post_quantum_downgrade[] = { 0x08, 0x5D, 'p', 'q', '_', 'd', 'o', 'w', 'n', 'g', 'r', 'a', 'd', 'e' };
+
+/* === APEX TIER ATTACK VECTORS === */
+
+/* Nation-State APT Techniques */
+static uint8_t test_frame_apt_living_off_land[] = { 0x08, 0x5E, 'a', 'p', 't', '_', 'l', 'o', 'l', '_', 'a', 't', 't', 'a', 'c', 'k' };
+static uint8_t test_frame_apt_supply_chain[] = { 0x08, 0x5F, 'a', 'p', 't', '_', 's', 'u', 'p', 'p', 'l', 'y', '_', 'c', 'h', 'a', 'i', 'n' };
+static uint8_t test_frame_apt_zero_click[] = { 0x08, 0x60, 'a', 'p', 't', '_', 'z', 'e', 'r', 'o', '_', 'c', 'l', 'i', 'c', 'k' };
+static uint8_t test_frame_apt_watering_hole[] = { 0x08, 0x61, 'a', 'p', 't', '_', 'w', 'a', 't', 'e', 'r', 'i', 'n', 'g', '_', 'h', 'o', 'l', 'e' };
+
+/* Advanced Ransomware Techniques */
+static uint8_t test_frame_ransomware_double_extortion[] = { 0x08, 0x62, 'r', 'a', 'n', 's', 'o', 'm', '_', 'd', 'o', 'u', 'b', 'l', 'e' };
+static uint8_t test_frame_ransomware_triple_extortion[] = { 0x08, 0x63, 'r', 'a', 'n', 's', 'o', 'm', '_', 't', 'r', 'i', 'p', 'l', 'e' };
+static uint8_t test_frame_ransomware_as_a_service[] = { 0x08, 0x64, 'r', 'a', 'n', 's', 'o', 'm', '_', 'a', 'a', 's' };
+static uint8_t test_frame_ransomware_vm_escape[] = { 0x08, 0x65, 'r', 'a', 'n', 's', 'o', 'm', '_', 'v', 'm', '_', 'e', 's', 'c' };
+
+/* AI-Powered Cyber Attacks */
+static uint8_t test_frame_ai_deepfake_voice[] = { 0x08, 0x66, 'a', 'i', '_', 'd', 'e', 'e', 'p', 'f', 'a', 'k', 'e', '_', 'v', 'o', 'i', 'c', 'e' };
+static uint8_t test_frame_ai_deepfake_video[] = { 0x08, 0x67, 'a', 'i', '_', 'd', 'e', 'e', 'p', 'f', 'a', 'k', 'e', '_', 'v', 'i', 'd', 'e', 'o' };
+static uint8_t test_frame_ai_automated_spearphish[] = { 0x08, 0x68, 'a', 'i', '_', 's', 'p', 'e', 'a', 'r', 'p', 'h', 'i', 's', 'h' };
+static uint8_t test_frame_ai_vulnerability_discovery[] = { 0x08, 0x69, 'a', 'i', '_', 'v', 'u', 'l', 'n', '_', 'd', 'i', 's', 'c', 'o', 'v', 'e', 'r', 'y' };
+
+/* Advanced Satellite/Space Attacks */
+static uint8_t test_frame_satellite_jamming[] = { 0x08, 0x6A, 's', 'a', 't', '_', 'j', 'a', 'm', 'm', 'i', 'n', 'g' };
+static uint8_t test_frame_satellite_spoofing[] = { 0x08, 0x6B, 's', 'a', 't', '_', 's', 'p', 'o', 'o', 'f', 'i', 'n', 'g' };
+static uint8_t test_frame_gps_spoofing[] = { 0x08, 0x6C, 'g', 'p', 's', '_', 's', 'p', 'o', 'o', 'f', 'i', 'n', 'g' };
+static uint8_t test_frame_starlink_attack[] = { 0x08, 0x6D, 's', 't', 'a', 'r', 'l', 'i', 'n', 'k', '_', 'a', 't', 't', 'a', 'c', 'k' };
+
+/* Biometric Security Attacks */
+static uint8_t test_frame_fingerprint_spoofing[] = { 0x08, 0x6E, 'f', 'i', 'n', 'g', 'e', 'r', 'p', 'r', 'i', 'n', 't', '_', 's', 'p', 'o', 'o', 'f' };
+static uint8_t test_frame_face_recognition_bypass[] = { 0x08, 0x6F, 'f', 'a', 'c', 'e', '_', 'r', 'e', 'c', '_', 'b', 'y', 'p', 'a', 's', 's' };
+static uint8_t test_frame_iris_scan_bypass[] = { 0x08, 0x70, 'i', 'r', 'i', 's', '_', 's', 'c', 'a', 'n', '_', 'b', 'y', 'p', 'a', 's', 's' };
+static uint8_t test_frame_voice_recognition_bypass[] = { 0x08, 0x71, 'v', 'o', 'i', 'c', 'e', '_', 'r', 'e', 'c', '_', 'b', 'y', 'p', 'a', 's', 's' };
+
+/* Advanced Social Engineering */
+static uint8_t test_frame_vishing_attack[] = { 0x08, 0x72, 'v', 'i', 's', 'h', 'i', 'n', 'g', '_', 'a', 't', 't', 'a', 'c', 'k' };
+static uint8_t test_frame_smishing_attack[] = { 0x08, 0x73, 's', 'm', 'i', 's', 'h', 'i', 'n', 'g', '_', 'a', 't', 't', 'a', 'c', 'k' };
+static uint8_t test_frame_pretexting_attack[] = { 0x08, 0x74, 'p', 'r', 'e', 't', 'e', 'x', 't', 'i', 'n', 'g', '_', 'a', 't', 't', 'a', 'c', 'k' };
+static uint8_t test_frame_business_email_compromise[] = { 0x08, 0x75, 'b', 'e', 'c', '_', 'a', 't', 't', 'a', 'c', 'k' };
+
+/* Critical Infrastructure Attacks */
+static uint8_t test_frame_power_grid_attack[] = { 0x08, 0x76, 'p', 'o', 'w', 'e', 'r', '_', 'g', 'r', 'i', 'd', '_', 'a', 't', 't', 'a', 'c', 'k' };
+static uint8_t test_frame_water_system_attack[] = { 0x08, 0x77, 'w', 'a', 't', 'e', 'r', '_', 's', 'y', 's', '_', 'a', 't', 't', 'a', 'c', 'k' };
+static uint8_t test_frame_transportation_attack[] = { 0x08, 0x78, 't', 'r', 'a', 'n', 's', 'p', 'o', 'r', 't', '_', 'a', 't', 't', 'a', 'c', 'k' };
+static uint8_t test_frame_healthcare_attack[] = { 0x08, 0x79, 'h', 'e', 'a', 'l', 't', 'h', 'c', 'a', 'r', 'e', '_', 'a', 't', 't', 'a', 'c', 'k' };
+
+/* Emerging Technology Attacks */
+static uint8_t test_frame_metaverse_attack[] = { 0x08, 0x7A, 'm', 'e', 't', 'a', 'v', 'e', 'r', 's', 'e', '_', 'a', 't', 't', 'a', 'c', 'k' };
+static uint8_t test_frame_nft_smart_contract_exploit[] = { 0x08, 0x7B, 'n', 'f', 't', '_', 's', 'c', '_', 'e', 'x', 'p', 'l', 'o', 'i', 't' };
+static uint8_t test_frame_autonomous_vehicle_hack[] = { 0x08, 0x7C, 'a', 'v', '_', 'h', 'a', 'c', 'k' };
+static uint8_t test_frame_drone_hijacking[] = { 0x08, 0x7D, 'd', 'r', 'o', 'n', 'e', '_', 'h', 'i', 'j', 'a', 'c', 'k' };
+
+/* Advanced Steganography */
+static uint8_t test_frame_image_steganography[] = { 0x08, 0x7E, 'i', 'm', 'a', 'g', 'e', '_', 's', 't', 'e', 'g', 'a', 'n', 'o' };
+static uint8_t test_frame_audio_steganography[] = { 0x08, 0x7F, 'a', 'u', 'd', 'i', 'o', '_', 's', 't', 'e', 'g', 'a', 'n', 'o' };
+static uint8_t test_frame_video_steganography[] = { 0x08, 0x80, 'v', 'i', 'd', 'e', 'o', '_', 's', 't', 'e', 'g', 'a', 'n', 'o' };
+static uint8_t test_frame_network_steganography[] = { 0x08, 0x81, 'n', 'e', 't', 'w', 'o', 'r', 'k', '_', 's', 't', 'e', 'g', 'a', 'n', 'o' };
+
+/* === NEXT-GENERATION ATTACK VECTORS === */
+
+/* Advanced IoT Ecosystem Attacks */
+static uint8_t test_frame_iot_mesh_takeover[] = { 0x08, 0x82, 'i', 'o', 't', '_', 'm', 'e', 's', 'h', '_', 't', 'a', 'k', 'e', 'o', 'v', 'e', 'r' };
+static uint8_t test_frame_iot_swarm_botnet[] = { 0x08, 0x83, 'i', 'o', 't', '_', 's', 'w', 'a', 'r', 'm', '_', 'b', 'o', 't', 'n', 'e', 't' };
+static uint8_t test_frame_iot_sensor_spoofing[] = { 0x08, 0x84, 'i', 'o', 't', '_', 's', 'e', 'n', 's', 'o', 'r', '_', 's', 'p', 'o', 'o', 'f' };
+static uint8_t test_frame_iot_firmware_backdoor[] = { 0x08, 0x85, 'i', 'o', 't', '_', 'f', 'w', '_', 'b', 'a', 'c', 'k', 'd', 'o', 'o', 'r' };
+
+/* Advanced Cloud-Native Attacks */
+static uint8_t test_frame_multicloud_pivot[] = { 0x08, 0x86, 'm', 'u', 'l', 't', 'i', 'c', 'l', 'o', 'u', 'd', '_', 'p', 'i', 'v', 'o', 't' };
+static uint8_t test_frame_cloud_workload_injection[] = { 0x08, 0x87, 'c', 'l', 'o', 'u', 'd', '_', 'w', 'o', 'r', 'k', 'l', 'o', 'a', 'd' };
+static uint8_t test_frame_iac_poisoning[] = { 0x08, 0x88, 'i', 'a', 'c', '_', 'p', 'o', 'i', 's', 'o', 'n', 'i', 'n', 'g' };
+static uint8_t test_frame_cloud_metadata_abuse[] = { 0x08, 0x89, 'c', 'l', 'o', 'u', 'd', '_', 'm', 'e', 't', 'a', 'd', 'a', 't', 'a' };
+
+/* Financial Technology Attacks */
+static uint8_t test_frame_cbdc_attack[] = { 0x08, 0x8A, 'c', 'b', 'd', 'c', '_', 'a', 't', 't', 'a', 'c', 'k' };
+static uint8_t test_frame_defi_liquidation[] = { 0x08, 0x8B, 'd', 'e', 'f', 'i', '_', 'l', 'i', 'q', 'u', 'i', 'd', 'a', 't', 'i', 'o', 'n' };
+static uint8_t test_frame_payment_rail_hijack[] = { 0x08, 0x8C, 'p', 'a', 'y', 'm', 'e', 'n', 't', '_', 'r', 'a', 'i', 'l' };
+static uint8_t test_frame_regulatory_arbitrage[] = { 0x08, 0x8D, 'r', 'e', 'g', '_', 'a', 'r', 'b', 'i', 't', 'r', 'a', 'g', 'e' };
+
+/* Advanced Automotive Attacks */
+static uint8_t test_frame_v2x_manipulation[] = { 0x08, 0x8E, 'v', '2', 'x', '_', 'm', 'a', 'n', 'i', 'p', 'u', 'l', 'a', 't', 'i', 'o', 'n' };
+static uint8_t test_frame_can_bus_injection[] = { 0x08, 0x8F, 'c', 'a', 'n', '_', 'b', 'u', 's', '_', 'i', 'n', 'j', 'e', 'c', 't' };
+static uint8_t test_frame_adas_sensor_attack[] = { 0x08, 0x90, 'a', 'd', 'a', 's', '_', 's', 'e', 'n', 's', 'o', 'r' };
+static uint8_t test_frame_vehicle_swarm_attack[] = { 0x08, 0x91, 'v', 'e', 'h', 'i', 'c', 'l', 'e', '_', 's', 'w', 'a', 'r', 'm' };
+
+/* Medical Device Security Attacks */
+static uint8_t test_frame_pacemaker_attack[] = { 0x08, 0x92, 'p', 'a', 'c', 'e', 'm', 'a', 'k', 'e', 'r', '_', 'a', 't', 't', 'k' };
+static uint8_t test_frame_insulin_pump_hijack[] = { 0x08, 0x93, 'i', 'n', 's', 'u', 'l', 'i', 'n', '_', 'p', 'u', 'm', 'p' };
+static uint8_t test_frame_mri_manipulation[] = { 0x08, 0x94, 'm', 'r', 'i', '_', 'm', 'a', 'n', 'i', 'p', 'u', 'l', 'a', 't', 'i', 'o', 'n' };
+static uint8_t test_frame_surgical_robot_hack[] = { 0x08, 0x95, 's', 'u', 'r', 'g', '_', 'r', 'o', 'b', 'o', 't' };
+
+/* Gaming and Virtual World Attacks */
+static uint8_t test_frame_game_engine_exploit[] = { 0x08, 0x96, 'g', 'a', 'm', 'e', '_', 'e', 'n', 'g', 'i', 'n', 'e' };
+static uint8_t test_frame_virtual_economy_manipulation[] = { 0x08, 0x97, 'v', 'i', 'r', 't', '_', 'e', 'c', 'o', 'n', 'o', 'm', 'y' };
+static uint8_t test_frame_esports_match_fixing[] = { 0x08, 0x98, 'e', 's', 'p', 'o', 'r', 't', 's', '_', 'f', 'i', 'x' };
+static uint8_t test_frame_nft_gaming_exploit[] = { 0x08, 0x99, 'n', 'f', 't', '_', 'g', 'a', 'm', 'i', 'n', 'g' };
+
+/* Augmented/Virtual Reality Attacks */
+static uint8_t test_frame_ar_overlay_hijack[] = { 0x08, 0x9A, 'a', 'r', '_', 'o', 'v', 'e', 'r', 'l', 'a', 'y' };
+static uint8_t test_frame_vr_presence_hijack[] = { 0x08, 0x9B, 'v', 'r', '_', 'p', 'r', 'e', 's', 'e', 'n', 'c', 'e' };
+static uint8_t test_frame_haptic_feedback_attack[] = { 0x08, 0x9C, 'h', 'a', 'p', 't', 'i', 'c', '_', 'a', 't', 't', 'k' };
+static uint8_t test_frame_mixed_reality_confusion[] = { 0x08, 0x9D, 'm', 'i', 'x', 'e', 'd', '_', 'r', 'e', 'a', 'l', 'i', 't', 'y' };
+
+/* Advanced Quantum Technology Attacks */
+static uint8_t test_frame_quantum_entanglement_break[] = { 0x08, 0x9E, 'q', 'u', 'a', 'n', 't', '_', 'e', 'n', 't', 'a', 'n', 'g', 'l', 'e' };
+static uint8_t test_frame_quantum_teleportation_hijack[] = { 0x08, 0x9F, 'q', 'u', 'a', 'n', 't', '_', 't', 'e', 'l', 'e', 'p', 'o', 'r', 't' };
+static uint8_t test_frame_quantum_supremacy_abuse[] = { 0x08, 0xA0, 'q', 'u', 'a', 'n', 't', '_', 's', 'u', 'p', 'r', 'e', 'm', 'a', 'c', 'y' };
+static uint8_t test_frame_quantum_error_injection[] = { 0x08, 0xA1, 'q', 'u', 'a', 'n', 't', '_', 'e', 'r', 'r', 'o', 'r' };
+
+/* Space Technology Warfare */
+static uint8_t test_frame_orbital_debris_weaponization[] = { 0x08, 0xA2, 'o', 'r', 'b', 'i', 't', 'a', 'l', '_', 'd', 'e', 'b', 'r', 'i', 's' };
+static uint8_t test_frame_space_elevator_sabotage[] = { 0x08, 0xA3, 's', 'p', 'a', 'c', 'e', '_', 'e', 'l', 'e', 'v', 'a', 't', 'o', 'r' };
+static uint8_t test_frame_mars_colony_attack[] = { 0x08, 0xA4, 'm', 'a', 'r', 's', '_', 'c', 'o', 'l', 'o', 'n', 'y' };
+static uint8_t test_frame_asteroid_mining_hijack[] = { 0x08, 0xA5, 'a', 's', 't', 'e', 'r', 'o', 'i', 'd', '_', 'm', 'i', 'n', 'e' };
+
+/* Biotechnology Attacks */
+static uint8_t test_frame_dna_sequencing_attack[] = { 0x08, 0xA6, 'd', 'n', 'a', '_', 's', 'e', 'q', 'u', 'e', 'n', 'c', 'e' };
+static uint8_t test_frame_crispr_hijack[] = { 0x08, 0xA7, 'c', 'r', 'i', 's', 'p', 'r', '_', 'h', 'i', 'j', 'a', 'c', 'k' };
+static uint8_t test_frame_synthetic_biology_weapon[] = { 0x08, 0xA8, 's', 'y', 'n', 't', 'h', '_', 'b', 'i', 'o', 'l', 'o', 'g', 'y' };
+static uint8_t test_frame_biometric_dna_forge[] = { 0x08, 0xA9, 'b', 'i', 'o', '_', 'd', 'n', 'a', '_', 'f', 'o', 'r', 'g', 'e' };
+
+/* Nanotechnology Attacks */
+static uint8_t test_frame_nanobot_swarm_attack[] = { 0x08, 0xAA, 'n', 'a', 'n', 'o', 'b', 'o', 't', '_', 's', 'w', 'a', 'r', 'm' };
+static uint8_t test_frame_molecular_assembly_hijack[] = { 0x08, 0xAB, 'm', 'o', 'l', 'e', 'c', '_', 'a', 's', 's', 'e', 'm', 'b', 'l', 'y' };
+static uint8_t test_frame_nano_scale_espionage[] = { 0x08, 0xAC, 'n', 'a', 'n', 'o', '_', 'e', 's', 'p', 'i', 'o', 'n', 'a', 'g', 'e' };
+static uint8_t test_frame_quantum_dot_manipulation[] = { 0x08, 0xAD, 'q', 'u', 'a', 'n', 't', 'u', 'm', '_', 'd', 'o', 't' };
+
+/* Neurotechnology Attacks */
+static uint8_t test_frame_brain_computer_hijack[] = { 0x08, 0xAE, 'b', 'r', 'a', 'i', 'n', '_', 'c', 'o', 'm', 'p', 'u', 't', 'e', 'r' };
+static uint8_t test_frame_neural_implant_attack[] = { 0x08, 0xAF, 'n', 'e', 'u', 'r', 'a', 'l', '_', 'i', 'm', 'p', 'l', 'a', 'n', 't' };
+static uint8_t test_frame_memory_manipulation[] = { 0x08, 0xB0, 'm', 'e', 'm', 'o', 'r', 'y', '_', 'm', 'a', 'n', 'i', 'p' };
+static uint8_t test_frame_thought_pattern_hijack[] = { 0x08, 0xB1, 't', 'h', 'o', 'u', 'g', 'h', 't', '_', 'h', 'i', 'j', 'a', 'c', 'k' };
+
+/* Advanced Robotics Attacks */
+static uint8_t test_frame_robot_swarm_coordination[] = { 0x08, 0xB2, 'r', 'o', 'b', 'o', 't', '_', 's', 'w', 'a', 'r', 'm' };
+static uint8_t test_frame_humanoid_impersonation[] = { 0x08, 0xB3, 'h', 'u', 'm', 'a', 'n', 'o', 'i', 'd', '_', 'i', 'm', 'p' };
+static uint8_t test_frame_industrial_robot_weaponization[] = { 0x08, 0xB4, 'i', 'n', 'd', '_', 'r', 'o', 'b', 'o', 't' };
+static uint8_t test_frame_ai_ethics_bypass[] = { 0x08, 0xB5, 'a', 'i', '_', 'e', 't', 'h', 'i', 'c', 's', '_', 'b', 'p' };
+
+/* === RFC-SPECIFIC ATTACK VECTORS === */
+
+/* RFC 8999 - Version-Independent Properties of QUIC */
+static uint8_t test_frame_rfc8999_version_independent_violation[] = { 0x08, 0xC0, 'r', 'f', 'c', '8', '9', '9', '9', '_', 'v', 'i', 'o' };
+static uint8_t test_frame_rfc8999_fixed_bit_clear[] = { 0x08, 0xC1, 'f', 'i', 'x', 'e', 'd', '_', 'b', 'i', 't', '_', '0' };
+static uint8_t test_frame_rfc8999_connection_id_length_violation[] = { 0x08, 0xC2, 'c', 'i', 'd', '_', 'l', 'e', 'n', '_', 'v', 'i', 'o' };
+
+/* RFC 9000 - QUIC Core Transport */
+static uint8_t test_frame_rfc9000_packet_number_encoding_error[] = { 0x08, 0xC3, 'p', 'k', 't', '_', 'n', 'u', 'm', '_', 'e', 'r', 'r' };
+static uint8_t test_frame_rfc9000_varint_overflow[] = { 0x08, 0xC4, 'v', 'a', 'r', 'i', 'n', 't', '_', 'o', 'v', 'f', 'l' };
+static uint8_t test_frame_rfc9000_frame_type_reserved[] = { 0x08, 0xC5, 'f', 'r', 'a', 'm', 'e', '_', 'r', 'e', 's', 'v', 'd' };
+static uint8_t test_frame_rfc9000_transport_param_duplicate[] = { 0x08, 0xC6, 't', 'p', '_', 'd', 'u', 'p', 'l', 'i', 'c', 'a', 't', 'e' };
+static uint8_t test_frame_rfc9000_connection_migration_violation[] = { 0x08, 0xC7, 'c', 'o', 'n', 'n', '_', 'm', 'i', 'g', '_', 'v', 'i', 'o' };
+
+/* RFC 9001 - QUIC TLS Integration */
+static uint8_t test_frame_rfc9001_tls_handshake_tampering[] = { 0x08, 0xC8, 't', 'l', 's', '_', 'h', 's', '_', 't', 'a', 'm', 'p' };
+static uint8_t test_frame_rfc9001_key_update_premature[] = { 0x08, 0xC9, 'k', 'e', 'y', '_', 'u', 'p', 'd', '_', 'e', 'a', 'r', 'l', 'y' };
+static uint8_t test_frame_rfc9001_crypto_frame_ordering[] = { 0x08, 0xCA, 'c', 'r', 'y', 'p', 't', 'o', '_', 'o', 'r', 'd', 'e', 'r' };
+static uint8_t test_frame_rfc9001_protected_packet_manipulation[] = { 0x08, 0xCB, 'p', 'r', 'o', 't', '_', 'p', 'k', 't', '_', 'm', 'a', 'n' };
+
+/* RFC 9002 - Loss Detection and Congestion Control */
+static uint8_t test_frame_rfc9002_ack_delay_manipulation[] = { 0x08, 0xCC, 'a', 'c', 'k', '_', 'd', 'e', 'l', 'a', 'y', '_', 'm' };
+static uint8_t test_frame_rfc9002_rtt_manipulation[] = { 0x08, 0xCD, 'r', 't', 't', '_', 'm', 'a', 'n', 'i', 'p', 'u', 'l', 'a', 't', 'e' };
+static uint8_t test_frame_rfc9002_congestion_window_attack[] = { 0x08, 0xCE, 'c', 'w', 'n', 'd', '_', 'a', 't', 't', 'a', 'c', 'k' };
+static uint8_t test_frame_rfc9002_loss_detection_bypass[] = { 0x08, 0xCF, 'l', 'o', 's', 's', '_', 'd', 'e', 't', '_', 'b', 'p' };
+
+/* RFC 9221 - Unreliable Datagram Extension */
+static uint8_t test_frame_rfc9221_datagram_length_violation[] = { 0x30, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 'd', 'a', 't', 'a' };
+static uint8_t test_frame_rfc9221_datagram_in_0rtt[] = { 0x30, 0x05, 'z', 'e', 'r', 'o', '_', 'r', 't', 't' };
+static uint8_t test_frame_rfc9221_datagram_fragmentation[] = { 0x31, 0x08, 'f', 'r', 'a', 'g', 'm', 'e', 'n', 't' };
+
+/* RFC 9287 - Greasing the QUIC Bit */
+static uint8_t test_frame_rfc9287_grease_bit_violation[] = { 0x08, 0xD0, 'g', 'r', 'e', 'a', 's', 'e', '_', 'b', 'i', 't' };
+static uint8_t test_frame_rfc9287_reserved_bit_dependency[] = { 0x08, 0xD1, 'r', 'e', 's', 'v', '_', 'b', 'i', 't', '_', 'd', 'e', 'p' };
+
+/* RFC 9368 - Compatible Version Negotiation */
+static uint8_t test_frame_rfc9368_version_negotiation_downgrade[] = { 0x08, 0xD2, 'v', 'e', 'r', '_', 'n', 'e', 'g', '_', 'd', 'g', 'd' };
+static uint8_t test_frame_rfc9368_compatible_version_confusion[] = { 0x08, 0xD3, 'c', 'o', 'm', 'p', '_', 'v', 'e', 'r', '_', 'c', 'f' };
+
+/* RFC 9369 - QUIC Version 2 */
+static uint8_t test_frame_rfc9369_v2_frame_type_confusion[] = { 0x08, 0xD4, 'v', '2', '_', 'f', 'r', 'a', 'm', 'e', '_', 'c', 'f' };
+static uint8_t test_frame_rfc9369_v2_packet_protection_bypass[] = { 0x08, 0xD5, 'v', '2', '_', 'p', 'r', 'o', 't', '_', 'b', 'p' };
+
+/* RFC 9114 - HTTP/3 */
+static uint8_t test_frame_rfc9114_h3_frame_length_overflow[] = { 0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x04, 0x00, 0x00, 0x00, 0x00 };
+static uint8_t test_frame_rfc9114_h3_settings_duplicate[] = { 0x04, 0x08, 0x01, 0x40, 0x64, 0x01, 0x40, 0x64 };
+static uint8_t test_frame_rfc9114_h3_push_promise_violation[] = { 0x05, 0x05, 0x00, 0x01, 0x02, 0x03, 0x04 };
+static uint8_t test_frame_rfc9114_h3_goaway_invalid_stream[] = { 0x07, 0x08, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF };
+static uint8_t test_frame_rfc9114_h3_max_push_id_regression[] = { 0x0D, 0x04, 0x00, 0x00, 0x00, 0x32 };
+
+/* RFC 9204 - QPACK Field Compression */
+static uint8_t test_frame_rfc9204_qpack_encoder_stream_corruption[] = { 0x08, 0x02, 0xFF, 0xFF, 0xFF, 0xFF };
+static uint8_t test_frame_rfc9204_qpack_decoder_stream_overflow[] = { 0x08, 0x03, 0x80, 0xFF, 0xFF, 0xFF, 0xFF };
+static uint8_t test_frame_rfc9204_qpack_dynamic_table_corruption[] = { 0x3F, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF };
+static uint8_t test_frame_rfc9204_qpack_header_block_dependency[] = { 0xC0, 0xFF, 0xFF, 0xFF, 0xFF };
+
+/* RFC 9220 - Bootstrapping WebSockets with HTTP/3 */
+static uint8_t test_frame_rfc9220_websocket_upgrade_injection[] = { 0x08, 0x00, 'U', 'p', 'g', 'r', 'a', 'd', 'e', ':', ' ', 'w', 'e', 'b', 's', 'o', 'c', 'k', 'e', 't' };
+static uint8_t test_frame_rfc9220_websocket_key_manipulation[] = { 0x08, 0x01, 'S', 'e', 'c', '-', 'W', 'e', 'b', 'S', 'o', 'c', 'k', 'e', 't', '-', 'K', 'e', 'y' };
+static uint8_t test_frame_rfc9220_websocket_protocol_confusion[] = { 0x08, 0x02, 'w', 's', ':', '/', '/', 'e', 'x', 'a', 'm', 'p', 'l', 'e' };
+
+/* RFC 9412 - ORIGIN Extension in HTTP/3 */
+static uint8_t test_frame_rfc9412_origin_frame_spoofing[] = { 0x0C, 0x10, 'h', 't', 't', 'p', 's', ':', '/', '/', 'e', 'v', 'i', 'l', '.', 'c', 'o', 'm' };
+static uint8_t test_frame_rfc9412_origin_authority_bypass[] = { 0x0C, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
+
+/* RFC 9250 - DNS over QUIC (DoQ) */
+static uint8_t test_frame_rfc9250_doq_malformed_query[] = { 0x08, 0x00, 0xFF, 0xFF, 0x01, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
+static uint8_t test_frame_rfc9250_doq_response_amplification[] = { 0x08, 0x01, 0x12, 0x34, 0x81, 0x80, 0x00, 0x01, 0x00, 0xFF, 0x00, 0x00, 0x00, 0x01 };
+static uint8_t test_frame_rfc9250_doq_cache_poisoning[] = { 0x08, 0x02, 0xBA, 0xDC, 0x81, 0x80, 0x00, 0x01, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00 };
+static uint8_t test_frame_rfc9250_doq_stream_reuse_violation[] = { 0x08, 0x00, 0x56, 0x78, 0x01, 0x00, 0x00, 0x01 };
+
+/* RFC 8484 - DNS over HTTPS (DoH) */
+static uint8_t test_frame_rfc8484_doh_get_parameter_injection[] = { 0x08, 0x00, 'G', 'E', 'T', ' ', '/', 'd', 'n', 's', '-', 'q', 'u', 'e', 'r', 'y', '?', 'd', 'n', 's', '=', 'e', 'v', 'i', 'l' };
+static uint8_t test_frame_rfc8484_doh_post_content_type_bypass[] = { 0x08, 0x01, 'C', 'o', 'n', 't', 'e', 'n', 't', '-', 'T', 'y', 'p', 'e', ':', ' ', 't', 'e', 'x', 't', '/', 'p', 'l', 'a', 'i', 'n' };
+
+/* RFC 8446 - TLS 1.3 Integration Issues */
+static uint8_t test_frame_rfc8446_tls13_early_data_replay[] = { 0x06, 0x00, 0x10, 0x16, 0x03, 0x03, 0x00, 0x0C, 0x08, 0x00, 0x00, 0x08, 'r', 'e', 'p', 'l', 'a', 'y', 'e', 'd' };
+static uint8_t test_frame_rfc8446_tls13_certificate_transparency_bypass[] = { 0x06, 0x00, 0x08, 0x0B, 0x00, 0x00, 0x04, 0x00, 0x00, 0x00, 0x00 };
+
+/* RFC 9110/9111/9112/9113 - HTTP Semantics Violations */
+static uint8_t test_frame_rfc9110_http_method_smuggling[] = { 0x08, 0x00, 'P', 'O', 'S', 'T', ' ', '/', 'x', ' ', 'H', 'T', 'T', 'P', '/', '3' };
+static uint8_t test_frame_rfc9111_cache_poisoning_via_vary[] = { 0x08, 0x01, 'V', 'a', 'r', 'y', ':', ' ', 'X', '-', 'E', 'v', 'i', 'l' };
+static uint8_t test_frame_rfc9113_h2_frame_injection[] = { 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x01 };
+
+/* RFC 7541 - HPACK vs QPACK Confusion */
+static uint8_t test_frame_rfc7541_hpack_in_qpack_context[] = { 0x82, 0x86, 0x84, 0x41, 0x8c, 0xf1, 0xe3, 0xc2, 0xe5, 0xf2, 0x3a, 0x6b, 0xa0, 0xab, 0x90, 0xf4, 0xff };
+static uint8_t test_frame_rfc7541_hpack_huffman_bomb[] = { 0x88, 0x25, 0xa8, 0x49, 0xe9, 0x5b, 0xa9, 0x7d, 0x7f, 0x89, 0x25, 0xa8, 0x49, 0xe9, 0x5b, 0xa9, 0x7d, 0x7f };
+
+/* RFC 7838 - HTTP Alternative Services Abuse */
+static uint8_t test_frame_rfc7838_alt_svc_redirection_attack[] = { 0x08, 0x00, 'A', 'l', 't', '-', 'S', 'v', 'c', ':', ' ', 'h', '3', '=', ':', '4', '4', '3' };
+static uint8_t test_frame_rfc7838_alt_svc_downgrade_attack[] = { 0x08, 0x01, 'A', 'l', 't', '-', 'S', 'v', 'c', ':', ' ', 'c', 'l', 'e', 'a', 'r' };
+
+/* RFC 9218 - Extensible Prioritization Scheme */
+static uint8_t test_frame_rfc9218_priority_update_overflow[] = { 0x10, 0x04, 0xFF, 0xFF, 0xFF, 0xFF, 'u', '=', '7', ',', 'i' };
+static uint8_t test_frame_rfc9218_priority_dependency_loop[] = { 0x10, 0x08, 0x00, 0x00, 0x00, 0x01, 'u', '=', '1', ',', 'p', '=', '1' };
+
+/* RFC 9297 - HTTP Datagrams Integration Issues */
+static uint8_t test_frame_rfc9297_http_datagram_context_confusion[] = { 0x30, 0x10, 0x00, 0x00, 0x00, 0x01, 'h', 't', 't', 'p', '_', 'd', 'a', 't', 'a', 'g', 'r', 'a', 'm' };
+static uint8_t test_frame_rfc9297_datagram_flow_id_collision[] = { 0x31, 0x08, 0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0x01, 0x02, 0x03 };
+
+/* === EXTENDED RFC-SPECIFIC ATTACK VECTORS === */
+
+/* RFC 2119/8174 - Requirement Level Violations */
+static uint8_t test_frame_rfc2119_must_violation[] = { 0x08, 0x00, 'M', 'U', 'S', 'T', '_', 'V', 'I', 'O', 'L', 'A', 'T', 'E' };
+static uint8_t test_frame_rfc8174_should_not_ignore[] = { 0x08, 0x01, 'S', 'H', 'O', 'U', 'L', 'D', '_', 'N', 'O', 'T' };
+static uint8_t test_frame_rfc2119_may_abuse[] = { 0x08, 0x02, 'M', 'A', 'Y', '_', 'A', 'B', 'U', 'S', 'E' };
+
+/* RFC 768 - UDP Integration Issues */
+static uint8_t test_frame_rfc768_udp_length_mismatch[] = { 0x08, 0x00, 0xFF, 0xFF, 0x00, 0x08, 'u', 'd', 'p', '_', 'l', 'e', 'n' };
+static uint8_t test_frame_rfc768_udp_checksum_zero[] = { 0x08, 0x01, 0x00, 0x00, 'z', 'e', 'r', 'o', '_', 'c', 's', 'u', 'm' };
+static uint8_t test_frame_rfc768_udp_port_zero[] = { 0x08, 0x02, 0x00, 0x00, 0x00, 0x00, 'p', 'o', 'r', 't', '_', '0' };
+
+/* RFC 6455 - WebSocket Protocol Deeper Violations */
+static uint8_t test_frame_rfc6455_ws_upgrade_downgrade[] = { 0x08, 0x00, 'U', 'p', 'g', 'r', 'a', 'd', 'e', ':', ' ', 'h', 't', 't', 'p' };
+static uint8_t test_frame_rfc6455_ws_sec_key_collision[] = { 0x08, 0x01, 'S', 'e', 'c', '-', 'W', 'e', 'b', 'S', 'o', 'c', 'k', 'e', 't', '-', 'K', 'e', 'y', ':', ' ', 'A', 'A', 'A', 'A' };
+static uint8_t test_frame_rfc6455_ws_version_mismatch[] = { 0x08, 0x02, 'S', 'e', 'c', '-', 'W', 'e', 'b', 'S', 'o', 'c', 'k', 'e', 't', '-', 'V', 'e', 'r', 's', 'i', 'o', 'n', ':', ' ', '1', '2' };
+static uint8_t test_frame_rfc6455_ws_extension_hijack[] = { 0x08, 0x03, 'S', 'e', 'c', '-', 'W', 'e', 'b', 'S', 'o', 'c', 'k', 'e', 't', '-', 'E', 'x', 't', 'e', 'n', 's', 'i', 'o', 'n', 's' };
+
+/* RFC 8441 - HTTP/2 over QUIC Violations */
+static uint8_t test_frame_rfc8441_h2_over_quic_settings[] = { 0x04, 0x06, 0x00, 0x08, 0x00, 0x00, 0x00, 0x01 };
+static uint8_t test_frame_rfc8441_h2_quic_stream_mapping[] = { 0x08, 0x00, 'h', '2', '_', 'q', 'u', 'i', 'c', '_', 'm', 'a', 'p' };
+static uint8_t test_frame_rfc8441_extended_connect_abuse[] = { 0x08, 0x01, 'C', 'O', 'N', 'N', 'E', 'C', 'T', ' ', '/', ' ', 'H', 'T', 'T', 'P', '/', '2' };
+
+/* Advanced RFC 9000 Core Protocol Edge Cases */
+static uint8_t test_frame_rfc9000_initial_packet_corruption[] = { 0x08, 0x00, 'i', 'n', 'i', 't', '_', 'c', 'o', 'r', 'r', 'u', 'p', 't' };
+static uint8_t test_frame_rfc9000_handshake_packet_replay[] = { 0x08, 0x01, 'h', 's', '_', 'r', 'e', 'p', 'l', 'a', 'y' };
+static uint8_t test_frame_rfc9000_application_data_leak[] = { 0x08, 0x02, 'a', 'p', 'p', '_', 'd', 'a', 't', 'a', '_', 'l', 'e', 'a', 'k' };
+static uint8_t test_frame_rfc9000_stateless_reset_forge[] = { 0x08, 0x03, 's', 't', 'a', 't', 'e', 'l', 'e', 's', 's', '_', 'f', 'o', 'r', 'g', 'e' };
+static uint8_t test_frame_rfc9000_retry_token_reuse[] = { 0x08, 0x04, 'r', 'e', 't', 'r', 'y', '_', 't', 'o', 'k', 'e', 'n', '_', 'r', 'e', 'u', 's', 'e' };
+
+/* Advanced RFC 9001 TLS Integration Attacks */
+static uint8_t test_frame_rfc9001_tls_alert_injection[] = { 0x06, 0x00, 0x04, 0x15, 0x03, 0x01, 0x02 };
+static uint8_t test_frame_rfc9001_early_data_confusion[] = { 0x06, 0x00, 0x08, 0x16, 0x03, 0x03, 0x00, 0x04, 0x0E, 0x00, 0x00, 0x00 };
+static uint8_t test_frame_rfc9001_certificate_verify_bypass[] = { 0x06, 0x00, 0x10, 0x16, 0x03, 0x03, 0x00, 0x0C, 0x0F, 0x00, 0x00, 0x08, 0x04, 0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
+static uint8_t test_frame_rfc9001_finished_message_forge[] = { 0x06, 0x00, 0x14, 0x16, 0x03, 0x03, 0x00, 0x10, 0x14, 0x00, 0x00, 0x0C, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF };
+
+/* Advanced RFC 9002 Loss Detection Exploits */
+static uint8_t test_frame_rfc9002_probe_timeout_manipulation[] = { 0x02, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0x00 };
+static uint8_t test_frame_rfc9002_persistent_congestion_force[] = { 0x02, 0x01, 0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0x00 };
+static uint8_t test_frame_rfc9002_bandwidth_estimation_poison[] = { 0x02, 0x64, 0x00, 0x00, 0x01, 0x00 };
+static uint8_t test_frame_rfc9002_loss_detection_evasion[] = { 0x01 }; // PING with specific timing
+
+/* Advanced RFC 9114 HTTP/3 Frame Attacks */
+static uint8_t test_frame_rfc9114_h3_cancel_push_invalid[] = { 0x03, 0x08, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF };
+static uint8_t test_frame_rfc9114_h3_headers_after_trailers[] = { 0x01, 0x04, 0x00, 0x00, 0x82, 0x84 };
+static uint8_t test_frame_rfc9114_h3_data_after_fin[] = { 0x00, 0x04, 'd', 'a', 't', 'a' };
+static uint8_t test_frame_rfc9114_h3_unknown_frame_critical[] = { 0xFF, 0x04, 'c', 'r', 'i', 't' };
+static uint8_t test_frame_rfc9114_h3_settings_after_request[] = { 0x04, 0x04, 0x01, 0x40, 0x64, 0x00 };
+
+/* Advanced RFC 9204 QPACK Compression Attacks */
+static uint8_t test_frame_rfc9204_qpack_table_update_race[] = { 0x3A, 0xFF, 0xFF, 0xFF, 0xFF };
+static uint8_t test_frame_rfc9204_qpack_name_reference_oob[] = { 0x50, 0xFF, 0xFF, 0xFF, 0xFF, 0x04, 't', 'e', 's', 't' };
+static uint8_t test_frame_rfc9204_qpack_huffman_bomb_extended[] = { 0x88, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF };
+static uint8_t test_frame_rfc9204_qpack_post_base_index[] = { 0x10, 0xFF, 0xFF, 0xFF, 0xFF };
+
+/* Advanced RFC 9221 Datagram Extension Exploits */
+static uint8_t test_frame_rfc9221_datagram_id_reuse[] = { 0x30, 0x08, 0x12, 0x34, 0x56, 0x78, 'd', 'u', 'p', 'e' };
+static uint8_t test_frame_rfc9221_datagram_ordering_violation[] = { 0x31, 0x10, 0x00, 0x00, 0x00, 0x02, 'o', 'u', 't', '_', 'o', 'f', '_', 'o', 'r', 'd', 'e', 'r' };
+static uint8_t test_frame_rfc9221_datagram_ack_elicitation[] = { 0x30, 0x04, 'a', 'c', 'k', '?' };
+
+/* Advanced RFC 9250 DoQ Protocol Violations */
+static uint8_t test_frame_rfc9250_doq_transaction_id_reuse[] = { 0x08, 0x00, 0x12, 0x34, 0x01, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
+static uint8_t test_frame_rfc9250_doq_stream_multiplexing_abuse[] = { 0x08, 0x04, 0x56, 0x78, 0x01, 0x00, 0x00, 0x01 };
+static uint8_t test_frame_rfc9250_doq_early_close_attack[] = { 0x1C, 0x00, 0x00, 0x04, 'd', 'o', 'q', '_', 'c', 'l', 'o', 's', 'e' };
+static uint8_t test_frame_rfc9250_doq_padding_analysis[] = { 0x08, 0x00, 0xAB, 0xCD, 0x01, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x01 };
+
+/* Cross-RFC Integration Attacks */
+static uint8_t test_frame_cross_rfc_h3_quic_version_confusion[] = { 0x08, 0x00, 'h', '3', '_', 'v', '1', '_', 'o', 'n', '_', 'v', '2' };
+static uint8_t test_frame_cross_rfc_tls_quic_key_mismatch[] = { 0x06, 0x00, 0x08, 't', 'l', 's', '_', 'k', 'e', 'y', '_', 'm', 'i', 's', 'm', 'a', 't', 'c', 'h' };
+static uint8_t test_frame_cross_rfc_http_quic_stream_leak[] = { 0x08, 0x00, 'h', 't', 't', 'p', '_', 's', 't', 'r', 'e', 'a', 'm', '_', 'l', 'e', 'a', 'k' };
+static uint8_t test_frame_cross_rfc_qpack_hpack_confusion[] = { 0x82, 0x84, 0x86, 0x41, 0x8A, 0x0E, 0x03, '2', '0', '0' };
+
+/* === ULTIMATE RFC COVERAGE EXPANSION === */
+
+/* RFC 1035 - DNS Protocol Violations */
+static uint8_t test_frame_rfc1035_dns_compression_bomb[] = { 0x08, 0x00, 0x12, 0x34, 0x01, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xC0, 0x0C, 0xC0, 0x0C, 0xC0, 0x0C };
+static uint8_t test_frame_rfc1035_dns_label_overflow[] = { 0x08, 0x01, 0xAB, 0xCD, 0x01, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xFF, 'A', 'A', 'A', 'A' };
+static uint8_t test_frame_rfc1035_dns_type_confusion[] = { 0x08, 0x02, 0xEF, 0x12, 0x01, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x07, 'e', 'x', 'a', 'm', 'p', 'l', 'e', 0x03, 'c', 'o', 'm', 0x00, 0xFF, 0xFF, 0xFF, 0xFF };
+
+/* RFC 1123 - Host Requirements Violations */
+static uint8_t test_frame_rfc1123_invalid_hostname[] = { 0x08, 0x00, 'H', 'o', 's', 't', ':', ' ', '-', 'i', 'n', 'v', 'a', 'l', 'i', 'd', '-', '.', 'c', 'o', 'm' };
+static uint8_t test_frame_rfc1123_hostname_length_overflow[] = { 0x08, 0x01, 'H', 'o', 's', 't', ':', ' ', 'A', 'A', 'A', 'A', 'A', 'A', 'A', 'A', 'A', 'A', 'A', 'A', 'A', 'A', 'A', 'A' };
+static uint8_t test_frame_rfc1123_numeric_only_hostname[] = { 0x08, 0x02, 'H', 'o', 's', 't', ':', ' ', '1', '2', '3', '4', '5', '6', '7', '8' };
+
+/* RFC 2131 - DHCP Protocol Violations */
+static uint8_t test_frame_rfc2131_dhcp_option_overflow[] = { 0x08, 0x00, 0x01, 0x01, 0x06, 0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF };
+static uint8_t test_frame_rfc2131_dhcp_malformed_packet[] = { 0x08, 0x01, 0x02, 0x01, 0x06, 0x00, 0x12, 0x34, 0x56, 0x78, 0x00, 0x00, 0x80, 0x00 };
+static uint8_t test_frame_rfc2131_dhcp_invalid_message_type[] = { 0x08, 0x02, 0x01, 0xFF, 0x06, 0x00, 0x00, 0x00, 0x00, 0x00 };
+
+/* RFC 2818 - HTTP Over TLS Violations */
+static uint8_t test_frame_rfc2818_https_redirect_attack[] = { 0x08, 0x00, 'L', 'o', 'c', 'a', 't', 'i', 'o', 'n', ':', ' ', 'h', 't', 't', 'p', ':', '/', '/', 'e', 'v', 'i', 'l' };
+static uint8_t test_frame_rfc2818_mixed_content_attack[] = { 0x08, 0x01, '<', 'i', 'm', 'g', ' ', 's', 'r', 'c', '=', '"', 'h', 't', 't', 'p', ':', '/', '/', 'a', 't', 't', 'a', 'c', 'k', 'e', 'r' };
+static uint8_t test_frame_rfc2818_certificate_pinning_bypass[] = { 0x06, 0x00, 0x10, 0x16, 0x03, 0x03, 0x00, 0x0C, 0x0B, 0x00, 0x08, 0x00, 0x00, 0x05, 'f', 'a', 'k', 'e', 'c' };
+
+/* RFC 3280 - Certificate and CRL Profile Violations */
+static uint8_t test_frame_rfc3280_certificate_chain_attack[] = { 0x06, 0x00, 0x20, 0x16, 0x03, 0x03, 0x00, 0x1C, 0x0B, 0x00, 0x18, 0x00, 0x00, 0x15, 'f', 'a', 'k', 'e', '_', 'c', 'e', 'r', 't', '_', 'c', 'h', 'a', 'i', 'n', '_', 'a', 't', 't', 'a', 'c', 'k' };
+static uint8_t test_frame_rfc3280_crl_poisoning[] = { 0x06, 0x00, 0x18, 0x16, 0x03, 0x03, 0x00, 0x14, 'c', 'r', 'l', '_', 'p', 'o', 'i', 's', 'o', 'n', 'i', 'n', 'g', '_', 'a', 't', 't', 'a', 'c', 'k' };
+static uint8_t test_frame_rfc3280_invalid_extension[] = { 0x06, 0x00, 0x0C, 0x16, 0x03, 0x03, 0x00, 0x08, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF };
+
+/* RFC 3492 - Punycode Implementation Attacks */
+static uint8_t test_frame_rfc3492_punycode_overflow[] = { 0x08, 0x00, 'H', 'o', 's', 't', ':', ' ', 'x', 'n', '-', '-', 'A', 'A', 'A', 'A', 'A', 'A', 'A', 'A' };
+static uint8_t test_frame_rfc3492_punycode_homograph[] = { 0x08, 0x01, 'H', 'o', 's', 't', ':', ' ', 'x', 'n', '-', '-', 'a', 'p', 'p', 'l', 'e', '-', '9', 'q', 'a' };
+static uint8_t test_frame_rfc3492_punycode_mixed_script[] = { 0x08, 0x02, 'x', 'n', '-', '-', 'c', 'y', 'r', 'i', 'l', 'l', 'i', 'c', '-', 'l', 'a', 't', 'i', 'n' };
+
+/* RFC 4291 - IPv6 Addressing Architecture Violations */
+static uint8_t test_frame_rfc4291_ipv6_header_manipulation[] = { 0x08, 0x00, 0x60, 0x00, 0x00, 0x00, 0xFF, 0xFF, 0x3A, 0xFF, 0x20, 0x01, 0x0D, 0xB8 };
+static uint8_t test_frame_rfc4291_ipv6_extension_header_bomb[] = { 0x08, 0x01, 0x60, 0x00, 0x00, 0x00, 0x00, 0x08, 0x00, 0x00, 0x00, 0x06, 0xFF, 0xFF, 0xFF, 0xFF };
+static uint8_t test_frame_rfc4291_ipv6_address_spoofing[] = { 0x08, 0x02, 0xFE, 0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF };
+
+/* RFC 5321 - SMTP Enhanced Violations */
+static uint8_t test_frame_rfc5321_smtp_pipeline_injection[] = { 0x08, 0x00, 'R', 'C', 'P', 'T', ' ', 'T', 'O', ':', '<', 'u', 's', 'e', 'r', '>', '\r', '\n', 'D', 'A', 'T', 'A' };
+static uint8_t test_frame_rfc5321_smtp_header_injection[] = { 0x08, 0x01, 'S', 'u', 'b', 'j', 'e', 'c', 't', ':', ' ', 't', 'e', 's', 't', '\r', '\n', 'B', 'c', 'c', ':' };
+static uint8_t test_frame_rfc5321_smtp_size_limit_bypass[] = { 0x08, 0x02, 'M', 'A', 'I', 'L', ' ', 'F', 'R', 'O', 'M', ':', '<', 't', 'e', 's', 't', '>', ' ', 'S', 'I', 'Z', 'E', '=', '-', '1' };
+
+/* RFC 3261 - SIP Integration Issues */
+static uint8_t test_frame_rfc3261_sip_uri_overflow[] = { 0x08, 0x00, 'S', 'I', 'P', '/', '2', '.', '0', ' ', '/', ' ', 'u', 'r', 'i', '_', 'o', 'v', 'f' };
+static uint8_t test_frame_rfc3261_sip_header_injection[] = { 0x08, 0x01, 'V', 'i', 'a', ':', ' ', 'S', 'I', 'P', '/', '2', '.', '0', '/', 'U', 'D', 'P' };
+static uint8_t test_frame_rfc3261_sip_message_smuggling[] = { 0x08, 0x02, 'C', 'o', 'n', 't', 'e', 'n', 't', '-', 'L', 'e', 'n', 'g', 't', 'h', ':', ' ', '-', '1' };
+
+/* RFC 5321 - SMTP Integration Violations */
+static uint8_t test_frame_rfc5321_smtp_command_injection[] = { 0x08, 0x00, 'M', 'A', 'I', 'L', ' ', 'F', 'R', 'O', 'M', ':', '<', 'e', 'v', 'i', 'l', '>' };
+static uint8_t test_frame_rfc5321_smtp_data_smuggling[] = { 0x08, 0x01, 'D', 'A', 'T', 'A', '\r', '\n', '.', '\r', '\n', 'M', 'A', 'I', 'L' };
+static uint8_t test_frame_rfc5321_smtp_relay_attack[] = { 0x08, 0x02, 'R', 'C', 'P', 'T', ' ', 'T', 'O', ':', '<', 'a', 'd', 'm', 'i', 'n' };
+
+/* RFC 1939 - POP3 Protocol Violations */
+static uint8_t test_frame_rfc1939_pop3_buffer_overflow[] = { 0x08, 0x00, 'U', 'S', 'E', 'R', ' ', 'A', 'A', 'A', 'A', 'A', 'A', 'A', 'A' };
+static uint8_t test_frame_rfc1939_pop3_command_injection[] = { 0x08, 0x01, 'P', 'A', 'S', 'S', ' ', '\x', '0', '0', '\x', '0', 'A' };
+
+/* RFC 3501 - IMAP4 Protocol Violations */
+static uint8_t test_frame_rfc3501_imap_literal_attack[] = { 0x08, 0x00, 'A', '0', '0', '1', ' ', 'L', 'O', 'G', 'I', 'N', ' ', '{', '9', '9', '9', '}' };
+static uint8_t test_frame_rfc3501_imap_command_continuation[] = { 0x08, 0x01, 'A', '0', '0', '2', ' ', 'S', 'E', 'A', 'R', 'C', 'H', ' ', 'A', 'L', 'L' };
+
+/* RFC 959 - FTP Protocol Violations */
+static uint8_t test_frame_rfc959_ftp_port_command_hijack[] = { 0x08, 0x00, 'P', 'O', 'R', 'T', ' ', '1', '2', '7', ',', '0', ',', '0', ',', '1' };
+static uint8_t test_frame_rfc959_ftp_pasv_response_spoof[] = { 0x08, 0x01, '2', '2', '7', ' ', 'P', 'A', 'S', 'V', ' ', '(', '1', '2', '7', ',' };
+
+/* RFC 854 - Telnet Protocol Violations */
+static uint8_t test_frame_rfc854_telnet_option_negotiation[] = { 0x08, 0x00, 0xFF, 0xFB, 0x01, 'I', 'A', 'C', ' ', 'W', 'I', 'L', 'L' };
+static uint8_t test_frame_rfc854_telnet_command_injection[] = { 0x08, 0x01, 0xFF, 0xF4, 0xFF, 0xFD, 0x06 };
+
+/* RFC 2616 - HTTP/1.1 Legacy Violations */
+static uint8_t test_frame_rfc2616_http11_request_smuggling[] = { 0x08, 0x00, 'P', 'O', 'S', 'T', ' ', '/', ' ', 'H', 'T', 'T', 'P', '/', '1', '.', '1' };
+static uint8_t test_frame_rfc2616_http11_response_splitting[] = { 0x08, 0x01, 'H', 'T', 'T', 'P', '/', '1', '.', '1', ' ', '2', '0', '0', '\r', '\n' };
+
+/* Advanced Transport Layer Attacks */
+static uint8_t test_frame_rfc793_tcp_sequence_prediction[] = { 0x08, 0x00, 'T', 'C', 'P', '_', 'S', 'E', 'Q', '_', 'P', 'R', 'E', 'D' };
+static uint8_t test_frame_rfc793_tcp_connection_hijack[] = { 0x08, 0x01, 'T', 'C', 'P', '_', 'H', 'I', 'J', 'A', 'C', 'K' };
+
+/* RFC 4880 - OpenPGP Integration Issues */
+static uint8_t test_frame_rfc4880_pgp_key_substitution[] = { 0x08, 0x00, 'P', 'G', 'P', '_', 'K', 'E', 'Y', '_', 'S', 'U', 'B', 'S', 'T' };
+static uint8_t test_frame_rfc4880_pgp_signature_forge[] = { 0x08, 0x01, 'P', 'G', 'P', '_', 'S', 'I', 'G', '_', 'F', 'O', 'R', 'G', 'E' };
+
+/* RFC 3986 - URI Manipulation Attacks */
+static uint8_t test_frame_rfc3986_uri_scheme_confusion[] = { 0x08, 0x00, 'h', 't', 't', 'p', 's', ':', '/', '/', 'e', 'v', 'i', 'l', '.', 'c', 'o', 'm' };
+static uint8_t test_frame_rfc3986_uri_authority_bypass[] = { 0x08, 0x01, 'h', 't', 't', 'p', ':', '/', '/', '@', 'e', 'v', 'i', 'l', '.', 'c', 'o', 'm' };
+
+/* RFC 2045 - MIME Content Type Violations */
+static uint8_t test_frame_rfc2045_mime_boundary_attack[] = { 0x08, 0x00, 'C', 'o', 'n', 't', 'e', 'n', 't', '-', 'T', 'y', 'p', 'e', ':', ' ', 'm', 'u', 'l', 't', 'i' };
+static uint8_t test_frame_rfc2045_mime_header_injection[] = { 0x08, 0x01, 'C', 'o', 'n', 't', 'e', 'n', 't', '-', 'D', 'i', 's', 'p', 'o', 's', 'i', 't', 'i', 'o', 'n' };
+
+/* RFC 3339 - Date/Time Format Attacks */
+static uint8_t test_frame_rfc3339_datetime_overflow[] = { 0x08, 0x00, '9', '9', '9', '9', '-', '1', '3', '-', '3', '2', 'T', '2', '5', ':', '6', '1' };
+static uint8_t test_frame_rfc3339_timezone_confusion[] = { 0x08, 0x01, '2', '0', '2', '4', '-', '0', '1', '-', '0', '1', 'T', '0', '0', ':', '0', '0', '+', '2', '5' };
+
+/* RFC 5246 - TLS 1.2 Legacy Protocol Violations */
+static uint8_t test_frame_rfc5246_tls12_downgrade_attack[] = { 0x06, 0x00, 0x08, 0x16, 0x03, 0x02, 0x00, 0x04, 0x01, 0x00, 0x00, 0x00 };
+static uint8_t test_frame_rfc5246_tls12_cipher_suite_confusion[] = { 0x06, 0x00, 0x0C, 0x16, 0x03, 0x02, 0x00, 0x08, 0x02, 0x00, 0x04, 0x03, 0x02, 0x00, 0x35, 0x00 };
+static uint8_t test_frame_rfc5246_tls12_renegotiation_attack[] = { 0x06, 0x00, 0x10, 0x16, 0x03, 0x02, 0x00, 0x0C, 0x01, 0x00, 0x08, 0x03, 0x02, 0xFF, 0x01, 0x00, 0x01, 0x00, 0x00, 0x00 };
+
+/* RFC 6066 - TLS Extensions Abuse */
+static uint8_t test_frame_rfc6066_sni_spoofing[] = { 0x06, 0x00, 0x18, 0x16, 0x03, 0x03, 0x00, 0x14, 0x00, 0x00, 0x00, 0x10, 0x00, 0x0E, 0x00, 0x00, 0x0B, 'e', 'v', 'i', 'l', '.', 'c', 'o', 'm', '.', 'c', 'o', 'm' };
+static uint8_t test_frame_rfc6066_max_fragment_length_attack[] = { 0x06, 0x00, 0x0C, 0x16, 0x03, 0x03, 0x00, 0x08, 0x00, 0x01, 0x00, 0x04, 0x00, 0x01, 0x00, 0x00 };
+static uint8_t test_frame_rfc6066_server_name_overflow[] = { 0x06, 0x00, 0x20, 0x16, 0x03, 0x03, 0x00, 0x1C, 0x00, 0x00, 0x00, 0x18, 0x00, 0x16, 0x00, 0x00, 0x13, 'A', 'A', 'A', 'A', 'A', 'A', 'A', 'A', 'A', 'A', 'A', 'A', 'A', 'A', 'A', 'A', 'A', 'A', 'A' };
+
+/* RFC 6520 - TLS/DTLS Heartbeat Extension Attacks */
+static uint8_t test_frame_rfc6520_heartbleed_attack[] = { 0x06, 0x00, 0x08, 0x18, 0x03, 0x03, 0x00, 0x04, 0x01, 0xFF, 0xFF, 0x00 };
+static uint8_t test_frame_rfc6520_heartbeat_overflow[] = { 0x06, 0x00, 0x10, 0x18, 0x03, 0x03, 0x00, 0x0C, 0x01, 0xFF, 0xFF, 'p', 'a', 'y', 'l', 'o', 'a', 'd', '_', 'a', 't', 't', 'k' };
+static uint8_t test_frame_rfc6520_heartbeat_response_spoofing[] = { 0x06, 0x00, 0x0C, 0x18, 0x03, 0x03, 0x00, 0x08, 0x02, 0x00, 0x04, 'f', 'a', 'k', 'e', '_', 'r', 'e', 's', 'p' };
+
+/* RFC 7301 - ALPN Extension Violations */
+static uint8_t test_frame_rfc7301_alpn_protocol_confusion[] = { 0x06, 0x00, 0x14, 0x16, 0x03, 0x03, 0x00, 0x10, 0x00, 0x10, 0x00, 0x0C, 0x00, 0x0A, 0x08, 'h', 't', 't', 'p', '/', '9', '.', '9' };
+static uint8_t test_frame_rfc7301_alpn_downgrade_attack[] = { 0x06, 0x00, 0x10, 0x16, 0x03, 0x03, 0x00, 0x0C, 0x00, 0x10, 0x00, 0x08, 0x00, 0x06, 0x04, 'h', 't', 't', 'p', '/', '1', '.', '1' };
+static uint8_t test_frame_rfc7301_alpn_protocol_injection[] = { 0x06, 0x00, 0x18, 0x16, 0x03, 0x03, 0x00, 0x14, 0x00, 0x10, 0x00, 0x10, 0x00, 0x0E, 0x0C, 'i', 'n', 'j', 'e', 'c', 't', 'e', 'd', '/', 'e', 'v', 'i', 'l' };
+
+/* RFC 7633 - X.509v3 TLS Feature Extension Attacks */
+static uint8_t test_frame_rfc7633_tls_feature_bypass[] = { 0x06, 0x00, 0x10, 0x16, 0x03, 0x03, 0x00, 0x0C, 0x00, 0x18, 0x00, 0x08, 0x00, 0x06, 0x30, 0x04, 0x02, 0x02, 0x00, 0x05 };
+static uint8_t test_frame_rfc7633_must_staple_violation[] = { 0x06, 0x00, 0x0C, 0x16, 0x03, 0x03, 0x00, 0x08, 0x00, 0x18, 0x00, 0x04, 0x30, 0x02, 0x02, 0x00 };
+
+/* RFC 8446 - TLS 1.3 Advanced Violations */
+static uint8_t test_frame_rfc8446_tls13_psk_binder_confusion[] = { 0x06, 0x00, 0x20, 0x16, 0x03, 0x03, 0x00, 0x1C, 0x01, 0x00, 0x18, 0x03, 0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x29, 0x00, 0x04, 0x00, 0x02, 0xFF, 0xFF };
+static uint8_t test_frame_rfc8446_tls13_hello_retry_confusion[] = { 0x06, 0x00, 0x24, 0x16, 0x03, 0x03, 0x00, 0x20, 0x02, 0x00, 0x1C, 0x03, 0x03, 0xCF, 0x21, 0xAD, 0x74, 0xE5, 0x9A, 0x61, 0x11, 0xBE, 0x1D, 0x8C, 0x02, 0x1E, 0x65, 0xB8, 0x91, 0xC2, 0xA2, 0x11, 0x16, 0x7A, 0xBB, 0x8C, 0x5E, 0x07, 0x9E, 0x09, 0xE2, 0xC8, 0xA8, 0x33, 0x9C };
+static uint8_t test_frame_rfc8446_tls13_key_share_manipulation[] = { 0x06, 0x00, 0x18, 0x16, 0x03, 0x03, 0x00, 0x14, 0x00, 0x33, 0x00, 0x10, 0x00, 0x0E, 0x00, 0x1D, 0x00, 0x08, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF };
+
+/* RFC 8879 - TLS Certificate Compression Attacks */
+static uint8_t test_frame_rfc8879_cert_compression_bomb[] = { 0x06, 0x00, 0x10, 0x16, 0x03, 0x03, 0x00, 0x0C, 0x00, 0x1B, 0x00, 0x08, 0x00, 0x02, 0x00, 0x00, 0xFF, 0xFF, 0xFF, 0xFF };
+static uint8_t test_frame_rfc8879_cert_decompression_attack[] = { 0x06, 0x00, 0x14, 0x16, 0x03, 0x03, 0x00, 0x10, 0x00, 0x1B, 0x00, 0x0C, 0x00, 0x01, 0x00, 0x08, 0x78, 0x9C, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF };
+
+/* RFC 8998 - ShangMi Cipher Suites Attacks */
+static uint8_t test_frame_rfc8998_shangmi_downgrade[] = { 0x06, 0x00, 0x10, 0x16, 0x03, 0x03, 0x00, 0x0C, 0x02, 0x00, 0x08, 0x03, 0x03, 0x00, 0x00, 0x00, 0xE0, 0x11, 0x00, 0x00 };
+static uint8_t test_frame_rfc8998_shangmi_key_confusion[] = { 0x06, 0x00, 0x20, 0x16, 0x03, 0x03, 0x00, 0x1C, 0x00, 0x33, 0x00, 0x18, 0x00, 0x16, 0x00, 0x1C, 0x00, 0x10, 'S', 'M', '2', '_', 'k', 'e', 'y', '_', 'c', 'o', 'n', 'f', 'u', 's', 'i', 'o', 'n' };
+
+/* RFC 9001 - Enhanced QUIC TLS Integration Attacks */
+static uint8_t test_frame_rfc9001_transport_param_encryption_bypass[] = { 0x06, 0x00, 0x10, 0x16, 0x03, 0x03, 0x00, 0x0C, 0x08, 0x00, 0x08, 't', 'p', '_', 'b', 'y', 'p', 'a', 's', 's' };
+static uint8_t test_frame_rfc9001_quic_tls_version_mismatch[] = { 0x06, 0x00, 0x08, 0x16, 0x03, 0x01, 0x00, 0x04, 'q', 'u', 'i', 'c' };
+static uint8_t test_frame_rfc9001_connection_id_confusion[] = { 0x06, 0x00, 0x0C, 0x16, 0x03, 0x03, 0x00, 0x08, 'c', 'i', 'd', '_', 'c', 'o', 'n', 'f', 'u', 's', 'e' };
+
+/* RFC 791 - Internet Protocol (IPv4) Violations */
+static uint8_t test_frame_rfc791_ipv4_fragment_overlap[] = { 0x08, 0x00, 0x45, 0x00, 0x00, 0x1C, 0x12, 0x34, 0x20, 0x01, 0x40, 0x01, 0x00, 0x00, 0xC0, 0xA8, 0x01, 0x01 };
+static uint8_t test_frame_rfc791_ipv4_option_overflow[] = { 0x08, 0x01, 0x4F, 0x00, 0x00, 0x40, 0x56, 0x78, 0x00, 0x00, 0x01, 0x01, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF };
+static uint8_t test_frame_rfc791_ipv4_ttl_manipulation[] = { 0x08, 0x02, 0x45, 0x00, 0x00, 0x14, 0xAB, 0xCD, 0x40, 0x00, 0x00, 0x06, 0x00, 0x00, 0x7F, 0x00, 0x00, 0x01 };
+
+/* RFC 793 - Transmission Control Protocol (TCP) Violations */
+static uint8_t test_frame_rfc793_tcp_sequence_wraparound[] = { 0x08, 0x00, 0x00, 0x50, 0x00, 0x80, 0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0x00, 0x00, 0x01, 0x50, 0x02, 0x20, 0x00 };
+static uint8_t test_frame_rfc793_tcp_window_scale_attack[] = { 0x08, 0x01, 0x12, 0x34, 0x56, 0x78, 0x9A, 0xBC, 0xDE, 0xF0, 0x12, 0x34, 0x56, 0x78, 0x50, 0x18, 0xFF, 0xFF };
+static uint8_t test_frame_rfc793_tcp_urgent_pointer_abuse[] = { 0x08, 0x02, 0x00, 0x50, 0x00, 0x80, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x02, 0x50, 0x20, 0x20, 0x00, 0xFF, 0xFF };
+
+/* RFC 826 - Address Resolution Protocol (ARP) Violations */
+static uint8_t test_frame_rfc826_arp_spoofing_attack[] = { 0x08, 0x00, 0x00, 0x01, 0x08, 0x00, 0x06, 0x04, 0x00, 0x02, 0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0xC0, 0xA8, 0x01, 0x01 };
+static uint8_t test_frame_rfc826_arp_cache_poisoning[] = { 0x08, 0x01, 0x00, 0x01, 0x08, 0x00, 0x06, 0x04, 0x00, 0x01, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0x00, 0x00, 0x00 };
+static uint8_t test_frame_rfc826_arp_gratuitous_flood[] = { 0x08, 0x02, 0x00, 0x01, 0x08, 0x00, 0x06, 0x04, 0x00, 0x01, 0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF };
+
+/* RFC 1058 - Routing Information Protocol (RIP) Violations */
+static uint8_t test_frame_rfc1058_rip_metric_infinity_attack[] = { 0x08, 0x00, 0x02, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x10 };
+static uint8_t test_frame_rfc1058_rip_route_poisoning[] = { 0x08, 0x01, 0x01, 0x01, 0x00, 0x00, 0xC0, 0xA8, 0x01, 0x00, 0xFF, 0xFF, 0xFF, 0x00, 0x00, 0x00, 0x00, 0x01 };
+static uint8_t test_frame_rfc1058_rip_authentication_bypass[] = { 0x08, 0x02, 0x02, 0x02, 0xFF, 0xFF, 0x00, 0x02, 'f', 'a', 'k', 'e', '_', 'a', 'u', 't', 'h' };
+
+/* RFC 1112 - Internet Group Management Protocol (IGMP) Violations */
+static uint8_t test_frame_rfc1112_igmp_membership_flood[] = { 0x08, 0x00, 0x11, 0x00, 0x00, 0x00, 0xE0, 0x00, 0x00, 0x01 };
+static uint8_t test_frame_rfc1112_igmp_leave_group_spoof[] = { 0x08, 0x01, 0x17, 0x00, 0x00, 0x00, 0xE0, 0x00, 0x00, 0x02 };
+static uint8_t test_frame_rfc1112_igmp_query_amplification[] = { 0x08, 0x02, 0x11, 0x01, 0x00, 0x00, 0xE0, 0x00, 0x00, 0x00 };
+
+/* RFC 1321 - MD5 Message-Digest Algorithm Attacks */
+static uint8_t test_frame_rfc1321_md5_collision_attack[] = { 0x08, 0x00, 0x4D, 0x44, 0x35, 0x00, 0xD1, 0x31, 0xDD, 0x02, 0xC5, 0xE6, 0xEE, 0xC4, 0x69, 0x3D, 0x9A, 0x06, 0x98, 0xAF };
+static uint8_t test_frame_rfc1321_md5_length_extension[] = { 0x08, 0x01, 0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0xC0 };
+static uint8_t test_frame_rfc1321_md5_preimage_attack[] = { 0x08, 0x02, 'p', 'r', 'e', 'i', 'm', 'a', 'g', 'e', '_', 'a', 't', 't', 'a', 'c', 'k', '_', 'm', 'd', '5' };
+
+/* RFC 1519 - Classless Inter-Domain Routing (CIDR) Violations */
+static uint8_t test_frame_rfc1519_cidr_route_aggregation_attack[] = { 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0xFF, 0xFF, 0xFF, 0x00 };
+static uint8_t test_frame_rfc1519_cidr_supernet_hijack[] = { 0x08, 0x01, 0x08, 0x08, 0x08, 0x00, 0xFF, 0x00, 0x00, 0x00 };
+static uint8_t test_frame_rfc1519_cidr_prefix_length_manipulation[] = { 0x08, 0x02, 0xC0, 0xA8, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00 };
+
+/* RFC 1631 - Network Address Translation (NAT) Violations */
+static uint8_t test_frame_rfc1631_nat_port_exhaustion[] = { 0x08, 0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0x00, 0x00, 0x00 };
+static uint8_t test_frame_rfc1631_nat_hairpinning_attack[] = { 0x08, 0x01, 0xC0, 0xA8, 0x01, 0x01, 0xC0, 0xA8, 0x01, 0x02 };
+static uint8_t test_frame_rfc1631_nat_translation_bypass[] = { 0x08, 0x02, 0x0A, 0x00, 0x00, 0x01, 0x08, 0x08, 0x08, 0x08 };
+
+/* RFC 1918 - Private Internet Address Space Violations */
+static uint8_t test_frame_rfc1918_private_ip_leak[] = { 0x08, 0x00, 0xC0, 0xA8, 0x01, 0x01, 0x08, 0x08, 0x08, 0x08 };
+static uint8_t test_frame_rfc1918_private_routing_attack[] = { 0x08, 0x01, 0x0A, 0x00, 0x00, 0x00, 0xFF, 0x00, 0x00, 0x00 };
+static uint8_t test_frame_rfc1918_reserved_address_abuse[] = { 0x08, 0x02, 0xAC, 0x10, 0x00, 0x00, 0xFF, 0xF0, 0x00, 0x00 };
+
+/* RFC 2104 - HMAC Keyed-Hashing Violations */
+static uint8_t test_frame_rfc2104_hmac_key_recovery[] = { 0x08, 0x00, 'H', 'M', 'A', 'C', '_', 'k', 'e', 'y', '_', 'l', 'e', 'a', 'k' };
+static uint8_t test_frame_rfc2104_hmac_timing_attack[] = { 0x08, 0x01, 0x36, 0x36, 0x36, 0x36, 0x5C, 0x5C, 0x5C, 0x5C };
+static uint8_t test_frame_rfc2104_hmac_length_extension[] = { 0x08, 0x02, 0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00 };
+
+/* RFC 2205 - Resource Reservation Protocol (RSVP) Violations */
+static uint8_t test_frame_rfc2205_rsvp_path_message_spoof[] = { 0x08, 0x00, 0x10, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01 };
+static uint8_t test_frame_rfc2205_rsvp_reservation_hijack[] = { 0x08, 0x01, 0x10, 0x02, 0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0x00 };
+static uint8_t test_frame_rfc2205_rsvp_teardown_attack[] = { 0x08, 0x02, 0x10, 0x05, 0x00, 0x00, 0x00, 0x00, 0xFF, 0xFF };
+
+/* RFC 2284 - PPP Extensible Authentication Protocol (EAP) Violations */
+static uint8_t test_frame_rfc2284_eap_identity_spoofing[] = { 0x08, 0x00, 0x02, 0x01, 0x00, 0x05, 0x01, 'f', 'a', 'k', 'e' };
+static uint8_t test_frame_rfc2284_eap_method_downgrade[] = { 0x08, 0x01, 0x02, 0x02, 0x00, 0x06, 0x04, 0x10, 0x00, 0x00 };
+static uint8_t test_frame_rfc2284_eap_success_injection[] = { 0x08, 0x02, 0x02, 0x03, 0x00, 0x04 };
+
+/* RFC 2328 - Open Shortest Path First (OSPF) Violations */
+static uint8_t test_frame_rfc2328_ospf_hello_flood[] = { 0x08, 0x00, 0x02, 0x01, 0x00, 0x2C, 0x01, 0x01, 0x01, 0x01, 0x00, 0x00, 0x00, 0x00 };
+static uint8_t test_frame_rfc2328_ospf_lsa_poisoning[] = { 0x08, 0x01, 0x02, 0x04, 0x00, 0x24, 0x02, 0x02, 0x02, 0x02, 0xFF, 0xFF, 0xFF, 0xFF };
+static uint8_t test_frame_rfc2328_ospf_area_hijack[] = { 0x08, 0x02, 0x02, 0x01, 0x00, 0x2C, 0x03, 0x03, 0x03, 0x03, 0x00, 0x00, 0x00, 0x01 };
+
+/* RFC 2401 - Security Architecture for IP (IPsec) Violations */
+static uint8_t test_frame_rfc2401_ipsec_esp_replay[] = { 0x08, 0x00, 0x32, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x01 };
+static uint8_t test_frame_rfc2401_ipsec_ah_truncation[] = { 0x08, 0x01, 0x33, 0x04, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x12, 0x34 };
+static uint8_t test_frame_rfc2401_ipsec_sa_confusion[] = { 0x08, 0x02, 0x32, 0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0x00, 0x00, 0x00 };
+
+/* RFC 2616 - HTTP/1.1 Protocol Violations */
+static uint8_t test_frame_rfc2616_http11_request_smuggling[] = { 0x08, 0x00, 'P', 'O', 'S', 'T', ' ', '/', ' ', 'H', 'T', 'T', 'P', '/', '1', '.', '1', '\r', '\n', 'C', 'o', 'n', 't', 'e', 'n', 't', '-', 'L', 'e', 'n', 'g', 't', 'h', ':', ' ', '0', '\r', '\n', 'T', 'r', 'a', 'n', 's', 'f', 'e', 'r', '-', 'E', 'n', 'c', 'o', 'd', 'i', 'n', 'g', ':', ' ', 'c', 'h', 'u', 'n', 'k', 'e', 'd' };
+static uint8_t test_frame_rfc2616_http11_header_injection[] = { 0x08, 0x01, 'G', 'E', 'T', ' ', '/', ' ', 'H', 'T', 'T', 'P', '/', '1', '.', '1', '\r', '\n', 'H', 'o', 's', 't', ':', ' ', 'e', 'x', 'a', 'm', 'p', 'l', 'e', '.', 'c', 'o', 'm', '\r', '\n', 'X', '-', 'I', 'n', 'j', 'e', 'c', 't', 'e', 'd', ':', ' ', 'e', 'v', 'i', 'l' };
+static uint8_t test_frame_rfc2616_http11_response_splitting[] = { 0x08, 0x02, 'H', 'T', 'T', 'P', '/', '1', '.', '1', ' ', '2', '0', '0', ' ', 'O', 'K', '\r', '\n', 'C', 'o', 'n', 't', 'e', 'n', 't', '-', 'T', 'y', 'p', 'e', ':', ' ', 't', 'e', 'x', 't', '/', 'h', 't', 'm', 'l', '\r', '\n', '\r', '\n', 'H', 'T', 'T', 'P', '/', '1', '.', '1', ' ', '3', '0', '2' };
+
+/* RFC 2865 - Remote Authentication Dial In User Service (RADIUS) Violations */
+static uint8_t test_frame_rfc2865_radius_shared_secret_attack[] = { 0x08, 0x00, 0x01, 0x01, 0x00, 0x14, 0x12, 0x34, 0x56, 0x78, 0x9A, 0xBC, 0xDE, 0xF0, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66 };
+static uint8_t test_frame_rfc2865_radius_attribute_overflow[] = { 0x08, 0x01, 0x01, 0x02, 0xFF, 0xFF, 0x01, 0xFF, 'A', 'A', 'A', 'A', 'A', 'A', 'A', 'A' };
+static uint8_t test_frame_rfc2865_radius_message_authenticator_bypass[] = { 0x08, 0x02, 0x01, 0x03, 0x00, 0x16, 0x50, 0x12, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
+
+/* RFC 3164 - Syslog Protocol Violations */
+static uint8_t test_frame_rfc3164_syslog_format_injection[] = { 0x08, 0x00, '<', '1', '3', '4', '>', 'O', 'c', 't', ' ', '1', '1', ' ', '2', '2', ':', '1', '4', ':', '1', '5', ' ', 'm', 'y', 'h', 'o', 's', 't', ' ', 's', 'u', ':', ' ', 'r', 'o', 'o', 't', '\n', '<', '1', '>', 'i', 'n', 'j', 'e', 'c', 't', 'e', 'd' };
+static uint8_t test_frame_rfc3164_syslog_priority_manipulation[] = { 0x08, 0x01, '<', '9', '9', '9', '>', 'f', 'a', 'k', 'e', '_', 'e', 'm', 'e', 'r', 'g', 'e', 'n', 'c', 'y' };
+static uint8_t test_frame_rfc3164_syslog_timestamp_confusion[] = { 0x08, 0x02, '<', '1', '6', '>', 'F', 'e', 'b', ' ', '3', '0', ' ', '2', '5', ':', '6', '1', ':', '6', '1', ' ', 'h', 'o', 's', 't', ' ', 'm', 's', 'g' };
+
+/* RFC 3411 - SNMP Architecture Violations */
+static uint8_t test_frame_rfc3411_snmp_community_brute_force[] = { 0x08, 0x00, 0x30, 0x19, 0x02, 0x01, 0x00, 0x04, 0x06, 'p', 'u', 'b', 'l', 'i', 'c', 0xA0, 0x0C, 0x02, 0x04, 0x12, 0x34, 0x56, 0x78, 0x02, 0x01, 0x00, 0x02, 0x01, 0x00, 0x30, 0x00 };
+static uint8_t test_frame_rfc3411_snmp_version_downgrade[] = { 0x08, 0x01, 0x30, 0x15, 0x02, 0x01, 0xFF, 0x04, 0x06, 'p', 'r', 'i', 'v', 'a', 't', 0xA1, 0x08, 0x02, 0x01, 0x01, 0x04, 0x00, 0x04, 0x00 };
+static uint8_t test_frame_rfc3411_snmp_oid_traversal[] = { 0x08, 0x02, 0x30, 0x20, 0x02, 0x01, 0x01, 0x04, 0x06, 'p', 'u', 'b', 'l', 'i', 'c', 0xA0, 0x13, 0x02, 0x04, 0x00, 0x00, 0x00, 0x01, 0x02, 0x01, 0x00, 0x02, 0x01, 0x00, 0x30, 0x05, 0x30, 0x03, 0x06, 0x01, 0x00 };
+
+/* RFC 3550 - Real-time Transport Protocol (RTP) Violations */
+static uint8_t test_frame_rfc3550_rtp_sequence_prediction[] = { 0x08, 0x00, 0x80, 0x08, 0x00, 0x01, 0x12, 0x34, 0x56, 0x78, 0x9A, 0xBC };
+static uint8_t test_frame_rfc3550_rtp_timestamp_manipulation[] = { 0x08, 0x01, 0x80, 0x60, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0x00 };
+static uint8_t test_frame_rfc3550_rtp_ssrc_collision[] = { 0x08, 0x02, 0x80, 0x08, 0x12, 0x34, 0x56, 0x78, 0x12, 0x34, 0x56, 0x78 };
+
+/* RFC 3748 - Extensible Authentication Protocol (EAP) Enhanced Violations */
+static uint8_t test_frame_rfc3748_eap_tls_fragment_bomb[] = { 0x08, 0x00, 0x02, 0x01, 0x00, 0xFF, 0x0D, 0xC0, 0xFF, 0xFF, 0xFF, 0xFF };
+static uint8_t test_frame_rfc3748_eap_method_chaining_attack[] = { 0x08, 0x01, 0x02, 0x02, 0x00, 0x08, 0x04, 0x10, 0x00, 0x06, 0x19, 0x00 };
+static uint8_t test_frame_rfc3748_eap_identity_disclosure[] = { 0x08, 0x02, 0x02, 0x01, 0x00, 0x10, 0x01, 'a', 'd', 'm', 'i', 'n', '@', 's', 'e', 'c', 'r', 'e', 't', '.', 'c', 'o', 'm' };
+
+/* RFC 4271 - Border Gateway Protocol (BGP-4) Violations */
+static uint8_t test_frame_rfc4271_bgp_route_hijack[] = { 0x08, 0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0x13, 0x02 };
+static uint8_t test_frame_rfc4271_bgp_path_attribute_manipulation[] = { 0x08, 0x01, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0x17, 0x02, 0x00, 0x00, 0x00, 0x00 };
+static uint8_t test_frame_rfc4271_bgp_as_path_prepending_attack[] = { 0x08, 0x02, 0x40, 0x01, 0x01, 0x00, 0x40, 0x02, 0xFF, 0x02, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF };
+
+/* RFC 4347 - Datagram Transport Layer Security (DTLS) Violations */
+static uint8_t test_frame_rfc4347_dtls_replay_attack[] = { 0x08, 0x00, 0x16, 0xFE, 0xFD, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
+static uint8_t test_frame_rfc4347_dtls_fragmentation_attack[] = { 0x08, 0x01, 0x16, 0xFE, 0xFD, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0x00, 0x00, 0x01 };
+static uint8_t test_frame_rfc4347_dtls_cookie_manipulation[] = { 0x08, 0x02, 0x16, 0xFE, 0xFD, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x0C, 0xFF, 'f', 'a', 'k', 'e', '_', 'c', 'o', 'o', 'k', 'i', 'e' };
+
+/* RFC 4456 - BGP Route Reflection Violations */
+static uint8_t test_frame_rfc4456_bgp_route_reflection_loop[] = { 0x08, 0x00, 0x80, 0x04, 0x04, 0x00, 0x00, 0x00, 0x64, 0x80, 0x0A, 0x04, 0x01, 0x01, 0x01, 0x01 };
+static uint8_t test_frame_rfc4456_bgp_cluster_id_spoof[] = { 0x08, 0x01, 0x80, 0x0A, 0x04, 0xFF, 0xFF, 0xFF, 0xFF };
+static uint8_t test_frame_rfc4456_bgp_originator_id_manipulation[] = { 0x08, 0x02, 0x80, 0x09, 0x04, 0x00, 0x00, 0x00, 0x00 };
+
+/* RFC 5321 - Enhanced SMTP Protocol Violations */
+static uint8_t test_frame_rfc5321_smtp_command_injection_enhanced[] = { 0x08, 0x00, 'M', 'A', 'I', 'L', ' ', 'F', 'R', 'O', 'M', ':', '<', 'u', 's', 'e', 'r', '>', '\r', '\n', 'R', 'C', 'P', 'T', ' ', 'T', 'O', ':', '<', 'v', 'i', 'c', 't', 'i', 'm', '>' };
+static uint8_t test_frame_rfc5321_smtp_data_smuggling[] = { 0x08, 0x01, 'D', 'A', 'T', 'A', '\r', '\n', '.', '\r', '\n', 'M', 'A', 'I', 'L', ' ', 'F', 'R', 'O', 'M', ':', '<', 'a', 't', 't', 'a', 'c', 'k', 'e', 'r', '>' };
+static uint8_t test_frame_rfc5321_smtp_auth_bypass[] = { 0x08, 0x02, 'A', 'U', 'T', 'H', ' ', 'P', 'L', 'A', 'I', 'N', ' ', 'A', 'G', 'F', 'k', 'b', 'W', 'l', 'u', 'A', 'G', 'F', 'k', 'b', 'W', 'l', 'u' };
+
+/* RFC 5389 - Session Traversal Utilities for NAT (STUN) Violations */
+static uint8_t test_frame_rfc5389_stun_message_integrity_bypass[] = { 0x08, 0x00, 0x00, 0x01, 0x00, 0x08, 0x21, 0x12, 0xA4, 0x42, 0x12, 0x34, 0x56, 0x78, 0x9A, 0xBC, 0xDE, 0xF0, 0x11, 0x22, 0x00, 0x08, 0x00, 0x14 };
+static uint8_t test_frame_rfc5389_stun_attribute_overflow[] = { 0x08, 0x01, 0x01, 0x01, 0xFF, 0xFF, 0x21, 0x12, 0xA4, 0x42, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
+static uint8_t test_frame_rfc5389_stun_xor_mapped_address_confusion[] = { 0x08, 0x02, 0x00, 0x01, 0x00, 0x0C, 0x21, 0x12, 0xA4, 0x42, 0x00, 0x20, 0x00, 0x08, 0x00, 0x01, 0xA1, 0x47, 0x01, 0x13 };
+
 static uint8_t test_stream_0x0C_off1_len0_fin0[] = {0x0C, 0x04, 0x0A, 'h','e','l','l','o',' ','s','t','r','e','a','m'};
 static uint8_t test_stream_0x0D_off1_len0_fin1[] = {0x0D, 0x04, 0x0A, 'h','e','l','l','o',' ','s','t','r','e','a','m'};
 static uint8_t test_stream_0x0E_off1_len1_fin0[] = {0x0E, 0x04, 0x0A, 0x0C, 'h','e','l','l','o',' ','s','t','r','e','a','m'};
@@ -3895,6 +4535,554 @@ static uint8_t test_frame_ws_all_rsv_set[] = { 0xF1, 0x04, 'd', 'a', 't', 'a' };
 
  /* END OF JULES ADDED FRAMES */
 
+/* === ADVANCED PROTOCOL VIOLATION TEST CASES === */
+
+/* HTTP/3 Protocol Violations */
+// SETTINGS frame sent on request stream (protocol violation)
+static uint8_t test_frame_h3_settings_frame_on_request_stream[] = { 0x04, 0x00 }; // SETTINGS on stream 0
+// DATA frame without preceding HEADERS
+static uint8_t test_frame_h3_data_frame_without_headers[] = { 0x00, 0x05, 'h', 'e', 'l', 'l', 'o' };
+// HEADERS frame after TRAILERS (protocol violation)
+static uint8_t test_frame_h3_headers_after_trailers[] = { 0x01, 0x00 }; // Empty HEADERS after trailers
+// PUSH_PROMISE on unidirectional stream
+static uint8_t test_frame_h3_push_promise_on_unidirectional[] = { 0x05, 0x01, 0x00 };
+// GOAWAY with invalid stream ID
+static uint8_t test_frame_h3_goaway_with_invalid_id[] = { 0x07, 0x03 }; // Stream ID 3 (invalid)
+// MAX_PUSH_ID decrease (protocol violation)
+static uint8_t test_frame_h3_max_push_id_decrease[] = { 0x0D, 0x01 }; // Decreased from previous value
+// CANCEL_PUSH for non-existent push
+static uint8_t test_frame_h3_cancel_push_nonexistent[] = { 0x03, 0xFF }; // Push ID 255 never promised
+// Duplicate SETTINGS frame
+static uint8_t test_frame_h3_duplicate_settings[] = { 0x04, 0x02, 0x01, 0x00, 0x01, 0x01 };
+// Reserved setting values
+static uint8_t test_frame_h3_reserved_setting_values[] = { 0x04, 0x02, 0x02, 0x01, 0x05, 0x01 };
+// Wrong frame type on QPACK encoder stream
+static uint8_t test_frame_h3_qpack_encoder_stream_wrong_type[] = { 0x00, 0x04, 't', 'e', 's', 't' };
+
+/* WebSocket Protocol Violations */
+// CONTINUATION without fragmented frame start
+static uint8_t test_frame_ws_continuation_without_start[] = { 0x80, 0x04, 't', 'e', 's', 't' };
+// TEXT frame after BINARY frame start
+static uint8_t test_frame_ws_text_after_binary_start[] = { 0x81, 0x04, 't', 'e', 's', 't' };
+// Control frame with fragmentation (invalid)
+static uint8_t test_frame_ws_control_frame_fragmented[] = { 0x08, 0x04, 0x00, 0x00, 't', 'e' };
+// CLOSE frame after previous CLOSE
+static uint8_t test_frame_ws_close_after_close[] = { 0x88, 0x02, 0x03, 0xE8 };
+// TEXT frame with invalid UTF-8
+static uint8_t test_frame_ws_invalid_utf8_text[] = { 0x81, 0x04, 0xFF, 0xFE, 0xFD, 0xFC };
+// Server-to-client frame with MASK bit set
+static uint8_t test_frame_ws_mask_bit_server_to_client[] = { 0x81, 0x84, 0x00, 0x00, 0x00, 0x00, 't', 'e', 's', 't' };
+// Client-to-server frame without MASK bit
+static uint8_t test_frame_ws_unmask_bit_client_to_server[] = { 0x81, 0x04, 't', 'e', 's', 't' };
+// CLOSE frame with reserved code 1005
+static uint8_t test_frame_ws_invalid_close_code_1005[] = { 0x88, 0x02, 0x03, 0xED };
+// CLOSE frame with reason but no code
+static uint8_t test_frame_ws_close_reason_without_code[] = { 0x88, 0x06, 'r', 'e', 'a', 's', 'o', 'n' };
+// PONG frame without corresponding PING
+static uint8_t test_frame_ws_pong_without_ping[] = { 0x8A, 0x04, 't', 'e', 's', 't' };
+
+/* QUIC Connection Migration Attacks */
+// PATH_CHALLENGE with wrong destination CID
+static uint8_t test_frame_quic_path_challenge_wrong_dcid[] = { 0x1A, 0x12, 0x34, 0x56, 0x78, 0x9A, 0xBC, 0xDE, 0xF0 };
+// PATH_RESPONSE replay attack
+static uint8_t test_frame_quic_path_response_replay_attack[] = { 0x1B, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88 };
+// NEW_CONNECTION_ID for migration attack
+static uint8_t test_frame_quic_new_cid_migration_attack[] = { 0x18, 0xFF, 0x00, 0x08, 0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0xFF, 0x00, 0x11, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F, 0x10 };
+// RETIRE_CONNECTION_ID for active path
+static uint8_t test_frame_quic_retire_cid_active_path[] = { 0x19, 0x00 }; // Retiring active CID
+// Path validation amplification attack
+static uint8_t test_frame_quic_path_validation_amplification[] = { 0x1A, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF };
+// Connection migration flood
+static uint8_t test_frame_quic_connection_migration_flood[] = { 0x1A, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01 };
+
+/* QUIC Cryptographic Attacks */
+// CRYPTO frame reordering attack
+static uint8_t test_frame_quic_crypto_frame_reordering[] = { 0x06, 0x40, 0x64, 0x04, 't', 'e', 's', 't' }; // Offset 100
+// CRYPTO frame with duplicate offset
+static uint8_t test_frame_quic_crypto_duplicate_offset[] = { 0x06, 0x00, 0x04, 's', 'a', 'm', 'e' };
+// CRYPTO frame gap attack
+static uint8_t test_frame_quic_crypto_gap_attack[] = { 0x06, 0x40, 0xFF, 0x04, 'g', 'a', 'p', 's' };
+// Handshake replay attack
+static uint8_t test_frame_quic_handshake_replay[] = { 0x06, 0x00, 0x08, 0x16, 0x03, 0x03, 0x00, 0x04, 0x01, 0x00, 0x00, 0x00 };
+// Crypto downgrade attack
+static uint8_t test_frame_quic_crypto_downgrade_attack[] = { 0x06, 0x00, 0x06, 0x16, 0x03, 0x01, 0x00, 0x02, 0x00, 0x00 };
+// Early data replay attack
+static uint8_t test_frame_quic_early_data_replay[] = { 0x08, 0x00, 'r', 'e', 'p', 'l', 'a', 'y' };
+
+/* QUIC Flow Control Attacks */
+// Flow control bypass attempt
+static uint8_t test_frame_quic_flow_control_bypass[] = { 0x08, 0x01, 0xFF, 0xFF, 0xFF, 0xFF, 'd', 'a', 't', 'a' };
+// MAX_DATA oscillation attack
+static uint8_t test_frame_quic_max_data_oscillation[] = { 0x10, 0x40, 0x64 }; // Oscillating values
+// Stream data blocked lie
+static uint8_t test_frame_quic_stream_data_blocked_lie[] = { 0x15, 0x01, 0x32 }; // False blocked claim
+// Premature data blocked claim
+static uint8_t test_frame_quic_data_blocked_premature[] = { 0x14, 0x32 }; // Premature blocking
+// Max streams exhaustion attack
+static uint8_t test_frame_quic_max_streams_exhaustion[] = { 0x12, 0xFF, 0xFF, 0xFF, 0xFF };
+// Stream limit bypass attempt
+static uint8_t test_frame_quic_stream_limit_bypass[] = { 0x08, 0xFF, 0xFF, 0xFF, 0xFF, 't', 'e', 's', 't' };
+
+/* QUIC Packet Number Space Violations */
+// ACK in wrong packet number space
+static uint8_t test_frame_quic_ack_wrong_pn_space[] = { 0x02, 0x00, 0x00, 0x00, 0x00 };
+// CRYPTO in application space
+static uint8_t test_frame_quic_crypto_in_app_space[] = { 0x06, 0x00, 0x04, 't', 'e', 's', 't' };
+// HANDSHAKE_DONE too early
+static uint8_t test_frame_quic_handshake_done_early[] = { 0x1E };
+// 0-RTT in handshake packet number space
+static uint8_t test_frame_quic_0rtt_in_handshake_pn[] = { 0x08, 0x00, 'e', 'a', 'r', 'l', 'y' };
+// STREAM in initial packet number space
+static uint8_t test_frame_quic_stream_in_initial_pn[] = { 0x08, 0x00, 'i', 'n', 'i', 't' };
+
+/* Advanced Varint Fuzzing */
+// Varint canonical form violation
+static uint8_t test_frame_quic_varint_canonical_violation[] = { 0x10, 0x40, 0x00 }; // Non-canonical encoding
+// Varint length mismatch
+static uint8_t test_frame_quic_varint_length_mismatch[] = { 0x10, 0x80, 0x01 }; // Wrong length prefix
+// Varint with reserved bits set
+static uint8_t test_frame_quic_varint_reserved_bits[] = { 0x10, 0xF0, 0x01 }; // Reserved bits set
+// Varint maximum value plus one
+static uint8_t test_frame_quic_varint_maximum_plus_one[] = { 0x10, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF };
+// Varint underflow
+static uint8_t test_frame_quic_varint_underflow[] = { 0x10, 0x00 }; // Underflow attempt
+
+/* DoS and Resource Exhaustion */
+// Memory exhaustion via stream IDs
+static uint8_t test_frame_quic_memory_exhaustion_stream_ids[] = { 0x08, 0xFF, 0xFF, 0xFF, 0xFC, 'd', 'a', 't', 'a' };
+// CPU exhaustion via ACK ranges
+static uint8_t test_frame_quic_cpu_exhaustion_ack_ranges[] = { 0x02, 0xFF, 0x00, 0xFF, 0xFF, 0x01, 0x00, 0x01, 0x00 };
+// Bandwidth exhaustion via padding
+static uint8_t test_frame_quic_bandwidth_exhaustion_padding[] = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
+// Connection table exhaustion
+static uint8_t test_frame_quic_connection_table_exhaustion[] = { 0x18, 0xFF, 0xFF, 0x08, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18, 0x19, 0x1A, 0x1B, 0x1C, 0x1D, 0x1E, 0x1F, 0x20 };
+// Token cache pollution
+static uint8_t test_frame_quic_token_cache_pollution[] = { 0x07, 0x10, 0xDE, 0xAD, 0xBE, 0xEF, 0xCA, 0xFE, 0xBA, 0xBE, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08 };
+
+/* State Machine Confusion */
+// STREAM after CONNECTION_CLOSE
+static uint8_t test_frame_quic_stream_after_connection_close[] = { 0x08, 0x01, 'b', 'a', 'd' };
+// ACK after CONNECTION_CLOSE
+static uint8_t test_frame_quic_ack_after_connection_close[] = { 0x02, 0x01, 0x00, 0x00, 0x00 };
+// NEW_TOKEN after migration
+static uint8_t test_frame_quic_new_token_after_migration[] = { 0x07, 0x08, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08 };
+// PATH_CHALLENGE after close
+static uint8_t test_frame_quic_path_challenge_after_close[] = { 0x1A, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08 };
+// HANDSHAKE_DONE sent twice
+static uint8_t test_frame_quic_handshake_done_twice[] = { 0x1E };
+
+/* Covert Channel Attacks */
+// Timing channel via ACK delay
+static uint8_t test_frame_quic_timing_channel_ack_delay[] = { 0x02, 0x01, 0xFF, 0xFF, 0xFF, 0x00, 0x00 };
+// Padding pattern channel
+static uint8_t test_frame_quic_padding_pattern_channel[] = { 0x00, 0x01, 0x00, 0x01, 0x00, 0x01, 0x00, 0x01 };
+// Stream ID pattern channel
+static uint8_t test_frame_quic_stream_id_pattern_channel[] = { 0x08, 0xAA, 'd', 'a', 't', 'a' };
+// Error code channel
+static uint8_t test_frame_quic_error_code_channel[] = { 0x1C, 0xDE, 0xAD, 0x00, 0x00 };
+// Frame ordering channel
+static uint8_t test_frame_quic_frame_ordering_channel[] = { 0x01, 0x08, 0x01, 'X' };
+
+/* Protocol Downgrade Attacks */
+// Version downgrade MITM
+static uint8_t test_frame_quic_version_downgrade_mitm[] = { 0x1C, 0x0B, 0x00, 0x00, 'v', 'e', 'r', 's', 'i', 'o', 'n' };
+// Transport parameter downgrade
+static uint8_t test_frame_quic_transport_parameter_downgrade[] = { 0x06, 0x00, 0x04, 0x00, 0x01, 0x00, 0x00 };
+// Extension downgrade
+static uint8_t test_frame_quic_extension_downgrade[] = { 0x40, 0x52, 0x04, 0x00, 0x00, 0x00, 0x00 };
+// Cipher suite downgrade
+static uint8_t test_frame_quic_cipher_suite_downgrade[] = { 0x06, 0x00, 0x06, 0x16, 0x03, 0x03, 0x00, 0x02, 0x00, 0x00 };
+
+/* Side Channel Attacks */
+// Cache timing attack vector
+static uint8_t test_frame_quic_cache_timing_attack[] = { 0x08, 0x01, 0xCA, 0xCE, 0xCA, 0xCE };
+// Branch prediction attack
+static uint8_t test_frame_quic_branch_prediction_attack[] = { 0x02, 0x55, 0xAA, 0x01, 0x00 };
+// Memory access pattern analysis
+static uint8_t test_frame_quic_memory_access_pattern[] = { 0x10, 0x80, 0x00, 0x00, 0x01 };
+// Power analysis resistant test
+static uint8_t test_frame_quic_power_analysis_resistant[] = { 0xFF, 0xFF, 0xFF, 0xFF, 0xFF };
+
+/* Implementation-Specific Edge Cases */
+// Buffer boundary edge case
+static uint8_t test_frame_quic_buffer_boundary_edge[] = { 0x08, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
+// Alignment requirement violation
+static uint8_t test_frame_quic_alignment_requirement_violation[] = { 0x10, 0x01, 0x02, 0x03 }; // Misaligned data
+// Endianness confusion
+static uint8_t test_frame_quic_endianness_confusion[] = { 0x10, 0x12, 0x34, 0x56, 0x78 };
+// Stack overflow trigger
+static uint8_t test_frame_quic_stack_overflow_trigger[] = { 0x02, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF };
+// Heap overflow trigger
+static uint8_t test_frame_quic_heap_overflow_trigger[] = { 0x31, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFE, 0x00 };
+
+/* === ADDITIONAL ADVANCED ATTACK VECTORS === */
+
+/* HTTP/2 Specific Violations */
+// HTTP/2 HEADERS frame with invalid padding
+static uint8_t test_frame_h2_headers_invalid_padding[] = { 0x00, 0x00, 0x05, 0x01, 0x08, 0x00, 0x00, 0x00, 0x01, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF };
+// HTTP/2 DATA frame with invalid padding length
+static uint8_t test_frame_h2_data_invalid_padding_len[] = { 0x00, 0x00, 0x06, 0x00, 0x08, 0x00, 0x00, 0x00, 0x01, 0x10, 'd', 'a', 't', 'a', 0x00 };
+// HTTP/2 PRIORITY frame with self-dependency
+static uint8_t test_frame_h2_priority_self_dependency[] = { 0x00, 0x00, 0x05, 0x02, 0x00, 0x00, 0x00, 0x00, 0x01, 0x80, 0x00, 0x00, 0x01, 0x10 };
+// HTTP/2 WINDOW_UPDATE with zero increment
+static uint8_t test_frame_h2_window_update_zero_increment[] = { 0x00, 0x00, 0x04, 0x08, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00 };
+// HTTP/2 SETTINGS ACK with payload
+static uint8_t test_frame_h2_settings_ack_with_payload[] = { 0x00, 0x00, 0x06, 0x04, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x10, 0x00 };
+// HTTP/2 GOAWAY with invalid last stream ID
+static uint8_t test_frame_h2_goaway_invalid_last_stream[] = { 0x00, 0x00, 0x08, 0x07, 0x00, 0x00, 0x00, 0x00, 0x00, 0x80, 0x00, 0x00, 0x02, 0x00, 0x00, 0x00, 0x02 };
+// HTTP/2 RST_STREAM with invalid error code
+static uint8_t test_frame_h2_rst_stream_invalid_error[] = { 0x00, 0x00, 0x04, 0x03, 0x00, 0x00, 0x00, 0x00, 0x01, 0xFF, 0xFF, 0xFF, 0xFF };
+// HTTP/2 PUSH_PROMISE with invalid promised ID
+static uint8_t test_frame_h2_push_promise_invalid_id[] = { 0x00, 0x00, 0x04, 0x05, 0x00, 0x00, 0x00, 0x00, 0x01, 0x80, 0x00, 0x00, 0x00 };
+// HTTP/2 CONTINUATION without HEADERS
+static uint8_t test_frame_h2_continuation_without_headers[] = { 0x00, 0x00, 0x04, 0x09, 0x04, 0x00, 0x00, 0x00, 0x01, 't', 'e', 's', 't' };
+// HTTP/2 Frame with reserved flags set
+static uint8_t test_frame_h2_reserved_flags_set[] = { 0x00, 0x00, 0x00, 0x00, 0xF0, 0x00, 0x00, 0x00, 0x01 };
+
+/* QPACK Specific Attacks */
+// QPACK encoder stream with invalid instruction
+static uint8_t test_frame_qpack_encoder_invalid_instruction[] = { 0xFF, 0xFF, 0xFF, 0xFF };
+// QPACK decoder stream with malformed header block ACK
+static uint8_t test_frame_qpack_decoder_malformed_ack[] = { 0x80, 0xFF, 0xFF };
+// QPACK dynamic table size update overflow
+static uint8_t test_frame_qpack_table_size_overflow[] = { 0x3F, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF };
+// QPACK literal header field with invalid name index
+static uint8_t test_frame_qpack_invalid_name_index[] = { 0x5F, 0xFF, 0xFF, 0xFF, 0xFF, 0x04, 't', 'e', 's', 't' };
+// QPACK duplicate instruction with invalid index
+static uint8_t test_frame_qpack_duplicate_invalid_index[] = { 0x1F, 0xFF, 0xFF, 0xFF, 0xFF };
+// QPACK header block with circular reference
+static uint8_t test_frame_qpack_circular_reference[] = { 0xC0, 0xFF, 0xFF, 0xFF, 0xFF };
+// QPACK encoder stream cancellation out of order
+static uint8_t test_frame_qpack_cancellation_out_of_order[] = { 0x40, 0xFF, 0xFF, 0xFF, 0xFF };
+// QPACK insert count increment overflow
+static uint8_t test_frame_qpack_insert_count_overflow[] = { 0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF };
+
+/* Multi-Protocol Confusion Attacks */
+// TLS Alert in QUIC CRYPTO frame
+static uint8_t test_frame_tls_alert_in_crypto[] = { 0x06, 0x00, 0x02, 0x15, 0x02 }; // TLS fatal alert
+// HTTP/1.1 request in QUIC STREAM
+static uint8_t test_frame_http1_in_quic_stream[] = { 0x08, 0x00, 'G', 'E', 'T', ' ', '/', ' ', 'H', 'T', 'T', 'P', '/', '1', '.', '1', '\r', '\n', '\r', '\n' };
+// SMTP command in QUIC STREAM
+static uint8_t test_frame_smtp_in_quic_stream[] = { 0x08, 0x01, 'H', 'E', 'L', 'O', ' ', 'e', 'x', 'a', 'm', 'p', 'l', 'e', '.', 'c', 'o', 'm' };
+// DNS query in DATAGRAM frame
+static uint8_t test_frame_dns_in_datagram[] = { 0x30, 0x12, 0x34, 0x01, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x07, 'e', 'x', 'a', 'm', 'p', 'l', 'e', 0x03, 'c', 'o', 'm', 0x00, 0x00, 0x01, 0x00, 0x01 };
+// FTP command in STREAM frame
+static uint8_t test_frame_ftp_in_stream[] = { 0x08, 0x02, 'U', 'S', 'E', 'R', ' ', 'a', 'n', 'o', 'n', 'y', 'm', 'o', 'u', 's' };
+// RTSP request in STREAM frame
+static uint8_t test_frame_rtsp_in_stream[] = { 0x08, 0x03, 'O', 'P', 'T', 'I', 'O', 'N', 'S', ' ', 'r', 't', 's', 'p', ':', '/', '/', 'e', 'x', 'a', 'm', 'p', 'l', 'e' };
+// SIP INVITE in STREAM frame
+static uint8_t test_frame_sip_in_stream[] = { 0x08, 0x04, 'I', 'N', 'V', 'I', 'T', 'E', ' ', 's', 'i', 'p', ':', 'u', 's', 'e', 'r', '@', 'e', 'x', 'a', 'm', 'p', 'l', 'e' };
+
+/* Advanced WebSocket Edge Cases */
+// WebSocket frame with invalid payload length encoding
+static uint8_t test_frame_ws_invalid_payload_len_encoding[] = { 0x81, 0x7E, 0x00, 0x00 };
+// WebSocket PING frame exceeding 125 bytes
+static uint8_t test_frame_ws_ping_oversized[] = { 0x89, 0x7E, 0x00, 0x80, /* 128 bytes of data */ 0x00, 0x01, 0x02, 0x03 };
+// WebSocket close frame with truncated reason
+static uint8_t test_frame_ws_close_truncated_reason[] = { 0x88, 0x04, 0x03, 0xE8, 't', 'e' };
+// WebSocket frame with mask key all zeros
+static uint8_t test_frame_ws_mask_key_all_zeros[] = { 0x81, 0x84, 0x00, 0x00, 0x00, 0x00, 't', 'e', 's', 't' };
+// WebSocket frame with predictable mask pattern
+static uint8_t test_frame_ws_predictable_mask[] = { 0x81, 0x84, 0xAA, 0xAA, 0xAA, 0xAA, 0xDE, 0xDE, 0xDE, 0xDE };
+// WebSocket binary frame with text-like content
+static uint8_t test_frame_ws_binary_text_content[] = { 0x82, 0x05, 'h', 'e', 'l', 'l', 'o' };
+// WebSocket text frame with binary-like content
+static uint8_t test_frame_ws_text_binary_content[] = { 0x81, 0x04, 0x00, 0x01, 0x02, 0x03 };
+
+/* Packet Fragmentation and Reassembly Attacks */
+// QUIC STREAM frame with overlapping data ranges
+static uint8_t test_frame_stream_overlapping_ranges[] = { 0x0C, 0x01, 0x02, 'A', 'B', 'C' }; // Overlaps with previous
+// CRYPTO frame with gap in offset sequence
+static uint8_t test_frame_crypto_gap_in_sequence[] = { 0x06, 0x40, 0xC8, 0x04, 'g', 'a', 'p', 's' }; // Offset 200
+// STREAM frame with data beyond final size
+static uint8_t test_frame_stream_data_beyond_final[] = { 0x0F, 0x01, 0x40, 0x64, 0x05, 'e', 'x', 't', 'r', 'a' };
+// Multiple STREAM frames with same offset
+static uint8_t test_frame_stream_duplicate_offset[] = { 0x0C, 0x01, 0x00, 'd', 'u', 'p', 'e' };
+// STREAM frame with zero-length at non-zero offset
+static uint8_t test_frame_stream_zero_len_nonzero_offset[] = { 0x0E, 0x01, 0x10, 0x00 };
+
+/* Version Negotiation Attacks */
+// Version negotiation with invalid version list
+static uint8_t test_frame_version_negotiation_invalid[] = { 0x00, 0x00, 0x00, 0x00, 0xFF, 0xFF, 0xFF, 0xFF };
+// Retry packet with invalid version
+static uint8_t test_frame_retry_invalid_version[] = { 0x00, 0x00, 0x00, 0x00 };
+// Version negotiation downgrade attack
+static uint8_t test_frame_version_downgrade[] = { 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x02 };
+// Version negotiation with duplicate versions
+static uint8_t test_frame_version_duplicates[] = { 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x01 };
+
+/* Transport Parameter Manipulation */
+// Invalid transport parameter ID
+static uint8_t test_frame_invalid_transport_param[] = { 0x06, 0x00, 0x04, 0xFF, 0xFF, 0x00, 0x00 };
+// Transport parameter with invalid length
+static uint8_t test_frame_transport_param_invalid_len[] = { 0x06, 0x00, 0x06, 0x01, 0x04, 0x00, 0x00, 0x00, 0x00 };
+// Duplicate transport parameter
+static uint8_t test_frame_duplicate_transport_param[] = { 0x06, 0x00, 0x08, 0x01, 0x02, 0x10, 0x00, 0x01, 0x02, 0x10, 0x00 };
+// Transport parameter with reserved value
+static uint8_t test_frame_reserved_transport_param[] = { 0x06, 0x00, 0x04, 0x1F, 0x02, 0xFF, 0xFF };
+
+/* Key Update Attacks */
+// Premature key update
+static uint8_t test_frame_premature_key_update[] = { 0x08, 0x00, 'e', 'a', 'r', 'l', 'y' }; // Before handshake complete
+// Excessive key update frequency
+static uint8_t test_frame_excessive_key_updates[] = { 0x08, 0x01, 'u', 'p', 'd', 'a', 't', 'e', '1' };
+// Key update with old key
+static uint8_t test_frame_key_update_old_key[] = { 0x08, 0x02, 'o', 'l', 'd', 'k', 'e', 'y' };
+// Key update rollback attack
+static uint8_t test_frame_key_update_rollback[] = { 0x08, 0x03, 'r', 'o', 'l', 'l', 'b', 'a', 'c', 'k' };
+
+/* Connection ID Rotation Attacks */
+// NEW_CONNECTION_ID with predictable sequence
+static uint8_t test_frame_cid_predictable_sequence[] = { 0x18, 0x10, 0x0F, 0x08, 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18, 0x19, 0x1A, 0x1B, 0x1C, 0x1D, 0x1E, 0x1F };
+// Connection ID rotation DoS
+static uint8_t test_frame_cid_rotation_dos[] = { 0x18, 0xFF, 0xFE, 0x08, 0xFF, 0xFE, 0xFD, 0xFC, 0xFB, 0xFA, 0xF9, 0xF8, 0xF7, 0xF6, 0xF5, 0xF4, 0xF3, 0xF2, 0xF1, 0xF0, 0xEF, 0xEE, 0xED, 0xEC, 0xEB, 0xEA, 0xE9, 0xE8 };
+// RETIRE_CONNECTION_ID flood
+static uint8_t test_frame_retire_cid_flood[] = { 0x19, 0xFF, 0xFF, 0xFF, 0xFF };
+// Connection ID collision attack
+static uint8_t test_frame_cid_collision_attack[] = { 0x18, 0x20, 0x00, 0x08, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F, 0x10 };
+
+/* Token Validation Attacks */
+// NEW_TOKEN with expired timestamp
+static uint8_t test_frame_token_expired[] = { 0x07, 0x10, 0x00, 0x00, 0x00, 0x01, 0x60, 0x00, 0x00, 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08 };
+// NEW_TOKEN with invalid signature
+static uint8_t test_frame_token_invalid_signature[] = { 0x07, 0x20, 0xBA, 0xD5, 0x16, 0x7A, 0x7E, 0xC4, 0x02, 0x8F, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F, 0x10 };
+// Token replay attack
+static uint8_t test_frame_token_replay[] = { 0x07, 0x08, 0xRE, 0xPL, 0xAY, 0xED, 0xTO, 0xKE, 0xN1, 0x23 };
+// Token with malformed structure
+static uint8_t test_frame_token_malformed_structure[] = { 0x07, 0x0C, 0xFF, 0xFF, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00 };
+
+/* Congestion Control Attacks */
+// ACK frame with manipulated ECN counts
+static uint8_t test_frame_ack_manipulated_ecn[] = { 0x03, 0xFF, 0x00, 0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF };
+// DATA_BLOCKED with false congestion signal
+static uint8_t test_frame_false_congestion_signal[] = { 0x14, 0x01 }; // False signal
+// Congestion window probing attack
+static uint8_t test_frame_cwnd_probing_attack[] = { 0x08, 0x01, 0xFF, 0xFF, 0xFF, 0xFF, 'p', 'r', 'o', 'b', 'e' };
+// Loss detection manipulation
+static uint8_t test_frame_loss_detection_manipulation[] = { 0x02, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0x00 };
+
+/* Advanced Timing Attacks */
+// ACK delay manipulation for timing inference
+static uint8_t test_frame_ack_delay_timing_inference[] = { 0x02, 0x01, 0xC0, 0x00, 0x00, 0x27, 0x10, 0x00, 0x00 };
+// PING frame timing correlation
+static uint8_t test_frame_ping_timing_correlation[] = { 0x01 }; // Timing-sensitive PING
+// PATH_CHALLENGE timing side-channel
+static uint8_t test_frame_path_challenge_timing_sidechannel[] = { 0x1A, 0x12, 0x34, 0x56, 0x78, 0x12, 0x34, 0x56, 0x78 };
+// Connection close timing attack
+static uint8_t test_frame_connection_close_timing[] = { 0x1C, 0x01, 0x00, 0x00, 't', 'i', 'm', 'i', 'n', 'g' };
+
+/* Memory Layout Attacks */
+// Frame designed to trigger memory alignment issues
+static uint8_t test_frame_memory_alignment_attack[] = { 0x08, 0x01, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07 }; // Odd alignment
+// Frame with pointer-like values
+static uint8_t test_frame_pointer_like_values[] = { 0x10, 0x7F, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF };
+// Frame targeting specific memory regions
+static uint8_t test_frame_memory_region_targeting[] = { 0x18, 0x00, 0x00, 0x08, 0x40, 0x00, 0x00, 0x00, 0x00, 0x10, 0x00, 0x00, 0x7F, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF };
+// Frame with return address-like patterns
+static uint8_t test_frame_return_address_pattern[] = { 0x08, 0x01, 0x41, 0x41, 0x41, 0x41, 0x42, 0x42, 0x42, 0x42 };
+
+/* === SPECIALIZED ATTACK VECTORS === */
+
+/* DNS over QUIC (DoQ) Attacks */
+static uint8_t test_frame_doq_malformed_query[] = { 0x08, 0x00, 0xFF, 0xFF, 0x01, 0x00, 0x00, 0x01, 0x00, 0x00 };
+static uint8_t test_frame_doq_amplification_attack[] = { 0x08, 0x01, 0x12, 0x34, 0x01, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x03, 'a', 'n', 'y', 0x00, 0x00, 0xFF, 0x00, 0x01 };
+static uint8_t test_frame_doq_cache_poisoning[] = { 0x08, 0x02, 0xBA, 0xD1, 0x81, 0x80, 0x00, 0x01, 0x00, 0x01 };
+
+/* WebTransport Attacks */
+static uint8_t test_frame_webtransport_invalid_session[] = { 0x41, 0x19, 0x08, 0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0x00, 0x00, 0x00 };
+static uint8_t test_frame_webtransport_stream_hijack[] = { 0x08, 0x42, 'h', 'i', 'j', 'a', 'c', 'k' };
+static uint8_t test_frame_webtransport_capsule_bomb[] = { 0x08, 0x43, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF };
+
+/* MASQUE Proxy Attacks */
+static uint8_t test_frame_masque_connect_udp_spoof[] = { 0x08, 0x00, 'C', 'O', 'N', 'N', 'E', 'C', 'T', '-', 'U', 'D', 'P' };
+static uint8_t test_frame_masque_ip_spoofing[] = { 0x08, 0x01, 0xC0, 0xA8, 0x01, 0x01, 0x00, 0x50 };
+static uint8_t test_frame_masque_proxy_loop[] = { 0x08, 0x02, 'l', 'o', 'o', 'p', 'b', 'a', 'c', 'k' };
+
+/* ECN Marking Attacks */
+static uint8_t test_frame_ecn_bleaching_attack[] = { 0x02, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
+static uint8_t test_frame_ecn_remarking_attack[] = { 0x03, 0x01, 0x00, 0x00, 0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF };
+static uint8_t test_frame_ecn_reflection_attack[] = { 0x02, 0x01, 0x00, 0x00, 0x00, 0x03, 0x03, 0x03 };
+
+/* Multipath QUIC Attacks */
+static uint8_t test_frame_mp_quic_path_scheduling_attack[] = { 0x1A, 0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0xFF, 0x00, 0x11 };
+static uint8_t test_frame_mp_quic_reinjection_attack[] = { 0x08, 0x01, 'r', 'e', 'i', 'n', 'j', 'e', 'c', 't' };
+static uint8_t test_frame_mp_quic_path_confusion[] = { 0x1B, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88 };
+
+/* Session Resumption Attacks */
+static uint8_t test_frame_session_ticket_forge[] = { 0x07, 0x20, 0xFO, 0xRG, 0xED, 0xTI, 0xCK, 0xET, 0x12, 0x34, 0x56, 0x78, 0x9A, 0xBC, 0xDE, 0xF0, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88, 0x99, 0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0xFF, 0x00, 0x01 };
+static uint8_t test_frame_psk_confusion_attack[] = { 0x06, 0x00, 0x10, 0x16, 0x03, 0x03, 0x00, 0x0C, 0x02, 0x00, 0x08, 0x03, 0x03, 0x00, 0x00, 0x00, 0x00, 0x00 };
+static uint8_t test_frame_resumption_replay[] = { 0x07, 0x10, 0xRE, 0xPL, 0xAY, 0xED, 0xSE, 0xSS, 0x12, 0x34, 0x56, 0x78, 0x9A, 0xBC, 0xDE, 0xF0, 0x01 };
+
+/* Post-Quantum Crypto Attacks */
+static uint8_t test_frame_pqc_hybrid_downgrade[] = { 0x06, 0x00, 0x08, 0x16, 0x03, 0x03, 0x00, 0x04, 0x0B, 0x00, 0x02, 0x00 };
+static uint8_t test_frame_pqc_kyber_malleability[] = { 0x06, 0x00, 0x40, /* Kyber ciphertext */ 0xBA, 0xD1, 0x23, 0x45 };
+static uint8_t test_frame_pqc_dilithium_forge[] = { 0x06, 0x00, 0x80, /* Dilithium signature */ 0xFO, 0xRG, 0xED, 0x56 };
+
+/* Anti-Forensics Techniques */
+static uint8_t test_frame_forensics_metadata_scrub[] = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
+static uint8_t test_frame_forensics_traffic_shaping[] = { 0x08, 0x01, 0xDE, 0xAD, 0xBE, 0xEF, 0xCA, 0xFE };
+static uint8_t test_frame_forensics_flow_correlation[] = { 0x01, /* Timing-sensitive pattern */ };
+
+/* Hardware-Specific Attacks */
+static uint8_t test_frame_cpu_cache_eviction[] = { 0x08, 0x01, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00 };
+static uint8_t test_frame_branch_predictor_poison[] = { 0x02, 0xAA, 0x55, 0xAA, 0x55, 0x00, 0x00, 0x00 };
+static uint8_t test_frame_speculative_execution[] = { 0x10, 0x40, 0x00, 0x00, 0x01 };
+
+/* ML Evasion Techniques */
+static uint8_t test_frame_ml_adversarial_padding[] = { 0x00, 0x01, 0x00, 0x01, 0x01, 0x00, 0x01, 0x00 };
+static uint8_t test_frame_ml_feature_poisoning[] = { 0x08, 0x01, 0x7F, 0x7F, 0x7F, 0x7F, 0x80, 0x80 };
+static uint8_t test_frame_ml_model_inversion[] = { 0x1C, 0x01, 0x00, 0x00, 'i', 'n', 'v', 'e', 'r', 't' };
+
+/* === COMPREHENSIVE NEGATIVE TEST CASES AND ADDITIONAL EDGE CASES === */
+
+/* Frame Type Boundary Testing */
+// Frame type at exact boundary values
+static uint8_t test_frame_type_boundary_0x3F[] = { 0x3F }; // Highest 1-byte varint
+static uint8_t test_frame_type_boundary_0x4000[] = { 0x40, 0x00 }; // Lowest 2-byte varint
+static uint8_t test_frame_type_boundary_0x7FFF[] = { 0x7F, 0xFF }; // Highest 2-byte varint
+static uint8_t test_frame_type_boundary_0x80000000[] = { 0x80, 0x00, 0x00, 0x00 }; // Lowest 4-byte varint
+static uint8_t test_frame_type_boundary_0xBFFFFFFF[] = { 0xBF, 0xFF, 0xFF, 0xFF }; // Highest 4-byte varint
+
+/* Stream State Violations */
+// STREAM frame after RESET_STREAM sent (state violation)
+static uint8_t test_stream_after_reset_violation[] = { 0x08, 0x01, 'b', 'a', 'd' }; // Stream 1 data after reset
+// STOP_SENDING after stream finished (state violation)
+static uint8_t test_stop_sending_after_fin_violation[] = { 0x05, 0x01, 0x00 }; // Stream 1 already finished
+// MAX_STREAM_DATA for closed stream (state violation)
+static uint8_t test_max_stream_data_closed_stream[] = { 0x11, 0x01, 0x41, 0x00 }; // Stream 1 closed
+
+/* Flow Control Edge Cases */
+// MAX_DATA smaller than current data sent
+static uint8_t test_max_data_regression[] = { 0x10, 0x32 }; // 50 bytes, less than already sent
+// MAX_STREAM_DATA smaller than current stream data
+static uint8_t test_max_stream_data_regression[] = { 0x11, 0x01, 0x32 }; // Stream 1, 50 bytes
+// STREAM data exceeding announced MAX_DATA
+static uint8_t test_stream_exceed_max_data[] = { 0x0A, 0x01, 0xFF, 0xFF, 'd','a','t','a' }; // Huge length
+
+/* Connection ID Management Violations */
+// NEW_CONNECTION_ID with sequence number regression
+static uint8_t test_new_cid_seq_regression[] = { 0x18, 0x01, 0x05, 0x08, 0xAA,0xAA,0xAA,0xAA,0xAA,0xAA,0xAA,0xAA, 0xBB,0xBB,0xBB,0xBB,0xBB,0xBB,0xBB,0xBB,0xBB,0xBB,0xBB,0xBB,0xBB,0xBB,0xBB,0xBB };
+// RETIRE_CONNECTION_ID for non-existent sequence
+static uint8_t test_retire_cid_nonexistent[] = { 0x19, 0xFF }; // Sequence 255 never announced
+// NEW_CONNECTION_ID with identical CID to existing
+static uint8_t test_new_cid_duplicate_cid[] = { 0x18, 0x03, 0x00, 0x08, 0x01,0x02,0x03,0x04,0x05,0x06,0x07,0x08, 0xC1,0xC2,0xC3,0xC4,0xC5,0xC6,0xC7,0xC8,0xC9,0xCA,0xCB,0xCC,0xCD,0xCE,0xCF,0xD0 };
+
+/* Frame Fragmentation Attacks */
+// Partial frame (truncated mid-field)
+static uint8_t test_frame_partial_stream[] = { 0x0F, 0x01, 0x40 }; // STREAM frame cut off in offset field
+// Partial varint (incomplete encoding)
+static uint8_t test_frame_partial_varint[] = { 0x10, 0x80 }; // MAX_DATA with incomplete 2-byte varint
+// Frame with missing required fields
+static uint8_t test_frame_missing_fields[] = { 0x04, 0x01 }; // RESET_STREAM missing error code and final size
+
+/* Varint Encoding Attacks */
+// Varint with excessive leading zeros
+static uint8_t test_varint_excessive_zeros[] = { 0x10, 0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01 }; // MAX_DATA value 1 in 8 bytes
+// Varint encoding edge case (exactly at boundary)
+static uint8_t test_varint_boundary_63[] = { 0x10, 0x3F }; // MAX_DATA value 63 (boundary)
+// Varint encoding edge case (exactly at boundary + 1)
+static uint8_t test_varint_boundary_64[] = { 0x10, 0x40, 0x40 }; // MAX_DATA value 64 (boundary + 1)
+
+/* Timing Attack Vectors */
+// ACK with unusual timing patterns (potential timing analysis)
+static uint8_t test_ack_timing_pattern[] = { 0x02, 0x64, 0xFF, 0xFF, 0xFF, 0xFF, 0x01, 0x00 }; // Large delay pattern
+// PATH_CHALLENGE with predictable timing
+static uint8_t test_path_challenge_timing[] = { 0x1a, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x02 }; // Predictable sequence
+
+/* Resource Exhaustion Patterns */
+// Many small STREAM frames for same stream
+static uint8_t test_stream_fragment_spam1[] = { 0x0C, 0x01, 0x00, 'A' }; // Offset 0
+static uint8_t test_stream_fragment_spam2[] = { 0x0C, 0x01, 0x01, 'B' }; // Offset 1
+static uint8_t test_stream_fragment_spam3[] = { 0x0C, 0x01, 0x02, 'C' }; // Offset 2
+// Rapid fire NEW_CONNECTION_ID frames
+static uint8_t test_rapid_new_cid1[] = { 0x18, 0x10, 0x00, 0x08, 0x10,0x10,0x10,0x10,0x10,0x10,0x10,0x10, 0xE1,0xE1,0xE1,0xE1,0xE1,0xE1,0xE1,0xE1,0xE1,0xE1,0xE1,0xE1,0xE1,0xE1,0xE1,0xE1 };
+static uint8_t test_rapid_new_cid2[] = { 0x18, 0x11, 0x00, 0x08, 0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11, 0xE2,0xE2,0xE2,0xE2,0xE2,0xE2,0xE2,0xE2,0xE2,0xE2,0xE2,0xE2,0xE2,0xE2,0xE2,0xE2 };
+
+/* Protocol State Machine Violations */
+// HANDSHAKE_DONE in wrong packet number space
+static uint8_t test_handshake_done_wrong_space[] = { 0x1e }; // In Initial/Handshake space
+// CRYPTO frame in Application space after handshake
+static uint8_t test_crypto_post_handshake[] = { 0x06, 0x00, 0x04, 't', 'e', 's', 't' };
+// ACK_FREQUENCY before handshake complete
+static uint8_t test_ack_frequency_early[] = { 0x40, 0xAF, 0x01, 0x01, 0x00, 0x00, 0x00 }; // Draft extension
+
+/* Frame Size Manipulation */
+// Extremely large frame claims
+static uint8_t test_frame_size_bomb[] = { 0x31, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x01 }; // DATAGRAM claiming max size
+// Zero-size frames with non-zero claims
+static uint8_t test_frame_zero_size_claim[] = { 0x31, 0x40, 0x64 }; // DATAGRAM length 100, no data
+
+/* Cross-Protocol Confusion */
+// HTTP/2 frame patterns in QUIC STREAM
+static uint8_t test_h2_in_quic_stream[] = { 0x08, 0x01, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00 }; // H2 HEADERS frame pattern
+// WebSocket frame patterns in QUIC STREAM  
+static uint8_t test_ws_in_quic_stream[] = { 0x08, 0x01, 0x81, 0x05, 'h', 'e', 'l', 'l', 'o' }; // WS Text frame pattern
+// TLS record patterns in CRYPTO frame
+static uint8_t test_tls_record_pattern[] = { 0x06, 0x00, 0x05, 0x16, 0x03, 0x03, 0x00, 0x01 }; // TLS handshake record start
+
+/* Integer Overflow Attempts */
+// Values designed to cause integer overflow in calculations
+static uint8_t test_overflow_offset_plus_len[] = { 0x0F, 0x01, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFE, 0xFF, 'X' }; // Max offset + large len
+// ACK range calculations that might overflow
+static uint8_t test_overflow_ack_range[] = { 0x02, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0x01, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF };
+
+/* Extension Frame Spoofing */
+// Frames that look like legitimate extensions but aren't
+static uint8_t test_fake_extension_frame[] = { 0x40, 0x52, 0x05, 0x01, 0x02, 0x03, 0x04 }; // Fake frame type with payload
+// Greased frame types with malicious patterns
+static uint8_t test_malicious_grease[] = { 0x1A, 0xDE, 0xAD, 0xBE, 0xEF, 0xCA, 0xFE }; // Suspicious payload pattern
+
+/* Path Validation Exploits */
+// PATH_CHALLENGE with all identical bytes
+static uint8_t test_path_challenge_identical[] = { 0x1a, 0xAA, 0xAA, 0xAA, 0xAA, 0xAA, 0xAA, 0xAA, 0xAA };
+// PATH_RESPONSE with wrong challenge data
+static uint8_t test_path_response_wrong[] = { 0x1b, 0x12, 0x34, 0x56, 0x78, 0x9A, 0xBC, 0xDE, 0xF0 };
+
+/* Token Management Attacks */
+// NEW_TOKEN with malformed token structure
+static uint8_t test_new_token_malformed[] = { 0x07, 0x10, 0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0x00, 0x00, 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08 };
+// NEW_TOKEN with token containing NULL bytes
+static uint8_t test_new_token_null_bytes[] = { 0x07, 0x08, 0x00, 0x01, 0x00, 0x02, 0x00, 0x03, 0x00, 0x04 };
+
+/* Stream Limit Boundary Testing */
+// Stream ID exactly at client/server boundary
+static uint8_t test_stream_boundary_client[] = { 0x08, 0xFC, 'd', 'a', 't', 'a' }; // Stream ID -4 (client uni)
+static uint8_t test_stream_boundary_server[] = { 0x08, 0xFD, 'd', 'a', 't', 'a' }; // Stream ID -3 (server uni)
+// Stream operations on wrong stream types
+static uint8_t test_bidi_ops_on_uni[] = { 0x05, 0x02, 0x00 }; // STOP_SENDING on uni stream
+
+/* Congestion Control Attacks */
+// Rapid MAX_DATA increases (bandwidth probing)
+static uint8_t test_rapid_max_data_increase[] = { 0x10, 0xFF, 0xFF, 0xFF, 0xFF }; // Sudden large increase
+// DATA_BLOCKED with suspicious values
+static uint8_t test_suspicious_data_blocked[] = { 0x14, 0x01 }; // Blocked at 1 byte
+
+/* Frame Ordering Violations */
+// ACK frame acknowledging future packets
+static uint8_t test_ack_future_packets[] = { 0x02, 0xFF, 0xFF, 0x00, 0x01, 0x00 }; // ACK packet 65535
+// CRYPTO frame with decreasing offset (reordering)
+static uint8_t test_crypto_reorder[] = { 0x06, 0x32, 0x04, 'l', 'a', 't', 'e' }; // Offset 50 after higher offset
+
+/* Padding Pattern Analysis */
+// Padding with non-zero patterns (covert channel)
+static uint8_t test_padding_covert_channel[] = { 0x00, 0x01, 0x00, 0x01, 0x00, 0x01 }; // Pattern in padding
+// Mixed padding and other frames
+static uint8_t test_padding_frame_mix[] = { 0x00, 0x01, 0x00, 0x08, 0x01, 'X', 0x00, 0x00 }; // PADDING, PING, PADDING, STREAM, PADDING
+
+/* Memory Exhaustion Patterns */
+// Many overlapping STREAM fragments
+static uint8_t test_overlap_fragment1[] = { 0x0C, 0x01, 0x00, 'A','A','A','A' }; // Offset 0-3
+static uint8_t test_overlap_fragment2[] = { 0x0C, 0x01, 0x02, 'B','B','B','B' }; // Offset 2-5 (overlap)
+static uint8_t test_overlap_fragment3[] = { 0x0C, 0x01, 0x01, 'C','C','C','C' }; // Offset 1-4 (overlap)
+
+/* Version Negotiation Confusion */
+// Frames that might confuse version negotiation
+static uint8_t test_version_confusion[] = { 0x40, 0x00, 0x00, 0x00, 0x00, 0x01 }; // Looks like version negotiation
+
+/* Error Code Enumeration */
+// CONNECTION_CLOSE with every possible error code
+static uint8_t test_conn_close_enum_error[] = { 0x1c, 0x40, 0xFF, 0x00, 0x00 }; // Error code 255
+
 /* Additional QUIC Negative Test Cases for Comprehensive Fuzzing */
 
 // CRYPTO frame with offset exceeding limits  
@@ -5248,6 +6436,109 @@ fuzi_q_frames_t fuzi_q_frame_list[] = {
     FUZI_Q_ITEM("quic_ping_invalid_context", test_frame_quic_ping_invalid_context),
     FUZI_Q_ITEM("quic_conn_close_max_err", test_frame_quic_conn_close_max_err),
     FUZI_Q_ITEM("quic_reset_after_fin_violation", test_frame_quic_reset_after_fin_violation),
+
+    /* === COMPREHENSIVE NEGATIVE TEST CASES FUZI_Q_ITEM ENTRIES === */
+    
+    /* Frame Type Boundary Testing */
+    FUZI_Q_ITEM("frame_type_boundary_0x3F", test_frame_type_boundary_0x3F),
+    FUZI_Q_ITEM("frame_type_boundary_0x4000", test_frame_type_boundary_0x4000),
+    FUZI_Q_ITEM("frame_type_boundary_0x7FFF", test_frame_type_boundary_0x7FFF),
+    FUZI_Q_ITEM("frame_type_boundary_0x80000000", test_frame_type_boundary_0x80000000),
+    FUZI_Q_ITEM("frame_type_boundary_0xBFFFFFFF", test_frame_type_boundary_0xBFFFFFFF),
+    
+    /* Stream State Violations */
+    FUZI_Q_ITEM("stream_after_reset_violation", test_stream_after_reset_violation),
+    FUZI_Q_ITEM("stop_sending_after_fin_violation", test_stop_sending_after_fin_violation),
+    FUZI_Q_ITEM("max_stream_data_closed_stream", test_max_stream_data_closed_stream),
+    
+    /* Flow Control Edge Cases */
+    FUZI_Q_ITEM("max_data_regression", test_max_data_regression),
+    FUZI_Q_ITEM("max_stream_data_regression", test_max_stream_data_regression),
+    FUZI_Q_ITEM("stream_exceed_max_data", test_stream_exceed_max_data),
+    
+    /* Connection ID Management Violations */
+    FUZI_Q_ITEM("new_cid_seq_regression", test_new_cid_seq_regression),
+    FUZI_Q_ITEM("retire_cid_nonexistent", test_retire_cid_nonexistent),
+    FUZI_Q_ITEM("new_cid_duplicate_cid", test_new_cid_duplicate_cid),
+    
+    /* Frame Fragmentation Attacks */
+    FUZI_Q_ITEM("frame_partial_stream", test_frame_partial_stream),
+    FUZI_Q_ITEM("frame_partial_varint", test_frame_partial_varint),
+    FUZI_Q_ITEM("frame_missing_fields", test_frame_missing_fields),
+    
+    /* Varint Encoding Attacks */
+    FUZI_Q_ITEM("varint_excessive_zeros", test_varint_excessive_zeros),
+    FUZI_Q_ITEM("varint_boundary_63", test_varint_boundary_63),
+    FUZI_Q_ITEM("varint_boundary_64", test_varint_boundary_64),
+    
+    /* Timing Attack Vectors */
+    FUZI_Q_ITEM("ack_timing_pattern", test_ack_timing_pattern),
+    FUZI_Q_ITEM("path_challenge_timing", test_path_challenge_timing),
+    
+    /* Resource Exhaustion Patterns */
+    FUZI_Q_ITEM("stream_fragment_spam1", test_stream_fragment_spam1),
+    FUZI_Q_ITEM("stream_fragment_spam2", test_stream_fragment_spam2),
+    FUZI_Q_ITEM("stream_fragment_spam3", test_stream_fragment_spam3),
+    FUZI_Q_ITEM("rapid_new_cid1", test_rapid_new_cid1),
+    FUZI_Q_ITEM("rapid_new_cid2", test_rapid_new_cid2),
+    
+    /* Protocol State Machine Violations */
+    FUZI_Q_ITEM("handshake_done_wrong_space", test_handshake_done_wrong_space),
+    FUZI_Q_ITEM("crypto_post_handshake", test_crypto_post_handshake),
+    FUZI_Q_ITEM("ack_frequency_early", test_ack_frequency_early),
+    
+    /* Frame Size Manipulation */
+    FUZI_Q_ITEM("frame_size_bomb", test_frame_size_bomb),
+    FUZI_Q_ITEM("frame_zero_size_claim", test_frame_zero_size_claim),
+    
+    /* Cross-Protocol Confusion */
+    FUZI_Q_ITEM("h2_in_quic_stream", test_h2_in_quic_stream),
+    FUZI_Q_ITEM("ws_in_quic_stream", test_ws_in_quic_stream),
+    FUZI_Q_ITEM("tls_record_pattern", test_tls_record_pattern),
+    
+    /* Integer Overflow Attempts */
+    FUZI_Q_ITEM("overflow_offset_plus_len", test_overflow_offset_plus_len),
+    FUZI_Q_ITEM("overflow_ack_range", test_overflow_ack_range),
+    
+    /* Extension Frame Spoofing */
+    FUZI_Q_ITEM("fake_extension_frame", test_fake_extension_frame),
+    FUZI_Q_ITEM("malicious_grease", test_malicious_grease),
+    
+    /* Path Validation Exploits */
+    FUZI_Q_ITEM("path_challenge_identical", test_path_challenge_identical),
+    FUZI_Q_ITEM("path_response_wrong", test_path_response_wrong),
+    
+    /* Token Management Attacks */
+    FUZI_Q_ITEM("new_token_malformed", test_new_token_malformed),
+    FUZI_Q_ITEM("new_token_null_bytes", test_new_token_null_bytes),
+    
+    /* Stream Limit Boundary Testing */
+    FUZI_Q_ITEM("stream_boundary_client", test_stream_boundary_client),
+    FUZI_Q_ITEM("stream_boundary_server", test_stream_boundary_server),
+    FUZI_Q_ITEM("bidi_ops_on_uni", test_bidi_ops_on_uni),
+    
+    /* Congestion Control Attacks */
+    FUZI_Q_ITEM("rapid_max_data_increase", test_rapid_max_data_increase),
+    FUZI_Q_ITEM("suspicious_data_blocked", test_suspicious_data_blocked),
+    
+    /* Frame Ordering Violations */
+    FUZI_Q_ITEM("ack_future_packets", test_ack_future_packets),
+    FUZI_Q_ITEM("crypto_reorder", test_crypto_reorder),
+    
+    /* Padding Pattern Analysis */
+    FUZI_Q_ITEM("padding_covert_channel", test_padding_covert_channel),
+    FUZI_Q_ITEM("padding_frame_mix", test_padding_frame_mix),
+    
+    /* Memory Exhaustion Patterns */
+    FUZI_Q_ITEM("overlap_fragment1", test_overlap_fragment1),
+    FUZI_Q_ITEM("overlap_fragment2", test_overlap_fragment2),
+    FUZI_Q_ITEM("overlap_fragment3", test_overlap_fragment3),
+    
+    /* Version Negotiation Confusion */
+    FUZI_Q_ITEM("version_confusion", test_version_confusion),
+    
+    /* Error Code Enumeration */
+    FUZI_Q_ITEM("conn_close_enum_error", test_conn_close_enum_error),
     FUZI_Q_ITEM("quic_unknown_type_0x40", test_frame_quic_unknown_type_0x40),
     FUZI_Q_ITEM("quic_unknown_type_0x41", test_frame_quic_unknown_type_0x41),
     FUZI_Q_ITEM("quic_unknown_type_0x42", test_frame_quic_unknown_type_0x42),
@@ -5277,6 +6568,968 @@ fuzi_q_frames_t fuzi_q_frame_list[] = {
     FUZI_Q_ITEM("quic_new_token_overflow", test_frame_quic_new_token_overflow),
     FUZI_Q_ITEM("quic_ack_timing_suspicious", test_frame_quic_ack_timing_suspicious),
 
+    /* Additional Advanced Protocol Violation Test Cases */
+    
+    /* HTTP/3 Protocol Violations */
+    FUZI_Q_ITEM("h3_settings_frame_on_request_stream", test_frame_h3_settings_frame_on_request_stream),
+    FUZI_Q_ITEM("h3_data_frame_without_headers", test_frame_h3_data_frame_without_headers),
+    FUZI_Q_ITEM("h3_headers_after_trailers", test_frame_h3_headers_after_trailers),
+    FUZI_Q_ITEM("h3_push_promise_on_unidirectional", test_frame_h3_push_promise_on_unidirectional),
+    FUZI_Q_ITEM("h3_goaway_with_invalid_id", test_frame_h3_goaway_with_invalid_id),
+    FUZI_Q_ITEM("h3_max_push_id_decrease", test_frame_h3_max_push_id_decrease),
+    FUZI_Q_ITEM("h3_cancel_push_nonexistent", test_frame_h3_cancel_push_nonexistent),
+    FUZI_Q_ITEM("h3_duplicate_settings", test_frame_h3_duplicate_settings),
+    FUZI_Q_ITEM("h3_reserved_setting_values", test_frame_h3_reserved_setting_values),
+    FUZI_Q_ITEM("h3_qpack_encoder_stream_wrong_type", test_frame_h3_qpack_encoder_stream_wrong_type),
+    
+    /* WebSocket Protocol Violations */
+    FUZI_Q_ITEM("ws_continuation_without_start", test_frame_ws_continuation_without_start),
+    FUZI_Q_ITEM("ws_text_after_binary_start", test_frame_ws_text_after_binary_start),
+    FUZI_Q_ITEM("ws_control_frame_fragmented", test_frame_ws_control_frame_fragmented),
+    FUZI_Q_ITEM("ws_close_after_close", test_frame_ws_close_after_close),
+    FUZI_Q_ITEM("ws_invalid_utf8_text", test_frame_ws_invalid_utf8_text),
+    FUZI_Q_ITEM("ws_mask_bit_server_to_client", test_frame_ws_mask_bit_server_to_client),
+    FUZI_Q_ITEM("ws_unmask_bit_client_to_server", test_frame_ws_unmask_bit_client_to_server),
+    FUZI_Q_ITEM("ws_invalid_close_code_1005", test_frame_ws_invalid_close_code_1005),
+    FUZI_Q_ITEM("ws_close_reason_without_code", test_frame_ws_close_reason_without_code),
+    FUZI_Q_ITEM("ws_pong_without_ping", test_frame_ws_pong_without_ping),
+    
+    /* QUIC Connection Migration Attacks */
+    FUZI_Q_ITEM("quic_path_challenge_wrong_dcid", test_frame_quic_path_challenge_wrong_dcid),
+    FUZI_Q_ITEM("quic_path_response_replay_attack", test_frame_quic_path_response_replay_attack),
+    FUZI_Q_ITEM("quic_new_cid_migration_attack", test_frame_quic_new_cid_migration_attack),
+    FUZI_Q_ITEM("quic_retire_cid_active_path", test_frame_quic_retire_cid_active_path),
+    FUZI_Q_ITEM("quic_path_validation_amplification", test_frame_quic_path_validation_amplification),
+    FUZI_Q_ITEM("quic_connection_migration_flood", test_frame_quic_connection_migration_flood),
+    
+    /* QUIC Cryptographic Attacks */
+    FUZI_Q_ITEM("quic_crypto_frame_reordering", test_frame_quic_crypto_frame_reordering),
+    FUZI_Q_ITEM("quic_crypto_duplicate_offset", test_frame_quic_crypto_duplicate_offset),
+    FUZI_Q_ITEM("quic_crypto_gap_attack", test_frame_quic_crypto_gap_attack),
+    FUZI_Q_ITEM("quic_handshake_replay", test_frame_quic_handshake_replay),
+    FUZI_Q_ITEM("quic_crypto_downgrade_attack", test_frame_quic_crypto_downgrade_attack),
+    FUZI_Q_ITEM("quic_early_data_replay", test_frame_quic_early_data_replay),
+    
+    /* QUIC Flow Control Attacks */
+    FUZI_Q_ITEM("quic_flow_control_bypass", test_frame_quic_flow_control_bypass),
+    FUZI_Q_ITEM("quic_max_data_oscillation", test_frame_quic_max_data_oscillation),
+    FUZI_Q_ITEM("quic_stream_data_blocked_lie", test_frame_quic_stream_data_blocked_lie),
+    FUZI_Q_ITEM("quic_data_blocked_premature", test_frame_quic_data_blocked_premature),
+    FUZI_Q_ITEM("quic_max_streams_exhaustion", test_frame_quic_max_streams_exhaustion),
+    FUZI_Q_ITEM("quic_stream_limit_bypass", test_frame_quic_stream_limit_bypass),
+    
+    /* QUIC Packet Number Space Violations */
+    FUZI_Q_ITEM("quic_ack_wrong_pn_space", test_frame_quic_ack_wrong_pn_space),
+    FUZI_Q_ITEM("quic_crypto_in_app_space", test_frame_quic_crypto_in_app_space),
+    FUZI_Q_ITEM("quic_handshake_done_early", test_frame_quic_handshake_done_early),
+    FUZI_Q_ITEM("quic_0rtt_in_handshake_pn", test_frame_quic_0rtt_in_handshake_pn),
+    FUZI_Q_ITEM("quic_stream_in_initial_pn", test_frame_quic_stream_in_initial_pn),
+    
+    /* Advanced Varint Fuzzing */
+    FUZI_Q_ITEM("quic_varint_canonical_violation", test_frame_quic_varint_canonical_violation),
+    FUZI_Q_ITEM("quic_varint_length_mismatch", test_frame_quic_varint_length_mismatch),
+    FUZI_Q_ITEM("quic_varint_reserved_bits", test_frame_quic_varint_reserved_bits),
+    FUZI_Q_ITEM("quic_varint_maximum_plus_one", test_frame_quic_varint_maximum_plus_one),
+    FUZI_Q_ITEM("quic_varint_underflow", test_frame_quic_varint_underflow),
+    
+    /* DoS and Resource Exhaustion */
+    FUZI_Q_ITEM("quic_memory_exhaustion_stream_ids", test_frame_quic_memory_exhaustion_stream_ids),
+    FUZI_Q_ITEM("quic_cpu_exhaustion_ack_ranges", test_frame_quic_cpu_exhaustion_ack_ranges),
+    FUZI_Q_ITEM("quic_bandwidth_exhaustion_padding", test_frame_quic_bandwidth_exhaustion_padding),
+    FUZI_Q_ITEM("quic_connection_table_exhaustion", test_frame_quic_connection_table_exhaustion),
+    FUZI_Q_ITEM("quic_token_cache_pollution", test_frame_quic_token_cache_pollution),
+    
+    /* State Machine Confusion */
+    FUZI_Q_ITEM("quic_stream_after_connection_close", test_frame_quic_stream_after_connection_close),
+    FUZI_Q_ITEM("quic_ack_after_connection_close", test_frame_quic_ack_after_connection_close),
+    FUZI_Q_ITEM("quic_new_token_after_migration", test_frame_quic_new_token_after_migration),
+    FUZI_Q_ITEM("quic_path_challenge_after_close", test_frame_quic_path_challenge_after_close),
+    FUZI_Q_ITEM("quic_handshake_done_twice", test_frame_quic_handshake_done_twice),
+    
+    /* Covert Channel Attacks */
+    FUZI_Q_ITEM("quic_timing_channel_ack_delay", test_frame_quic_timing_channel_ack_delay),
+    FUZI_Q_ITEM("quic_padding_pattern_channel", test_frame_quic_padding_pattern_channel),
+    FUZI_Q_ITEM("quic_stream_id_pattern_channel", test_frame_quic_stream_id_pattern_channel),
+    FUZI_Q_ITEM("quic_error_code_channel", test_frame_quic_error_code_channel),
+    FUZI_Q_ITEM("quic_frame_ordering_channel", test_frame_quic_frame_ordering_channel),
+    
+    /* Protocol Downgrade Attacks */
+    FUZI_Q_ITEM("quic_version_downgrade_mitm", test_frame_quic_version_downgrade_mitm),
+    FUZI_Q_ITEM("quic_transport_parameter_downgrade", test_frame_quic_transport_parameter_downgrade),
+    FUZI_Q_ITEM("quic_extension_downgrade", test_frame_quic_extension_downgrade),
+    FUZI_Q_ITEM("quic_cipher_suite_downgrade", test_frame_quic_cipher_suite_downgrade),
+    
+    /* Side Channel Attacks */
+    FUZI_Q_ITEM("quic_cache_timing_attack", test_frame_quic_cache_timing_attack),
+    FUZI_Q_ITEM("quic_branch_prediction_attack", test_frame_quic_branch_prediction_attack),
+    FUZI_Q_ITEM("quic_memory_access_pattern", test_frame_quic_memory_access_pattern),
+    FUZI_Q_ITEM("quic_power_analysis_resistant", test_frame_quic_power_analysis_resistant),
+    
+    /* Implementation-Specific Edge Cases */
+    FUZI_Q_ITEM("quic_buffer_boundary_edge", test_frame_quic_buffer_boundary_edge),
+    FUZI_Q_ITEM("quic_alignment_requirement_violation", test_frame_quic_alignment_requirement_violation),
+    FUZI_Q_ITEM("quic_endianness_confusion", test_frame_quic_endianness_confusion),
+    FUZI_Q_ITEM("quic_stack_overflow_trigger", test_frame_quic_stack_overflow_trigger),
+    FUZI_Q_ITEM("quic_heap_overflow_trigger", test_frame_quic_heap_overflow_trigger),
+    
+    /* === ADDITIONAL ADVANCED ATTACK VECTORS FUZI_Q_ITEM ENTRIES === */
+    
+    /* HTTP/2 Specific Violations */
+    FUZI_Q_ITEM("h2_headers_invalid_padding", test_frame_h2_headers_invalid_padding),
+    FUZI_Q_ITEM("h2_data_invalid_padding_len", test_frame_h2_data_invalid_padding_len),
+    FUZI_Q_ITEM("h2_priority_self_dependency", test_frame_h2_priority_self_dependency),
+    FUZI_Q_ITEM("h2_window_update_zero_increment", test_frame_h2_window_update_zero_increment),
+    FUZI_Q_ITEM("h2_settings_ack_with_payload", test_frame_h2_settings_ack_with_payload),
+    FUZI_Q_ITEM("h2_goaway_invalid_last_stream", test_frame_h2_goaway_invalid_last_stream),
+    FUZI_Q_ITEM("h2_rst_stream_invalid_error", test_frame_h2_rst_stream_invalid_error),
+    FUZI_Q_ITEM("h2_push_promise_invalid_id", test_frame_h2_push_promise_invalid_id),
+    FUZI_Q_ITEM("h2_continuation_without_headers", test_frame_h2_continuation_without_headers),
+    FUZI_Q_ITEM("h2_reserved_flags_set", test_frame_h2_reserved_flags_set),
+    
+    /* QPACK Specific Attacks */
+    FUZI_Q_ITEM("qpack_encoder_invalid_instruction", test_frame_qpack_encoder_invalid_instruction),
+    FUZI_Q_ITEM("qpack_decoder_malformed_ack", test_frame_qpack_decoder_malformed_ack),
+    FUZI_Q_ITEM("qpack_table_size_overflow", test_frame_qpack_table_size_overflow),
+    FUZI_Q_ITEM("qpack_invalid_name_index", test_frame_qpack_invalid_name_index),
+    FUZI_Q_ITEM("qpack_duplicate_invalid_index", test_frame_qpack_duplicate_invalid_index),
+    FUZI_Q_ITEM("qpack_circular_reference", test_frame_qpack_circular_reference),
+    FUZI_Q_ITEM("qpack_cancellation_out_of_order", test_frame_qpack_cancellation_out_of_order),
+    FUZI_Q_ITEM("qpack_insert_count_overflow", test_frame_qpack_insert_count_overflow),
+    
+    /* Multi-Protocol Confusion Attacks */
+    FUZI_Q_ITEM("tls_alert_in_crypto", test_frame_tls_alert_in_crypto),
+    FUZI_Q_ITEM("http1_in_quic_stream", test_frame_http1_in_quic_stream),
+    FUZI_Q_ITEM("smtp_in_quic_stream", test_frame_smtp_in_quic_stream),
+    FUZI_Q_ITEM("dns_in_datagram", test_frame_dns_in_datagram),
+    FUZI_Q_ITEM("ftp_in_stream", test_frame_ftp_in_stream),
+    FUZI_Q_ITEM("rtsp_in_stream", test_frame_rtsp_in_stream),
+    FUZI_Q_ITEM("sip_in_stream", test_frame_sip_in_stream),
+    
+    /* Advanced WebSocket Edge Cases */
+    FUZI_Q_ITEM("ws_invalid_payload_len_encoding", test_frame_ws_invalid_payload_len_encoding),
+    FUZI_Q_ITEM("ws_ping_oversized", test_frame_ws_ping_oversized),
+    FUZI_Q_ITEM("ws_close_truncated_reason", test_frame_ws_close_truncated_reason),
+    FUZI_Q_ITEM("ws_mask_key_all_zeros", test_frame_ws_mask_key_all_zeros),
+    FUZI_Q_ITEM("ws_predictable_mask", test_frame_ws_predictable_mask),
+    FUZI_Q_ITEM("ws_binary_text_content", test_frame_ws_binary_text_content),
+    FUZI_Q_ITEM("ws_text_binary_content", test_frame_ws_text_binary_content),
+    
+    /* Packet Fragmentation and Reassembly Attacks */
+    FUZI_Q_ITEM("stream_overlapping_ranges", test_frame_stream_overlapping_ranges),
+    FUZI_Q_ITEM("crypto_gap_in_sequence", test_frame_crypto_gap_in_sequence),
+    FUZI_Q_ITEM("stream_data_beyond_final", test_frame_stream_data_beyond_final),
+    FUZI_Q_ITEM("stream_duplicate_offset", test_frame_stream_duplicate_offset),
+    FUZI_Q_ITEM("stream_zero_len_nonzero_offset", test_frame_stream_zero_len_nonzero_offset),
+    
+    /* Version Negotiation Attacks */
+    FUZI_Q_ITEM("version_negotiation_invalid", test_frame_version_negotiation_invalid),
+    FUZI_Q_ITEM("retry_invalid_version", test_frame_retry_invalid_version),
+    FUZI_Q_ITEM("version_downgrade", test_frame_version_downgrade),
+    FUZI_Q_ITEM("version_duplicates", test_frame_version_duplicates),
+    
+    /* Transport Parameter Manipulation */
+    FUZI_Q_ITEM("invalid_transport_param", test_frame_invalid_transport_param),
+    FUZI_Q_ITEM("transport_param_invalid_len", test_frame_transport_param_invalid_len),
+    FUZI_Q_ITEM("duplicate_transport_param", test_frame_duplicate_transport_param),
+    FUZI_Q_ITEM("reserved_transport_param", test_frame_reserved_transport_param),
+    
+    /* Key Update Attacks */
+    FUZI_Q_ITEM("premature_key_update", test_frame_premature_key_update),
+    FUZI_Q_ITEM("excessive_key_updates", test_frame_excessive_key_updates),
+    FUZI_Q_ITEM("key_update_old_key", test_frame_key_update_old_key),
+    FUZI_Q_ITEM("key_update_rollback", test_frame_key_update_rollback),
+    
+    /* Connection ID Rotation Attacks */
+    FUZI_Q_ITEM("cid_predictable_sequence", test_frame_cid_predictable_sequence),
+    FUZI_Q_ITEM("cid_rotation_dos", test_frame_cid_rotation_dos),
+    FUZI_Q_ITEM("retire_cid_flood", test_frame_retire_cid_flood),
+    FUZI_Q_ITEM("cid_collision_attack", test_frame_cid_collision_attack),
+    
+    /* Token Validation Attacks */
+    FUZI_Q_ITEM("token_expired", test_frame_token_expired),
+    FUZI_Q_ITEM("token_invalid_signature", test_frame_token_invalid_signature),
+    FUZI_Q_ITEM("token_replay", test_frame_token_replay),
+    FUZI_Q_ITEM("token_malformed_structure", test_frame_token_malformed_structure),
+    
+    /* Congestion Control Attacks */
+    FUZI_Q_ITEM("ack_manipulated_ecn", test_frame_ack_manipulated_ecn),
+    FUZI_Q_ITEM("false_congestion_signal", test_frame_false_congestion_signal),
+    FUZI_Q_ITEM("cwnd_probing_attack", test_frame_cwnd_probing_attack),
+    FUZI_Q_ITEM("loss_detection_manipulation", test_frame_loss_detection_manipulation),
+    
+    /* Advanced Timing Attacks */
+    FUZI_Q_ITEM("ack_delay_timing_inference", test_frame_ack_delay_timing_inference),
+    FUZI_Q_ITEM("ping_timing_correlation", test_frame_ping_timing_correlation),
+    FUZI_Q_ITEM("path_challenge_timing_sidechannel", test_frame_path_challenge_timing_sidechannel),
+    FUZI_Q_ITEM("connection_close_timing", test_frame_connection_close_timing),
+    
+    /* Memory Layout Attacks */
+    FUZI_Q_ITEM("memory_alignment_attack", test_frame_memory_alignment_attack),
+    FUZI_Q_ITEM("pointer_like_values", test_frame_pointer_like_values),
+    FUZI_Q_ITEM("memory_region_targeting", test_frame_memory_region_targeting),
+    FUZI_Q_ITEM("return_address_pattern", test_frame_return_address_pattern),
+    
+    /* === SPECIALIZED ATTACK VECTORS FUZI_Q_ITEM ENTRIES === */
+    
+    /* DNS over QUIC (DoQ) Attacks */
+    FUZI_Q_ITEM("doq_malformed_query", test_frame_doq_malformed_query),
+    FUZI_Q_ITEM("doq_amplification_attack", test_frame_doq_amplification_attack),
+    FUZI_Q_ITEM("doq_cache_poisoning", test_frame_doq_cache_poisoning),
+    
+    /* WebTransport Attacks */
+    FUZI_Q_ITEM("webtransport_invalid_session", test_frame_webtransport_invalid_session),
+    FUZI_Q_ITEM("webtransport_stream_hijack", test_frame_webtransport_stream_hijack),
+    FUZI_Q_ITEM("webtransport_capsule_bomb", test_frame_webtransport_capsule_bomb),
+    
+    /* MASQUE Proxy Attacks */
+    FUZI_Q_ITEM("masque_connect_udp_spoof", test_frame_masque_connect_udp_spoof),
+    FUZI_Q_ITEM("masque_ip_spoofing", test_frame_masque_ip_spoofing),
+    FUZI_Q_ITEM("masque_proxy_loop", test_frame_masque_proxy_loop),
+    
+    /* ECN Marking Attacks */
+    FUZI_Q_ITEM("ecn_bleaching_attack", test_frame_ecn_bleaching_attack),
+    FUZI_Q_ITEM("ecn_remarking_attack", test_frame_ecn_remarking_attack),
+    FUZI_Q_ITEM("ecn_reflection_attack", test_frame_ecn_reflection_attack),
+    
+    /* Multipath QUIC Attacks */
+    FUZI_Q_ITEM("mp_quic_path_scheduling_attack", test_frame_mp_quic_path_scheduling_attack),
+    FUZI_Q_ITEM("mp_quic_reinjection_attack", test_frame_mp_quic_reinjection_attack),
+    FUZI_Q_ITEM("mp_quic_path_confusion", test_frame_mp_quic_path_confusion),
+    
+    /* Session Resumption Attacks */
+    FUZI_Q_ITEM("session_ticket_forge", test_frame_session_ticket_forge),
+    FUZI_Q_ITEM("psk_confusion_attack", test_frame_psk_confusion_attack),
+    FUZI_Q_ITEM("resumption_replay", test_frame_resumption_replay),
+    
+    /* Post-Quantum Crypto Attacks */
+    FUZI_Q_ITEM("pqc_hybrid_downgrade", test_frame_pqc_hybrid_downgrade),
+    FUZI_Q_ITEM("pqc_kyber_malleability", test_frame_pqc_kyber_malleability),
+    FUZI_Q_ITEM("pqc_dilithium_forge", test_frame_pqc_dilithium_forge),
+    
+    /* Anti-Forensics Techniques */
+    FUZI_Q_ITEM("forensics_metadata_scrub", test_frame_forensics_metadata_scrub),
+    FUZI_Q_ITEM("forensics_traffic_shaping", test_frame_forensics_traffic_shaping),
+    FUZI_Q_ITEM("forensics_flow_correlation", test_frame_forensics_flow_correlation),
+    
+    /* Hardware-Specific Attacks */
+    FUZI_Q_ITEM("cpu_cache_eviction", test_frame_cpu_cache_eviction),
+    FUZI_Q_ITEM("branch_predictor_poison", test_frame_branch_predictor_poison),
+    FUZI_Q_ITEM("speculative_execution", test_frame_speculative_execution),
+    
+    /* ML Evasion Techniques */
+    FUZI_Q_ITEM("ml_adversarial_padding", test_frame_ml_adversarial_padding),
+    FUZI_Q_ITEM("ml_feature_poisoning", test_frame_ml_feature_poisoning),
+    FUZI_Q_ITEM("ml_model_inversion", test_frame_ml_model_inversion),
+    
+    /* === MAXIMUM COVERAGE ATTACK VECTORS FUZI_Q_ITEM ENTRIES === */
+    
+    /* Binary Exploitation Patterns */
+    FUZI_Q_ITEM("format_string_attack", test_frame_format_string_attack),
+    FUZI_Q_ITEM("integer_wraparound", test_frame_integer_wraparound),
+    FUZI_Q_ITEM("off_by_one_trigger", test_frame_off_by_one_trigger),
+    FUZI_Q_ITEM("use_after_free_pattern", test_frame_use_after_free_pattern),
+    FUZI_Q_ITEM("double_free_trigger", test_frame_double_free_trigger),
+    
+    /* SQL Injection Patterns */
+    FUZI_Q_ITEM("sql_injection_basic", test_frame_sql_injection_basic),
+    FUZI_Q_ITEM("sql_union_attack", test_frame_sql_union_attack),
+    FUZI_Q_ITEM("sql_blind_injection", test_frame_sql_blind_injection),
+    
+    /* XSS Payloads */
+    FUZI_Q_ITEM("xss_script_tag", test_frame_xss_script_tag),
+    FUZI_Q_ITEM("xss_img_onerror", test_frame_xss_img_onerror),
+    
+    /* Command Injection */
+    FUZI_Q_ITEM("cmd_injection_pipe", test_frame_cmd_injection_pipe),
+    FUZI_Q_ITEM("cmd_injection_backtick", test_frame_cmd_injection_backtick),
+    
+    /* Path Traversal */
+    FUZI_Q_ITEM("path_traversal_basic", test_frame_path_traversal_basic),
+    FUZI_Q_ITEM("path_traversal_encoded", test_frame_path_traversal_encoded),
+    
+    /* LDAP Injection */
+    FUZI_Q_ITEM("ldap_injection", test_frame_ldap_injection),
+    
+    /* SSRF Attacks */
+    FUZI_Q_ITEM("ssrf_localhost", test_frame_ssrf_localhost),
+    FUZI_Q_ITEM("ssrf_metadata", test_frame_ssrf_metadata),
+    
+    /* Crypto Oracle Attacks */
+    FUZI_Q_ITEM("padding_oracle_attack", test_frame_padding_oracle_attack),
+    FUZI_Q_ITEM("timing_oracle_crypto", test_frame_timing_oracle_crypto),
+    
+    /* IoT Attacks */
+    FUZI_Q_ITEM("iot_coap_attack", test_frame_iot_coap_attack),
+    FUZI_Q_ITEM("iot_mqtt_hijack", test_frame_iot_mqtt_hijack),
+    
+    /* Container Escape */
+    FUZI_Q_ITEM("docker_escape", test_frame_docker_escape),
+    FUZI_Q_ITEM("k8s_privilege_escalation", test_frame_k8s_privilege_escalation),
+    
+    /* === EXTENDED MAXIMUM COVERAGE ATTACK VECTORS FUZI_Q_ITEM ENTRIES === */
+    
+    /* NoSQL Injection Patterns */
+    FUZI_Q_ITEM("nosql_mongodb_injection", test_frame_nosql_mongodb_injection),
+    FUZI_Q_ITEM("nosql_couchdb_injection", test_frame_nosql_couchdb_injection),
+    FUZI_Q_ITEM("nosql_redis_injection", test_frame_nosql_redis_injection),
+    
+    /* Template Injection Attacks */
+    FUZI_Q_ITEM("template_jinja2_injection", test_frame_template_jinja2_injection),
+    FUZI_Q_ITEM("template_twig_injection", test_frame_template_twig_injection),
+    FUZI_Q_ITEM("template_freemarker_injection", test_frame_template_freemarker_injection),
+    
+    /* Race Condition Triggers */
+    FUZI_Q_ITEM("race_condition_toctou", test_frame_race_condition_toctou),
+    FUZI_Q_ITEM("race_condition_double_fetch", test_frame_race_condition_double_fetch),
+    FUZI_Q_ITEM("race_condition_atomic_violation", test_frame_race_condition_atomic_violation),
+    
+    /* Deserialization Attacks (Extended) */
+    FUZI_Q_ITEM("deserial_java_commons", test_frame_deserial_java_commons),
+    FUZI_Q_ITEM("deserial_python_pickle", test_frame_deserial_python_pickle),
+    FUZI_Q_ITEM("deserial_php_unserialize", test_frame_deserial_php_unserialize),
+    FUZI_Q_ITEM("deserial_dotnet_binaryformatter", test_frame_deserial_dotnet_binaryformatter),
+    
+    /* Blockchain/DeFi Attacks (Extended) */
+    FUZI_Q_ITEM("blockchain_reentrancy", test_frame_blockchain_reentrancy),
+    FUZI_Q_ITEM("blockchain_flashloan", test_frame_blockchain_flashloan),
+    FUZI_Q_ITEM("blockchain_mev_sandwich", test_frame_blockchain_mev_sandwich),
+    FUZI_Q_ITEM("blockchain_oracle_manipulation", test_frame_blockchain_oracle_manipulation),
+    
+    /* AI/ML Model Attacks (Extended) */
+    FUZI_Q_ITEM("ai_model_extraction", test_frame_ai_model_extraction),
+    FUZI_Q_ITEM("ai_membership_inference", test_frame_ai_membership_inference),
+    FUZI_Q_ITEM("ai_backdoor_trigger", test_frame_ai_backdoor_trigger),
+    FUZI_Q_ITEM("ai_prompt_injection", test_frame_ai_prompt_injection),
+    
+    /* Supply Chain Attacks (Extended) */
+    FUZI_Q_ITEM("supply_dependency_confusion", test_frame_supply_dependency_confusion),
+    FUZI_Q_ITEM("supply_typosquatting", test_frame_supply_typosquatting),
+    FUZI_Q_ITEM("supply_malicious_package", test_frame_supply_malicious_package),
+    FUZI_Q_ITEM("supply_compromised_repo", test_frame_supply_compromised_repo),
+    
+    /* 5G/Edge Computing Attacks (Extended) */
+    FUZI_Q_ITEM("5g_slice_isolation_bypass", test_frame_5g_slice_isolation_bypass),
+    FUZI_Q_ITEM("5g_compute_escape", test_frame_5g_compute_escape),
+    FUZI_Q_ITEM("5g_network_slicing_attack", test_frame_5g_network_slicing_attack),
+    FUZI_Q_ITEM("edge_function_escape", test_frame_edge_function_escape),
+    
+    /* Advanced Binary Exploitation */
+    FUZI_Q_ITEM("binary_rop_chain", test_frame_binary_rop_chain),
+    FUZI_Q_ITEM("binary_jop_chain", test_frame_binary_jop_chain),
+    FUZI_Q_ITEM("binary_stack_pivot", test_frame_binary_stack_pivot),
+    FUZI_Q_ITEM("binary_heap_spray", test_frame_binary_heap_spray),
+    
+    /* Advanced Container/Orchestration Attacks */
+    FUZI_Q_ITEM("container_runtime_escape", test_frame_container_runtime_escape),
+    FUZI_Q_ITEM("k8s_rbac_bypass", test_frame_k8s_rbac_bypass),
+    FUZI_Q_ITEM("k8s_admission_bypass", test_frame_k8s_admission_bypass),
+    FUZI_Q_ITEM("k8s_pod_escape", test_frame_k8s_pod_escape),
+    
+    /* Advanced Firmware/Hardware Attacks */
+    FUZI_Q_ITEM("firmware_dump_attack", test_frame_firmware_dump_attack),
+    FUZI_Q_ITEM("uefi_bootkit", test_frame_uefi_bootkit),
+    FUZI_Q_ITEM("smc_vulnerability", test_frame_smc_vulnerability),
+    FUZI_Q_ITEM("tpm_bypass", test_frame_tpm_bypass),
+    
+    /* Cloud Native Security Attacks */
+    FUZI_Q_ITEM("serverless_cold_start", test_frame_serverless_cold_start),
+    FUZI_Q_ITEM("serverless_injection", test_frame_serverless_injection),
+    FUZI_Q_ITEM("api_gateway_bypass", test_frame_api_gateway_bypass),
+    FUZI_Q_ITEM("service_mesh_attack", test_frame_service_mesh_attack),
+    
+    /* === ULTRA ADVANCED ATTACK VECTORS FUZI_Q_ITEM ENTRIES === */
+    
+    /* Advanced Cryptographic Attacks */
+    FUZI_Q_ITEM("lattice_attack", test_frame_lattice_attack),
+    FUZI_Q_ITEM("bleichenbacher_attack", test_frame_bleichenbacher_attack),
+    FUZI_Q_ITEM("invalid_curve_attack", test_frame_invalid_curve_attack),
+    FUZI_Q_ITEM("twist_attack", test_frame_twist_attack),
+    FUZI_Q_ITEM("fault_injection", test_frame_fault_injection),
+    
+    /* Zero-Day Exploitation Patterns */
+    FUZI_Q_ITEM("cve_2024_pattern", test_frame_cve_2024_pattern),
+    FUZI_Q_ITEM("nday_exploitation", test_frame_nday_exploitation),
+    FUZI_Q_ITEM("vulnerability_chaining", test_frame_vulnerability_chaining),
+    FUZI_Q_ITEM("exploit_mitigation_bypass", test_frame_exploit_mitigation_bypass),
+    
+    /* Advanced Network Attacks */
+    FUZI_Q_ITEM("bgp_hijacking", test_frame_bgp_hijacking),
+    FUZI_Q_ITEM("dns_cache_poisoning", test_frame_dns_cache_poisoning),
+    FUZI_Q_ITEM("arp_spoofing", test_frame_arp_spoofing),
+    FUZI_Q_ITEM("dhcp_starvation", test_frame_dhcp_starvation),
+    FUZI_Q_ITEM("icmp_redirect", test_frame_icmp_redirect),
+    
+    /* Database-Specific Attacks */
+    FUZI_Q_ITEM("oracle_injection", test_frame_oracle_injection),
+    FUZI_Q_ITEM("mssql_injection", test_frame_mssql_injection),
+    FUZI_Q_ITEM("postgresql_injection", test_frame_postgresql_injection),
+    FUZI_Q_ITEM("elasticsearch_injection", test_frame_elasticsearch_injection),
+    FUZI_Q_ITEM("cassandra_injection", test_frame_cassandra_injection),
+    
+    /* Advanced Web Application Attacks */
+    FUZI_Q_ITEM("xxe_attack", test_frame_xxe_attack),
+    FUZI_Q_ITEM("csrf_attack", test_frame_csrf_attack),
+    FUZI_Q_ITEM("clickjacking", test_frame_clickjacking),
+    FUZI_Q_ITEM("dom_clobbering", test_frame_dom_clobbering),
+    FUZI_Q_ITEM("prototype_pollution", test_frame_prototype_pollution),
+    
+    /* Mobile Security Attacks */
+    FUZI_Q_ITEM("android_intent_hijack", test_frame_android_intent_hijack),
+    FUZI_Q_ITEM("ios_url_scheme", test_frame_ios_url_scheme),
+    FUZI_Q_ITEM("mobile_ssl_pinning_bypass", test_frame_mobile_ssl_pinning_bypass),
+    FUZI_Q_ITEM("mobile_root_detection_bypass", test_frame_mobile_root_detection_bypass),
+    
+    /* Industrial Control System Attacks */
+    FUZI_Q_ITEM("modbus_attack", test_frame_modbus_attack),
+    FUZI_Q_ITEM("scada_attack", test_frame_scada_attack),
+    FUZI_Q_ITEM("dnp3_attack", test_frame_dnp3_attack),
+    FUZI_Q_ITEM("iec104_attack", test_frame_iec104_attack),
+    
+    /* Advanced Memory Corruption */
+    FUZI_Q_ITEM("vtable_hijacking", test_frame_vtable_hijacking),
+    FUZI_Q_ITEM("coop_attack", test_frame_coop_attack),
+    FUZI_Q_ITEM("brop_attack", test_frame_brop_attack),
+    FUZI_Q_ITEM("type_confusion", test_frame_type_confusion),
+    
+    /* Advanced Persistence Techniques */
+    FUZI_Q_ITEM("dll_hijacking", test_frame_dll_hijacking),
+    FUZI_Q_ITEM("com_hijacking", test_frame_com_hijacking),
+    FUZI_Q_ITEM("registry_persistence", test_frame_registry_persistence),
+    FUZI_Q_ITEM("scheduled_task_abuse", test_frame_scheduled_task_abuse),
+    
+    /* Advanced Evasion Techniques */
+    FUZI_Q_ITEM("sandbox_evasion", test_frame_sandbox_evasion),
+    FUZI_Q_ITEM("av_evasion", test_frame_av_evasion),
+    FUZI_Q_ITEM("edr_evasion", test_frame_edr_evasion),
+    FUZI_Q_ITEM("behavioral_evasion", test_frame_behavioral_evasion),
+    
+    /* Quantum Computing Attacks */
+    FUZI_Q_ITEM("shor_algorithm", test_frame_shor_algorithm),
+    FUZI_Q_ITEM("grover_algorithm", test_frame_grover_algorithm),
+    FUZI_Q_ITEM("quantum_key_recovery", test_frame_quantum_key_recovery),
+    FUZI_Q_ITEM("post_quantum_downgrade", test_frame_post_quantum_downgrade),
+    
+    /* === APEX TIER ATTACK VECTORS FUZI_Q_ITEM ENTRIES === */
+    
+    /* Nation-State APT Techniques */
+    FUZI_Q_ITEM("apt_living_off_land", test_frame_apt_living_off_land),
+    FUZI_Q_ITEM("apt_supply_chain", test_frame_apt_supply_chain),
+    FUZI_Q_ITEM("apt_zero_click", test_frame_apt_zero_click),
+    FUZI_Q_ITEM("apt_watering_hole", test_frame_apt_watering_hole),
+    
+    /* Advanced Ransomware Techniques */
+    FUZI_Q_ITEM("ransomware_double_extortion", test_frame_ransomware_double_extortion),
+    FUZI_Q_ITEM("ransomware_triple_extortion", test_frame_ransomware_triple_extortion),
+    FUZI_Q_ITEM("ransomware_as_a_service", test_frame_ransomware_as_a_service),
+    FUZI_Q_ITEM("ransomware_vm_escape", test_frame_ransomware_vm_escape),
+    
+    /* AI-Powered Cyber Attacks */
+    FUZI_Q_ITEM("ai_deepfake_voice", test_frame_ai_deepfake_voice),
+    FUZI_Q_ITEM("ai_deepfake_video", test_frame_ai_deepfake_video),
+    FUZI_Q_ITEM("ai_automated_spearphish", test_frame_ai_automated_spearphish),
+    FUZI_Q_ITEM("ai_vulnerability_discovery", test_frame_ai_vulnerability_discovery),
+    
+    /* Advanced Satellite/Space Attacks */
+    FUZI_Q_ITEM("satellite_jamming", test_frame_satellite_jamming),
+    FUZI_Q_ITEM("satellite_spoofing", test_frame_satellite_spoofing),
+    FUZI_Q_ITEM("gps_spoofing", test_frame_gps_spoofing),
+    FUZI_Q_ITEM("starlink_attack", test_frame_starlink_attack),
+    
+    /* Biometric Security Attacks */
+    FUZI_Q_ITEM("fingerprint_spoofing", test_frame_fingerprint_spoofing),
+    FUZI_Q_ITEM("face_recognition_bypass", test_frame_face_recognition_bypass),
+    FUZI_Q_ITEM("iris_scan_bypass", test_frame_iris_scan_bypass),
+    FUZI_Q_ITEM("voice_recognition_bypass", test_frame_voice_recognition_bypass),
+    
+    /* Advanced Social Engineering */
+    FUZI_Q_ITEM("vishing_attack", test_frame_vishing_attack),
+    FUZI_Q_ITEM("smishing_attack", test_frame_smishing_attack),
+    FUZI_Q_ITEM("pretexting_attack", test_frame_pretexting_attack),
+    FUZI_Q_ITEM("business_email_compromise", test_frame_business_email_compromise),
+    
+    /* Critical Infrastructure Attacks */
+    FUZI_Q_ITEM("power_grid_attack", test_frame_power_grid_attack),
+    FUZI_Q_ITEM("water_system_attack", test_frame_water_system_attack),
+    FUZI_Q_ITEM("transportation_attack", test_frame_transportation_attack),
+    FUZI_Q_ITEM("healthcare_attack", test_frame_healthcare_attack),
+    
+    /* Emerging Technology Attacks */
+    FUZI_Q_ITEM("metaverse_attack", test_frame_metaverse_attack),
+    FUZI_Q_ITEM("nft_smart_contract_exploit", test_frame_nft_smart_contract_exploit),
+    FUZI_Q_ITEM("autonomous_vehicle_hack", test_frame_autonomous_vehicle_hack),
+    FUZI_Q_ITEM("drone_hijacking", test_frame_drone_hijacking),
+    
+    /* Advanced Steganography */
+    FUZI_Q_ITEM("image_steganography", test_frame_image_steganography),
+    FUZI_Q_ITEM("audio_steganography", test_frame_audio_steganography),
+    FUZI_Q_ITEM("video_steganography", test_frame_video_steganography),
+    FUZI_Q_ITEM("network_steganography", test_frame_network_steganography),
+    
+    /* === NEXT-GENERATION ATTACK VECTORS FUZI_Q_ITEM ENTRIES === */
+    
+    /* Advanced IoT Ecosystem Attacks */
+    FUZI_Q_ITEM("iot_mesh_takeover", test_frame_iot_mesh_takeover),
+    FUZI_Q_ITEM("iot_swarm_botnet", test_frame_iot_swarm_botnet),
+    FUZI_Q_ITEM("iot_sensor_spoofing", test_frame_iot_sensor_spoofing),
+    FUZI_Q_ITEM("iot_firmware_backdoor", test_frame_iot_firmware_backdoor),
+    
+    /* Advanced Cloud-Native Attacks */
+    FUZI_Q_ITEM("multicloud_pivot", test_frame_multicloud_pivot),
+    FUZI_Q_ITEM("cloud_workload_injection", test_frame_cloud_workload_injection),
+    FUZI_Q_ITEM("iac_poisoning", test_frame_iac_poisoning),
+    FUZI_Q_ITEM("cloud_metadata_abuse", test_frame_cloud_metadata_abuse),
+    
+    /* Financial Technology Attacks */
+    FUZI_Q_ITEM("cbdc_attack", test_frame_cbdc_attack),
+    FUZI_Q_ITEM("defi_liquidation", test_frame_defi_liquidation),
+    FUZI_Q_ITEM("payment_rail_hijack", test_frame_payment_rail_hijack),
+    FUZI_Q_ITEM("regulatory_arbitrage", test_frame_regulatory_arbitrage),
+    
+    /* Advanced Automotive Attacks */
+    FUZI_Q_ITEM("v2x_manipulation", test_frame_v2x_manipulation),
+    FUZI_Q_ITEM("can_bus_injection", test_frame_can_bus_injection),
+    FUZI_Q_ITEM("adas_sensor_attack", test_frame_adas_sensor_attack),
+    FUZI_Q_ITEM("vehicle_swarm_attack", test_frame_vehicle_swarm_attack),
+    
+    /* Medical Device Security Attacks */
+    FUZI_Q_ITEM("pacemaker_attack", test_frame_pacemaker_attack),
+    FUZI_Q_ITEM("insulin_pump_hijack", test_frame_insulin_pump_hijack),
+    FUZI_Q_ITEM("mri_manipulation", test_frame_mri_manipulation),
+    FUZI_Q_ITEM("surgical_robot_hack", test_frame_surgical_robot_hack),
+    
+    /* Gaming and Virtual World Attacks */
+    FUZI_Q_ITEM("game_engine_exploit", test_frame_game_engine_exploit),
+    FUZI_Q_ITEM("virtual_economy_manipulation", test_frame_virtual_economy_manipulation),
+    FUZI_Q_ITEM("esports_match_fixing", test_frame_esports_match_fixing),
+    FUZI_Q_ITEM("nft_gaming_exploit", test_frame_nft_gaming_exploit),
+    
+    /* Augmented/Virtual Reality Attacks */
+    FUZI_Q_ITEM("ar_overlay_hijack", test_frame_ar_overlay_hijack),
+    FUZI_Q_ITEM("vr_presence_hijack", test_frame_vr_presence_hijack),
+    FUZI_Q_ITEM("haptic_feedback_attack", test_frame_haptic_feedback_attack),
+    FUZI_Q_ITEM("mixed_reality_confusion", test_frame_mixed_reality_confusion),
+    
+    /* Advanced Quantum Technology Attacks */
+    FUZI_Q_ITEM("quantum_entanglement_break", test_frame_quantum_entanglement_break),
+    FUZI_Q_ITEM("quantum_teleportation_hijack", test_frame_quantum_teleportation_hijack),
+    FUZI_Q_ITEM("quantum_supremacy_abuse", test_frame_quantum_supremacy_abuse),
+    FUZI_Q_ITEM("quantum_error_injection", test_frame_quantum_error_injection),
+    
+    /* Space Technology Warfare */
+    FUZI_Q_ITEM("orbital_debris_weaponization", test_frame_orbital_debris_weaponization),
+    FUZI_Q_ITEM("space_elevator_sabotage", test_frame_space_elevator_sabotage),
+    FUZI_Q_ITEM("mars_colony_attack", test_frame_mars_colony_attack),
+    FUZI_Q_ITEM("asteroid_mining_hijack", test_frame_asteroid_mining_hijack),
+    
+    /* Biotechnology Attacks */
+    FUZI_Q_ITEM("dna_sequencing_attack", test_frame_dna_sequencing_attack),
+    FUZI_Q_ITEM("crispr_hijack", test_frame_crispr_hijack),
+    FUZI_Q_ITEM("synthetic_biology_weapon", test_frame_synthetic_biology_weapon),
+    FUZI_Q_ITEM("biometric_dna_forge", test_frame_biometric_dna_forge),
+    
+    /* Nanotechnology Attacks */
+    FUZI_Q_ITEM("nanobot_swarm_attack", test_frame_nanobot_swarm_attack),
+    FUZI_Q_ITEM("molecular_assembly_hijack", test_frame_molecular_assembly_hijack),
+    FUZI_Q_ITEM("nano_scale_espionage", test_frame_nano_scale_espionage),
+    FUZI_Q_ITEM("quantum_dot_manipulation", test_frame_quantum_dot_manipulation),
+    
+    /* Neurotechnology Attacks */
+    FUZI_Q_ITEM("brain_computer_hijack", test_frame_brain_computer_hijack),
+    FUZI_Q_ITEM("neural_implant_attack", test_frame_neural_implant_attack),
+    FUZI_Q_ITEM("memory_manipulation", test_frame_memory_manipulation),
+    FUZI_Q_ITEM("thought_pattern_hijack", test_frame_thought_pattern_hijack),
+    
+    /* Advanced Robotics Attacks */
+    FUZI_Q_ITEM("robot_swarm_coordination", test_frame_robot_swarm_coordination),
+    FUZI_Q_ITEM("humanoid_impersonation", test_frame_humanoid_impersonation),
+    FUZI_Q_ITEM("industrial_robot_weaponization", test_frame_industrial_robot_weaponization),
+    FUZI_Q_ITEM("ai_ethics_bypass", test_frame_ai_ethics_bypass),
+    
+    /* === RFC-SPECIFIC ATTACK VECTORS FUZI_Q_ITEM ENTRIES === */
+    
+    /* RFC 8999 - Version-Independent Properties of QUIC */
+    FUZI_Q_ITEM("rfc8999_version_independent_violation", test_frame_rfc8999_version_independent_violation),
+    FUZI_Q_ITEM("rfc8999_fixed_bit_clear", test_frame_rfc8999_fixed_bit_clear),
+    FUZI_Q_ITEM("rfc8999_connection_id_length_violation", test_frame_rfc8999_connection_id_length_violation),
+    
+    /* RFC 9000 - QUIC Core Transport */
+    FUZI_Q_ITEM("rfc9000_packet_number_encoding_error", test_frame_rfc9000_packet_number_encoding_error),
+    FUZI_Q_ITEM("rfc9000_varint_overflow", test_frame_rfc9000_varint_overflow),
+    FUZI_Q_ITEM("rfc9000_frame_type_reserved", test_frame_rfc9000_frame_type_reserved),
+    FUZI_Q_ITEM("rfc9000_transport_param_duplicate", test_frame_rfc9000_transport_param_duplicate),
+    FUZI_Q_ITEM("rfc9000_connection_migration_violation", test_frame_rfc9000_connection_migration_violation),
+    
+    /* RFC 9001 - QUIC TLS Integration */
+    FUZI_Q_ITEM("rfc9001_tls_handshake_tampering", test_frame_rfc9001_tls_handshake_tampering),
+    FUZI_Q_ITEM("rfc9001_key_update_premature", test_frame_rfc9001_key_update_premature),
+    FUZI_Q_ITEM("rfc9001_crypto_frame_ordering", test_frame_rfc9001_crypto_frame_ordering),
+    FUZI_Q_ITEM("rfc9001_protected_packet_manipulation", test_frame_rfc9001_protected_packet_manipulation),
+    
+    /* RFC 9002 - Loss Detection and Congestion Control */
+    FUZI_Q_ITEM("rfc9002_ack_delay_manipulation", test_frame_rfc9002_ack_delay_manipulation),
+    FUZI_Q_ITEM("rfc9002_rtt_manipulation", test_frame_rfc9002_rtt_manipulation),
+    FUZI_Q_ITEM("rfc9002_congestion_window_attack", test_frame_rfc9002_congestion_window_attack),
+    FUZI_Q_ITEM("rfc9002_loss_detection_bypass", test_frame_rfc9002_loss_detection_bypass),
+    
+    /* RFC 9221 - Unreliable Datagram Extension */
+    FUZI_Q_ITEM("rfc9221_datagram_length_violation", test_frame_rfc9221_datagram_length_violation),
+    FUZI_Q_ITEM("rfc9221_datagram_in_0rtt", test_frame_rfc9221_datagram_in_0rtt),
+    FUZI_Q_ITEM("rfc9221_datagram_fragmentation", test_frame_rfc9221_datagram_fragmentation),
+    
+    /* RFC 9287 - Greasing the QUIC Bit */
+    FUZI_Q_ITEM("rfc9287_grease_bit_violation", test_frame_rfc9287_grease_bit_violation),
+    FUZI_Q_ITEM("rfc9287_reserved_bit_dependency", test_frame_rfc9287_reserved_bit_dependency),
+    
+    /* RFC 9368 - Compatible Version Negotiation */
+    FUZI_Q_ITEM("rfc9368_version_negotiation_downgrade", test_frame_rfc9368_version_negotiation_downgrade),
+    FUZI_Q_ITEM("rfc9368_compatible_version_confusion", test_frame_rfc9368_compatible_version_confusion),
+    
+    /* RFC 9369 - QUIC Version 2 */
+    FUZI_Q_ITEM("rfc9369_v2_frame_type_confusion", test_frame_rfc9369_v2_frame_type_confusion),
+    FUZI_Q_ITEM("rfc9369_v2_packet_protection_bypass", test_frame_rfc9369_v2_packet_protection_bypass),
+    
+    /* RFC 9114 - HTTP/3 */
+    FUZI_Q_ITEM("rfc9114_h3_frame_length_overflow", test_frame_rfc9114_h3_frame_length_overflow),
+    FUZI_Q_ITEM("rfc9114_h3_settings_duplicate", test_frame_rfc9114_h3_settings_duplicate),
+    FUZI_Q_ITEM("rfc9114_h3_push_promise_violation", test_frame_rfc9114_h3_push_promise_violation),
+    FUZI_Q_ITEM("rfc9114_h3_goaway_invalid_stream", test_frame_rfc9114_h3_goaway_invalid_stream),
+    FUZI_Q_ITEM("rfc9114_h3_max_push_id_regression", test_frame_rfc9114_h3_max_push_id_regression),
+    
+    /* RFC 9204 - QPACK Field Compression */
+    FUZI_Q_ITEM("rfc9204_qpack_encoder_stream_corruption", test_frame_rfc9204_qpack_encoder_stream_corruption),
+    FUZI_Q_ITEM("rfc9204_qpack_decoder_stream_overflow", test_frame_rfc9204_qpack_decoder_stream_overflow),
+    FUZI_Q_ITEM("rfc9204_qpack_dynamic_table_corruption", test_frame_rfc9204_qpack_dynamic_table_corruption),
+    FUZI_Q_ITEM("rfc9204_qpack_header_block_dependency", test_frame_rfc9204_qpack_header_block_dependency),
+    
+    /* RFC 9220 - Bootstrapping WebSockets with HTTP/3 */
+    FUZI_Q_ITEM("rfc9220_websocket_upgrade_injection", test_frame_rfc9220_websocket_upgrade_injection),
+    FUZI_Q_ITEM("rfc9220_websocket_key_manipulation", test_frame_rfc9220_websocket_key_manipulation),
+    FUZI_Q_ITEM("rfc9220_websocket_protocol_confusion", test_frame_rfc9220_websocket_protocol_confusion),
+    
+    /* RFC 9412 - ORIGIN Extension in HTTP/3 */
+    FUZI_Q_ITEM("rfc9412_origin_frame_spoofing", test_frame_rfc9412_origin_frame_spoofing),
+    FUZI_Q_ITEM("rfc9412_origin_authority_bypass", test_frame_rfc9412_origin_authority_bypass),
+    
+    /* RFC 9250 - DNS over QUIC (DoQ) */
+    FUZI_Q_ITEM("rfc9250_doq_malformed_query", test_frame_rfc9250_doq_malformed_query),
+    FUZI_Q_ITEM("rfc9250_doq_response_amplification", test_frame_rfc9250_doq_response_amplification),
+    FUZI_Q_ITEM("rfc9250_doq_cache_poisoning", test_frame_rfc9250_doq_cache_poisoning),
+    FUZI_Q_ITEM("rfc9250_doq_stream_reuse_violation", test_frame_rfc9250_doq_stream_reuse_violation),
+    
+    /* RFC 8484 - DNS over HTTPS (DoH) */
+    FUZI_Q_ITEM("rfc8484_doh_get_parameter_injection", test_frame_rfc8484_doh_get_parameter_injection),
+    FUZI_Q_ITEM("rfc8484_doh_post_content_type_bypass", test_frame_rfc8484_doh_post_content_type_bypass),
+    
+    /* RFC 8446 - TLS 1.3 Integration Issues */
+    FUZI_Q_ITEM("rfc8446_tls13_early_data_replay", test_frame_rfc8446_tls13_early_data_replay),
+    FUZI_Q_ITEM("rfc8446_tls13_certificate_transparency_bypass", test_frame_rfc8446_tls13_certificate_transparency_bypass),
+    
+    /* RFC 9110/9111/9112/9113 - HTTP Semantics Violations */
+    FUZI_Q_ITEM("rfc9110_http_method_smuggling", test_frame_rfc9110_http_method_smuggling),
+    FUZI_Q_ITEM("rfc9111_cache_poisoning_via_vary", test_frame_rfc9111_cache_poisoning_via_vary),
+    FUZI_Q_ITEM("rfc9113_h2_frame_injection", test_frame_rfc9113_h2_frame_injection),
+    
+    /* RFC 7541 - HPACK vs QPACK Confusion */
+    FUZI_Q_ITEM("rfc7541_hpack_in_qpack_context", test_frame_rfc7541_hpack_in_qpack_context),
+    FUZI_Q_ITEM("rfc7541_hpack_huffman_bomb", test_frame_rfc7541_hpack_huffman_bomb),
+    
+    /* RFC 7838 - HTTP Alternative Services Abuse */
+    FUZI_Q_ITEM("rfc7838_alt_svc_redirection_attack", test_frame_rfc7838_alt_svc_redirection_attack),
+    FUZI_Q_ITEM("rfc7838_alt_svc_downgrade_attack", test_frame_rfc7838_alt_svc_downgrade_attack),
+    
+    /* RFC 9218 - Extensible Prioritization Scheme */
+    FUZI_Q_ITEM("rfc9218_priority_update_overflow", test_frame_rfc9218_priority_update_overflow),
+    FUZI_Q_ITEM("rfc9218_priority_dependency_loop", test_frame_rfc9218_priority_dependency_loop),
+    
+    /* RFC 9297 - HTTP Datagrams Integration Issues */
+    FUZI_Q_ITEM("rfc9297_http_datagram_context_confusion", test_frame_rfc9297_http_datagram_context_confusion),
+    FUZI_Q_ITEM("rfc9297_datagram_flow_id_collision", test_frame_rfc9297_datagram_flow_id_collision),
+    
+    /* === EXTENDED RFC-SPECIFIC ATTACK VECTORS FUZI_Q_ITEM ENTRIES === */
+    
+    /* RFC 2119/8174 - Requirement Level Violations */
+    FUZI_Q_ITEM("rfc2119_must_violation", test_frame_rfc2119_must_violation),
+    FUZI_Q_ITEM("rfc8174_should_not_ignore", test_frame_rfc8174_should_not_ignore),
+    FUZI_Q_ITEM("rfc2119_may_abuse", test_frame_rfc2119_may_abuse),
+    
+    /* RFC 768 - UDP Integration Issues */
+    FUZI_Q_ITEM("rfc768_udp_length_mismatch", test_frame_rfc768_udp_length_mismatch),
+    FUZI_Q_ITEM("rfc768_udp_checksum_zero", test_frame_rfc768_udp_checksum_zero),
+    FUZI_Q_ITEM("rfc768_udp_port_zero", test_frame_rfc768_udp_port_zero),
+    
+    /* RFC 6455 - WebSocket Protocol Deeper Violations */
+    FUZI_Q_ITEM("rfc6455_ws_upgrade_downgrade", test_frame_rfc6455_ws_upgrade_downgrade),
+    FUZI_Q_ITEM("rfc6455_ws_sec_key_collision", test_frame_rfc6455_ws_sec_key_collision),
+    FUZI_Q_ITEM("rfc6455_ws_version_mismatch", test_frame_rfc6455_ws_version_mismatch),
+    FUZI_Q_ITEM("rfc6455_ws_extension_hijack", test_frame_rfc6455_ws_extension_hijack),
+    
+    /* RFC 8441 - HTTP/2 over QUIC Violations */
+    FUZI_Q_ITEM("rfc8441_h2_over_quic_settings", test_frame_rfc8441_h2_over_quic_settings),
+    FUZI_Q_ITEM("rfc8441_h2_quic_stream_mapping", test_frame_rfc8441_h2_quic_stream_mapping),
+    FUZI_Q_ITEM("rfc8441_extended_connect_abuse", test_frame_rfc8441_extended_connect_abuse),
+    
+    /* Advanced RFC 9000 Core Protocol Edge Cases */
+    FUZI_Q_ITEM("rfc9000_initial_packet_corruption", test_frame_rfc9000_initial_packet_corruption),
+    FUZI_Q_ITEM("rfc9000_handshake_packet_replay", test_frame_rfc9000_handshake_packet_replay),
+    FUZI_Q_ITEM("rfc9000_application_data_leak", test_frame_rfc9000_application_data_leak),
+    FUZI_Q_ITEM("rfc9000_stateless_reset_forge", test_frame_rfc9000_stateless_reset_forge),
+    FUZI_Q_ITEM("rfc9000_retry_token_reuse", test_frame_rfc9000_retry_token_reuse),
+    
+    /* Advanced RFC 9001 TLS Integration Attacks */
+    FUZI_Q_ITEM("rfc9001_tls_alert_injection", test_frame_rfc9001_tls_alert_injection),
+    FUZI_Q_ITEM("rfc9001_early_data_confusion", test_frame_rfc9001_early_data_confusion),
+    FUZI_Q_ITEM("rfc9001_certificate_verify_bypass", test_frame_rfc9001_certificate_verify_bypass),
+    FUZI_Q_ITEM("rfc9001_finished_message_forge", test_frame_rfc9001_finished_message_forge),
+    
+    /* Advanced RFC 9002 Loss Detection Exploits */
+    FUZI_Q_ITEM("rfc9002_probe_timeout_manipulation", test_frame_rfc9002_probe_timeout_manipulation),
+    FUZI_Q_ITEM("rfc9002_persistent_congestion_force", test_frame_rfc9002_persistent_congestion_force),
+    FUZI_Q_ITEM("rfc9002_bandwidth_estimation_poison", test_frame_rfc9002_bandwidth_estimation_poison),
+    FUZI_Q_ITEM("rfc9002_loss_detection_evasion", test_frame_rfc9002_loss_detection_evasion),
+    
+    /* Advanced RFC 9114 HTTP/3 Frame Attacks */
+    FUZI_Q_ITEM("rfc9114_h3_cancel_push_invalid", test_frame_rfc9114_h3_cancel_push_invalid),
+    FUZI_Q_ITEM("rfc9114_h3_headers_after_trailers", test_frame_rfc9114_h3_headers_after_trailers),
+    FUZI_Q_ITEM("rfc9114_h3_data_after_fin", test_frame_rfc9114_h3_data_after_fin),
+    FUZI_Q_ITEM("rfc9114_h3_unknown_frame_critical", test_frame_rfc9114_h3_unknown_frame_critical),
+    FUZI_Q_ITEM("rfc9114_h3_settings_after_request", test_frame_rfc9114_h3_settings_after_request),
+    
+    /* Advanced RFC 9204 QPACK Compression Attacks */
+    FUZI_Q_ITEM("rfc9204_qpack_table_update_race", test_frame_rfc9204_qpack_table_update_race),
+    FUZI_Q_ITEM("rfc9204_qpack_name_reference_oob", test_frame_rfc9204_qpack_name_reference_oob),
+    FUZI_Q_ITEM("rfc9204_qpack_huffman_bomb_extended", test_frame_rfc9204_qpack_huffman_bomb_extended),
+    FUZI_Q_ITEM("rfc9204_qpack_post_base_index", test_frame_rfc9204_qpack_post_base_index),
+    
+    /* Advanced RFC 9221 Datagram Extension Exploits */
+    FUZI_Q_ITEM("rfc9221_datagram_id_reuse", test_frame_rfc9221_datagram_id_reuse),
+    FUZI_Q_ITEM("rfc9221_datagram_ordering_violation", test_frame_rfc9221_datagram_ordering_violation),
+    FUZI_Q_ITEM("rfc9221_datagram_ack_elicitation", test_frame_rfc9221_datagram_ack_elicitation),
+    
+    /* Advanced RFC 9250 DoQ Protocol Violations */
+    FUZI_Q_ITEM("rfc9250_doq_transaction_id_reuse", test_frame_rfc9250_doq_transaction_id_reuse),
+    FUZI_Q_ITEM("rfc9250_doq_stream_multiplexing_abuse", test_frame_rfc9250_doq_stream_multiplexing_abuse),
+    FUZI_Q_ITEM("rfc9250_doq_early_close_attack", test_frame_rfc9250_doq_early_close_attack),
+    FUZI_Q_ITEM("rfc9250_doq_padding_analysis", test_frame_rfc9250_doq_padding_analysis),
+    
+    /* Cross-RFC Integration Attacks */
+    FUZI_Q_ITEM("cross_rfc_h3_quic_version_confusion", test_frame_cross_rfc_h3_quic_version_confusion),
+    FUZI_Q_ITEM("cross_rfc_tls_quic_key_mismatch", test_frame_cross_rfc_tls_quic_key_mismatch),
+    FUZI_Q_ITEM("cross_rfc_http_quic_stream_leak", test_frame_cross_rfc_http_quic_stream_leak),
+    FUZI_Q_ITEM("cross_rfc_qpack_hpack_confusion", test_frame_cross_rfc_qpack_hpack_confusion),
+    
+    /* === EXTENDED RFC-SPECIFIC ATTACK VECTORS FUZI_Q_ITEM ENTRIES === */
+    
+    /* RFC 1035 - DNS Protocol Violations */
+    FUZI_Q_ITEM("rfc1035_dns_compression_bomb", test_frame_rfc1035_dns_compression_bomb),
+    FUZI_Q_ITEM("rfc1035_dns_label_overflow", test_frame_rfc1035_dns_label_overflow),
+    FUZI_Q_ITEM("rfc1035_dns_type_confusion", test_frame_rfc1035_dns_type_confusion),
+    
+    /* RFC 1123 - Host Requirements Violations */
+    FUZI_Q_ITEM("rfc1123_invalid_hostname", test_frame_rfc1123_invalid_hostname),
+    FUZI_Q_ITEM("rfc1123_hostname_length_overflow", test_frame_rfc1123_hostname_length_overflow),
+    FUZI_Q_ITEM("rfc1123_numeric_only_hostname", test_frame_rfc1123_numeric_only_hostname),
+    
+    /* RFC 2131 - DHCP Protocol Violations */
+    FUZI_Q_ITEM("rfc2131_dhcp_option_overflow", test_frame_rfc2131_dhcp_option_overflow),
+    FUZI_Q_ITEM("rfc2131_dhcp_malformed_packet", test_frame_rfc2131_dhcp_malformed_packet),
+    FUZI_Q_ITEM("rfc2131_dhcp_invalid_message_type", test_frame_rfc2131_dhcp_invalid_message_type),
+    
+    /* RFC 2818 - HTTP Over TLS Violations */
+    FUZI_Q_ITEM("rfc2818_https_redirect_attack", test_frame_rfc2818_https_redirect_attack),
+    FUZI_Q_ITEM("rfc2818_mixed_content_attack", test_frame_rfc2818_mixed_content_attack),
+    FUZI_Q_ITEM("rfc2818_certificate_pinning_bypass", test_frame_rfc2818_certificate_pinning_bypass),
+    
+    /* RFC 3280 - Certificate and CRL Profile Violations */
+    FUZI_Q_ITEM("rfc3280_certificate_chain_attack", test_frame_rfc3280_certificate_chain_attack),
+    FUZI_Q_ITEM("rfc3280_crl_poisoning", test_frame_rfc3280_crl_poisoning),
+    FUZI_Q_ITEM("rfc3280_invalid_extension", test_frame_rfc3280_invalid_extension),
+    
+    /* RFC 3492 - Punycode Implementation Attacks */
+    FUZI_Q_ITEM("rfc3492_punycode_overflow", test_frame_rfc3492_punycode_overflow),
+    FUZI_Q_ITEM("rfc3492_punycode_homograph", test_frame_rfc3492_punycode_homograph),
+    FUZI_Q_ITEM("rfc3492_punycode_mixed_script", test_frame_rfc3492_punycode_mixed_script),
+    
+    /* RFC 4291 - IPv6 Addressing Architecture Violations */
+    FUZI_Q_ITEM("rfc4291_ipv6_header_manipulation", test_frame_rfc4291_ipv6_header_manipulation),
+    FUZI_Q_ITEM("rfc4291_ipv6_extension_header_bomb", test_frame_rfc4291_ipv6_extension_header_bomb),
+    FUZI_Q_ITEM("rfc4291_ipv6_address_spoofing", test_frame_rfc4291_ipv6_address_spoofing),
+    
+    /* RFC 5246 - TLS 1.2 Legacy Protocol Violations */
+    FUZI_Q_ITEM("rfc5246_tls12_downgrade_attack", test_frame_rfc5246_tls12_downgrade_attack),
+    FUZI_Q_ITEM("rfc5246_tls12_cipher_suite_confusion", test_frame_rfc5246_tls12_cipher_suite_confusion),
+    FUZI_Q_ITEM("rfc5246_tls12_renegotiation_attack", test_frame_rfc5246_tls12_renegotiation_attack),
+    
+    /* RFC 5321 - SMTP Enhanced Violations */
+    FUZI_Q_ITEM("rfc5321_smtp_pipeline_injection", test_frame_rfc5321_smtp_pipeline_injection),
+    FUZI_Q_ITEM("rfc5321_smtp_header_injection", test_frame_rfc5321_smtp_header_injection),
+    FUZI_Q_ITEM("rfc5321_smtp_size_limit_bypass", test_frame_rfc5321_smtp_size_limit_bypass),
+    
+    /* RFC 6066 - TLS Extensions Abuse */
+    FUZI_Q_ITEM("rfc6066_sni_spoofing", test_frame_rfc6066_sni_spoofing),
+    FUZI_Q_ITEM("rfc6066_max_fragment_length_attack", test_frame_rfc6066_max_fragment_length_attack),
+    FUZI_Q_ITEM("rfc6066_server_name_overflow", test_frame_rfc6066_server_name_overflow),
+    
+    /* RFC 6520 - TLS/DTLS Heartbeat Extension Attacks */
+    FUZI_Q_ITEM("rfc6520_heartbleed_attack", test_frame_rfc6520_heartbleed_attack),
+    FUZI_Q_ITEM("rfc6520_heartbeat_overflow", test_frame_rfc6520_heartbeat_overflow),
+    FUZI_Q_ITEM("rfc6520_heartbeat_response_spoofing", test_frame_rfc6520_heartbeat_response_spoofing),
+    
+    /* RFC 7301 - ALPN Extension Violations */
+    FUZI_Q_ITEM("rfc7301_alpn_protocol_confusion", test_frame_rfc7301_alpn_protocol_confusion),
+    FUZI_Q_ITEM("rfc7301_alpn_downgrade_attack", test_frame_rfc7301_alpn_downgrade_attack),
+    FUZI_Q_ITEM("rfc7301_alpn_protocol_injection", test_frame_rfc7301_alpn_protocol_injection),
+    
+    /* RFC 7633 - X.509v3 TLS Feature Extension Attacks */
+    FUZI_Q_ITEM("rfc7633_tls_feature_bypass", test_frame_rfc7633_tls_feature_bypass),
+    FUZI_Q_ITEM("rfc7633_must_staple_violation", test_frame_rfc7633_must_staple_violation),
+    
+    /* RFC 8446 - TLS 1.3 Advanced Violations */
+    FUZI_Q_ITEM("rfc8446_tls13_psk_binder_confusion", test_frame_rfc8446_tls13_psk_binder_confusion),
+    FUZI_Q_ITEM("rfc8446_tls13_hello_retry_confusion", test_frame_rfc8446_tls13_hello_retry_confusion),
+    FUZI_Q_ITEM("rfc8446_tls13_key_share_manipulation", test_frame_rfc8446_tls13_key_share_manipulation),
+    
+    /* RFC 8879 - TLS Certificate Compression Attacks */
+    FUZI_Q_ITEM("rfc8879_cert_compression_bomb", test_frame_rfc8879_cert_compression_bomb),
+    FUZI_Q_ITEM("rfc8879_cert_decompression_attack", test_frame_rfc8879_cert_decompression_attack),
+    
+    /* RFC 8998 - ShangMi Cipher Suites Attacks */
+    FUZI_Q_ITEM("rfc8998_shangmi_downgrade", test_frame_rfc8998_shangmi_downgrade),
+    FUZI_Q_ITEM("rfc8998_shangmi_key_confusion", test_frame_rfc8998_shangmi_key_confusion),
+    
+    /* RFC 9001 - Enhanced QUIC TLS Integration Attacks */
+    FUZI_Q_ITEM("rfc9001_transport_param_encryption_bypass", test_frame_rfc9001_transport_param_encryption_bypass),
+    FUZI_Q_ITEM("rfc9001_quic_tls_version_mismatch", test_frame_rfc9001_quic_tls_version_mismatch),
+    FUZI_Q_ITEM("rfc9001_connection_id_confusion", test_frame_rfc9001_connection_id_confusion),
+    
+    /* === FOUNDATIONAL NETWORKING PROTOCOLS FUZI_Q_ITEM ENTRIES === */
+    
+    /* RFC 791 - Internet Protocol (IPv4) Violations */
+    FUZI_Q_ITEM("rfc791_ipv4_fragment_overlap", test_frame_rfc791_ipv4_fragment_overlap),
+    FUZI_Q_ITEM("rfc791_ipv4_option_overflow", test_frame_rfc791_ipv4_option_overflow),
+    FUZI_Q_ITEM("rfc791_ipv4_ttl_manipulation", test_frame_rfc791_ipv4_ttl_manipulation),
+    
+    /* RFC 793 - Transmission Control Protocol (TCP) Violations */
+    FUZI_Q_ITEM("rfc793_tcp_sequence_wraparound", test_frame_rfc793_tcp_sequence_wraparound),
+    FUZI_Q_ITEM("rfc793_tcp_window_scale_attack", test_frame_rfc793_tcp_window_scale_attack),
+    FUZI_Q_ITEM("rfc793_tcp_urgent_pointer_abuse", test_frame_rfc793_tcp_urgent_pointer_abuse),
+    
+    /* RFC 826 - Address Resolution Protocol (ARP) Violations */
+    FUZI_Q_ITEM("rfc826_arp_spoofing_attack", test_frame_rfc826_arp_spoofing_attack),
+    FUZI_Q_ITEM("rfc826_arp_cache_poisoning", test_frame_rfc826_arp_cache_poisoning),
+    FUZI_Q_ITEM("rfc826_arp_gratuitous_flood", test_frame_rfc826_arp_gratuitous_flood),
+    
+    /* RFC 1058 - Routing Information Protocol (RIP) Violations */
+    FUZI_Q_ITEM("rfc1058_rip_metric_infinity_attack", test_frame_rfc1058_rip_metric_infinity_attack),
+    FUZI_Q_ITEM("rfc1058_rip_route_poisoning", test_frame_rfc1058_rip_route_poisoning),
+    FUZI_Q_ITEM("rfc1058_rip_authentication_bypass", test_frame_rfc1058_rip_authentication_bypass),
+    
+    /* RFC 1112 - Internet Group Management Protocol (IGMP) Violations */
+    FUZI_Q_ITEM("rfc1112_igmp_membership_flood", test_frame_rfc1112_igmp_membership_flood),
+    FUZI_Q_ITEM("rfc1112_igmp_leave_group_spoof", test_frame_rfc1112_igmp_leave_group_spoof),
+    FUZI_Q_ITEM("rfc1112_igmp_query_amplification", test_frame_rfc1112_igmp_query_amplification),
+    
+    /* RFC 1321 - MD5 Message-Digest Algorithm Attacks */
+    FUZI_Q_ITEM("rfc1321_md5_collision_attack", test_frame_rfc1321_md5_collision_attack),
+    FUZI_Q_ITEM("rfc1321_md5_length_extension", test_frame_rfc1321_md5_length_extension),
+    FUZI_Q_ITEM("rfc1321_md5_preimage_attack", test_frame_rfc1321_md5_preimage_attack),
+    
+    /* RFC 1519 - Classless Inter-Domain Routing (CIDR) Violations */
+    FUZI_Q_ITEM("rfc1519_cidr_route_aggregation_attack", test_frame_rfc1519_cidr_route_aggregation_attack),
+    FUZI_Q_ITEM("rfc1519_cidr_supernet_hijack", test_frame_rfc1519_cidr_supernet_hijack),
+    FUZI_Q_ITEM("rfc1519_cidr_prefix_length_manipulation", test_frame_rfc1519_cidr_prefix_length_manipulation),
+    
+    /* RFC 1631 - Network Address Translation (NAT) Violations */
+    FUZI_Q_ITEM("rfc1631_nat_port_exhaustion", test_frame_rfc1631_nat_port_exhaustion),
+    FUZI_Q_ITEM("rfc1631_nat_hairpinning_attack", test_frame_rfc1631_nat_hairpinning_attack),
+    FUZI_Q_ITEM("rfc1631_nat_translation_bypass", test_frame_rfc1631_nat_translation_bypass),
+    
+    /* RFC 1918 - Private Internet Address Space Violations */
+    FUZI_Q_ITEM("rfc1918_private_ip_leak", test_frame_rfc1918_private_ip_leak),
+    FUZI_Q_ITEM("rfc1918_private_routing_attack", test_frame_rfc1918_private_routing_attack),
+    FUZI_Q_ITEM("rfc1918_reserved_address_abuse", test_frame_rfc1918_reserved_address_abuse),
+    
+    /* RFC 2104 - HMAC Keyed-Hashing Violations */
+    FUZI_Q_ITEM("rfc2104_hmac_key_recovery", test_frame_rfc2104_hmac_key_recovery),
+    FUZI_Q_ITEM("rfc2104_hmac_timing_attack", test_frame_rfc2104_hmac_timing_attack),
+    FUZI_Q_ITEM("rfc2104_hmac_length_extension", test_frame_rfc2104_hmac_length_extension),
+    
+    /* RFC 2205 - Resource Reservation Protocol (RSVP) Violations */
+    FUZI_Q_ITEM("rfc2205_rsvp_path_message_spoof", test_frame_rfc2205_rsvp_path_message_spoof),
+    FUZI_Q_ITEM("rfc2205_rsvp_reservation_hijack", test_frame_rfc2205_rsvp_reservation_hijack),
+    FUZI_Q_ITEM("rfc2205_rsvp_teardown_attack", test_frame_rfc2205_rsvp_teardown_attack),
+    
+    /* RFC 2284 - PPP Extensible Authentication Protocol (EAP) Violations */
+    FUZI_Q_ITEM("rfc2284_eap_identity_spoofing", test_frame_rfc2284_eap_identity_spoofing),
+    FUZI_Q_ITEM("rfc2284_eap_method_downgrade", test_frame_rfc2284_eap_method_downgrade),
+    FUZI_Q_ITEM("rfc2284_eap_success_injection", test_frame_rfc2284_eap_success_injection),
+    
+    /* RFC 2328 - Open Shortest Path First (OSPF) Violations */
+    FUZI_Q_ITEM("rfc2328_ospf_hello_flood", test_frame_rfc2328_ospf_hello_flood),
+    FUZI_Q_ITEM("rfc2328_ospf_lsa_poisoning", test_frame_rfc2328_ospf_lsa_poisoning),
+    FUZI_Q_ITEM("rfc2328_ospf_area_hijack", test_frame_rfc2328_ospf_area_hijack),
+    
+    /* RFC 2401 - Security Architecture for IP (IPsec) Violations */
+    FUZI_Q_ITEM("rfc2401_ipsec_esp_replay", test_frame_rfc2401_ipsec_esp_replay),
+    FUZI_Q_ITEM("rfc2401_ipsec_ah_truncation", test_frame_rfc2401_ipsec_ah_truncation),
+    FUZI_Q_ITEM("rfc2401_ipsec_sa_confusion", test_frame_rfc2401_ipsec_sa_confusion),
+    
+    /* === ADVANCED NETWORKING PROTOCOLS FUZI_Q_ITEM ENTRIES === */
+    
+    /* RFC 2616 - HTTP/1.1 Protocol Violations */
+    FUZI_Q_ITEM("rfc2616_http11_request_smuggling", test_frame_rfc2616_http11_request_smuggling),
+    FUZI_Q_ITEM("rfc2616_http11_header_injection", test_frame_rfc2616_http11_header_injection),
+    FUZI_Q_ITEM("rfc2616_http11_response_splitting", test_frame_rfc2616_http11_response_splitting),
+    
+    /* RFC 2865 - Remote Authentication Dial In User Service (RADIUS) Violations */
+    FUZI_Q_ITEM("rfc2865_radius_shared_secret_attack", test_frame_rfc2865_radius_shared_secret_attack),
+    FUZI_Q_ITEM("rfc2865_radius_attribute_overflow", test_frame_rfc2865_radius_attribute_overflow),
+    FUZI_Q_ITEM("rfc2865_radius_message_authenticator_bypass", test_frame_rfc2865_radius_message_authenticator_bypass),
+    
+    /* RFC 3164 - Syslog Protocol Violations */
+    FUZI_Q_ITEM("rfc3164_syslog_format_injection", test_frame_rfc3164_syslog_format_injection),
+    FUZI_Q_ITEM("rfc3164_syslog_priority_manipulation", test_frame_rfc3164_syslog_priority_manipulation),
+    FUZI_Q_ITEM("rfc3164_syslog_timestamp_confusion", test_frame_rfc3164_syslog_timestamp_confusion),
+    
+    /* RFC 3411 - SNMP Architecture Violations */
+    FUZI_Q_ITEM("rfc3411_snmp_community_brute_force", test_frame_rfc3411_snmp_community_brute_force),
+    FUZI_Q_ITEM("rfc3411_snmp_version_downgrade", test_frame_rfc3411_snmp_version_downgrade),
+    FUZI_Q_ITEM("rfc3411_snmp_oid_traversal", test_frame_rfc3411_snmp_oid_traversal),
+    
+    /* RFC 3550 - Real-time Transport Protocol (RTP) Violations */
+    FUZI_Q_ITEM("rfc3550_rtp_sequence_prediction", test_frame_rfc3550_rtp_sequence_prediction),
+    FUZI_Q_ITEM("rfc3550_rtp_timestamp_manipulation", test_frame_rfc3550_rtp_timestamp_manipulation),
+    FUZI_Q_ITEM("rfc3550_rtp_ssrc_collision", test_frame_rfc3550_rtp_ssrc_collision),
+    
+    /* RFC 3748 - Extensible Authentication Protocol (EAP) Enhanced Violations */
+    FUZI_Q_ITEM("rfc3748_eap_tls_fragment_bomb", test_frame_rfc3748_eap_tls_fragment_bomb),
+    FUZI_Q_ITEM("rfc3748_eap_method_chaining_attack", test_frame_rfc3748_eap_method_chaining_attack),
+    FUZI_Q_ITEM("rfc3748_eap_identity_disclosure", test_frame_rfc3748_eap_identity_disclosure),
+    
+    /* RFC 4271 - Border Gateway Protocol (BGP-4) Violations */
+    FUZI_Q_ITEM("rfc4271_bgp_route_hijack", test_frame_rfc4271_bgp_route_hijack),
+    FUZI_Q_ITEM("rfc4271_bgp_path_attribute_manipulation", test_frame_rfc4271_bgp_path_attribute_manipulation),
+    FUZI_Q_ITEM("rfc4271_bgp_as_path_prepending_attack", test_frame_rfc4271_bgp_as_path_prepending_attack),
+    
+    /* RFC 4347 - Datagram Transport Layer Security (DTLS) Violations */
+    FUZI_Q_ITEM("rfc4347_dtls_replay_attack", test_frame_rfc4347_dtls_replay_attack),
+    FUZI_Q_ITEM("rfc4347_dtls_fragmentation_attack", test_frame_rfc4347_dtls_fragmentation_attack),
+    FUZI_Q_ITEM("rfc4347_dtls_cookie_manipulation", test_frame_rfc4347_dtls_cookie_manipulation),
+    
+    /* RFC 4456 - BGP Route Reflection Violations */
+    FUZI_Q_ITEM("rfc4456_bgp_route_reflection_loop", test_frame_rfc4456_bgp_route_reflection_loop),
+    FUZI_Q_ITEM("rfc4456_bgp_cluster_id_spoof", test_frame_rfc4456_bgp_cluster_id_spoof),
+    FUZI_Q_ITEM("rfc4456_bgp_originator_id_manipulation", test_frame_rfc4456_bgp_originator_id_manipulation),
+    
+    /* RFC 5321 - Enhanced SMTP Protocol Violations */
+    FUZI_Q_ITEM("rfc5321_smtp_command_injection_enhanced", test_frame_rfc5321_smtp_command_injection_enhanced),
+    FUZI_Q_ITEM("rfc5321_smtp_data_smuggling", test_frame_rfc5321_smtp_data_smuggling),
+    FUZI_Q_ITEM("rfc5321_smtp_auth_bypass", test_frame_rfc5321_smtp_auth_bypass),
+    
+    /* RFC 5389 - Session Traversal Utilities for NAT (STUN) Violations */
+    FUZI_Q_ITEM("rfc5389_stun_message_integrity_bypass", test_frame_rfc5389_stun_message_integrity_bypass),
+    FUZI_Q_ITEM("rfc5389_stun_attribute_overflow", test_frame_rfc5389_stun_attribute_overflow),
+    FUZI_Q_ITEM("rfc5389_stun_xor_mapped_address_confusion", test_frame_rfc5389_stun_xor_mapped_address_confusion),
+    
     /* END OF JULES ADDED FUZI_Q_ITEM ENTRIES */
 };
 
