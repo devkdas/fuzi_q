@@ -1269,7 +1269,6 @@ static uint8_t test_frame_uefi_bootkit[] = { 0x08, 0x80, 'U', 'E', 'F', 'I', '_'
 static uint8_t test_frame_smc_vulnerability[] = { 0x08, 0x81, 'S', 'M', 'C', '_', 'V', 'U', 'L', 'N' };
 static uint8_t test_frame_tpm_bypass[] = { 0x08, 0x82, 'T', 'P', 'M', '_', 'B', 'Y', 'P', 'A', 'S', 'S' };
 
-```
 /* === NEXT-GENERATION ATTACK VECTORS === */
 
 /* Additional missing definitions */
@@ -1279,7 +1278,7 @@ static uint8_t test_frame_xxe_attack[] = { 0x08, 0x70, 'X', 'X', 'E', '_', 'A', 
 static uint8_t test_frame_iot_mesh_takeover[] = { 0x08, 0x82, 'i', 'o', 't', '_', 'm', 'e', 's', 'h', '_', 't', 'a', 'k', 'e', 'o', 'v', 'e', 'r' };
 static uint8_t test_frame_iot_swarm_botnet[] = { 0x08, 0x83, 'i', 'o', 't', '_', 's', 'w', 'a', 'r', 'm', '_', 'b', 'o', 't', 'n', 'e', 't' };
 static uint8_t test_frame_iot_sensor_spoofing[] = { 0x08, 0x84, 'i', 'o', 't', '_', 's', 'e', 'n', 's', 'o', 'r', '_', 's', 'p', 'o', 'o', 'f' };
-static uint8_t test_frame_iot_firmware_backdoor[] = { 0x08, 0x85, 'i', 'o', 't', '_', 'f', 'w', '_', 'b', 'a', 'c', 'k', 'd
+static uint8_t test_frame_iot_firmware_backdoor[] = { 0x08, 0x85, 'i', 'o', 't', '_', 'f', 'w', '_', 'b', 'a', 'c', 'k', 'd', 'o', 'o', 'r' };
 
 /* Financial Technology Attacks */
 static uint8_t test_frame_cbdc_attack[] = { 0x08, 0x8A, 'c', 'b', 'd', 'c', '_', 'a', 't', 't', 'a', 'c', 'k' };
