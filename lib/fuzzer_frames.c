@@ -1091,6 +1091,7 @@ static uint8_t test_frame_icmp_redirect[] = { 0x08, 0x3B, 'i', 'c', 'm', 'p', '_
 /* Database-Specific Attacks */
 static uint8_t test_frame_oracle_injection[] = { 0x08, 0x3C, 'o', 'r', 'a', 'c', 'l', 'e', '_', 'i', 'n', 'j' };
 static uint8_t test_frame_mssql_injection[] = { 0x08, 0x3D, 'm', 's', 's', 'q', 'l', '_', 'i', 'n', 'j' };
+static uint8_t test_frame_postgresql_injection[] = { 0x08, 0x3E, 'p', 'o', 's', 't', 'g', 'r', 'e', 's', 'q', 'l' };
 static uint8_t test_frame_nosql_redis_injection[] = { 0x08, 0x03, 'F', 'L', 'U', 'S', 'H', 'A', 'L', 'L', 0x0D, 0x0A };
 static uint8_t test_frame_elasticsearch_injection[] = { 0x08, 0x3F, 'e', 'l', 'a', 's', 't', 'i', 'c', '_', 'i', 'n', 'j' };
 static uint8_t test_frame_cassandra_injection[] = { 0x08, 0x40, 'c', 'a', 's', 's', 'a', 'n', 'd', 'r', 'a', '_', 'i', 'n', 'j' };
