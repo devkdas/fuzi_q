@@ -1096,8 +1096,43 @@ static uint8_t test_frame_nosql_redis_injection[] = { 0x08, 0x03, 'F', 'L', 'U',
 static uint8_t test_frame_elasticsearch_injection[] = { 0x08, 0x3F, 'e', 'l', 'a', 's', 't', 'i', 'c', '_', 'i', 'n', 'j' };
 static uint8_t test_frame_cassandra_injection[] = { 0x08, 0x40, 'c', 'a', 's', 's', 'a', 'n', 'd', 'r', 'a', '_', 'i', 'n', 'j' };
 
-/* Advanced Web Application Attacks */
-static uint8_t test_frame_xxe_attack[] = { 0x08, 0x41, 'x', 'x', 'e', '_', 'a', 't', 't', 'a', 'c', 'k' };
+/* Basic SQL Injection Patterns */
+static uint8_t test_frame_sql_injection_basic[] = { 0x08, 0x50, 'S', 'Q', 'L', '_', 'B', 'A', 'S', 'I', 'C' };
+static uint8_t test_frame_sql_union_attack[] = { 0x08, 0x51, 'S', 'Q', 'L', '_', 'U', 'N', 'I', 'O', 'N' };
+static uint8_t test_frame_sql_blind_injection[] = { 0x08, 0x52, 'S', 'Q', 'L', '_', 'B', 'L', 'I', 'N', 'D' };
+
+/* XSS Attack Payloads */
+static uint8_t test_frame_xss_script_tag[] = { 0x08, 0x53, 'X', 'S', 'S', '_', 'S', 'C', 'R', 'I', 'P', 'T' };
+static uint8_t test_frame_xss_img_onerror[] = { 0x08, 0x54, 'X', 'S', 'S', '_', 'I', 'M', 'G', '_', 'E', 'R', 'R' };
+
+/* Command Injection Patterns */
+static uint8_t test_frame_cmd_injection_pipe[] = { 0x08, 0x55, 'C', 'M', 'D', '_', 'P', 'I', 'P', 'E' };
+static uint8_t test_frame_cmd_injection_backtick[] = { 0x08, 0x56, 'C', 'M', 'D', '_', 'B', 'T', 'I', 'C', 'K' };
+
+/* Path Traversal Attacks */
+static uint8_t test_frame_path_traversal_basic[] = { 0x08, 0x57, 'P', 'A', 'T', 'H', '_', 'T', 'R', 'A', 'V' };
+static uint8_t test_frame_path_traversal_encoded[] = { 0x08, 0x58, 'P', 'A', 'T', 'H', '_', 'E', 'N', 'C' };
+static uint8_t test_frame_sql_union_attack[] = { 0x08, 0x51, '\'', ' ', 'U', 'N', 'I', 'O', 'N', ' ', 'S', 'E', 'L', 'E', 'C', 'T' };
+static uint8_t test_frame_sql_blind_injection[] = { 0x08, 0x52, '\'', ' ', 'A', 'N', 'D', ' ', 'S', 'L', 'E', 'E', 'P', '(', '5', ')', ' ', '-', '-' };
+
+/* XSS Attack Payloads */
+static uint8_t test_frame_xss_script_tag[] = { 0x08, 0x53, '<', 's', 'c', 'r', 'i', 'p', 't', '>', 'a', 'l', 'e', 'r', 't', '(', '1', ')', '<', '/', 's', 'c', 'r', 'i', 'p', 't', '>' };
+static uint8_t test_frame_xss_img_onerror[] = { 0x08, 0x54, '<', 'i', 'm', 'g', ' ', 's', 'r', 'c', '=', 'x', ' ', 'o', 'n', 'e', 'r', 'r', 'o', 'r', '=', 'a', 'l', 'e', 'r', 't', '(', '1', ')', '>' };
+
+/* Command Injection Patterns */
+static uint8_t test_frame_cmd_injection_pipe[] = { 0x08, 0x55, ';', ' ', 'c', 'a', 't', ' ', '/', 'e', 't', 'c', '/', 'p', 'a', 's', 's', 'w', 'd' };
+static uint8_t test_frame_cmd_injection_backtick[] = { 0x08, 0x56, '`', 'i', 'd', '`' };
+
+/* Path Traversal Attacks */
+static uint8_t test_frame_path_traversal_basic[] = { 0x08, 0x57, '.', '.', '/', '.', '.', '/', '.', '.', '/', 'e', 't', 'c', '/', 'p', 'a', 's', 's', 'w', 'd' };
+static uint8_t test_frame_path_traversal_encoded[] = { 0x08, 0x58, '%', '2', 'e', '%', '2', 'e', '%', '2', 'f', '%', '2', 'e', '%', '2', 'e', '%', '2', 'f', 'e', 't', 'c', '%', '2', 'f', 'p', 'a', 's', 's', 'w', 'd' };
+
+/* LDAP Injection */
+static uint8_t test_frame_ldap_injection[] = { 0x08, 0x59, '*', ')', '(', 'o', 'b', 'j', 'e', 'c', 't', 'C', 'l', 'a', 's', 's', '=', '*' };
+
+/* SSRF Attacks */
+static uint8_t test_frame_ssrf_localhost[] = { 0x08, 0x5A, 'h', 't', 't', 'p', ':', '/', '/', '1', '2', '7', '.', '0', '.', '0', '.', '1', ':', '2', '2' };
+static uint8_t test_frame_ss
 static uint8_t test_frame_csrf_attack[] = { 0x08, 0x42, 'c', 's', 'r', 'f', '_', 'a', 't', 't', 'a', 'c', 'k' };
 static uint8_t test_frame_clickjacking[] = { 0x08, 0x43, 'c', 'l', 'i', 'c', 'k', 'j', 'a', 'c', 'k', 'i', 'n', 'g' };
 static uint8_t test_frame_dom_clobbering[] = { 0x08, 0x44, 'd', 'o', 'm', '_', 'c', 'l', 'o', 'b', 'b', 'e', 'r' };
@@ -1194,6 +1229,61 @@ static uint8_t test_frame_image_steganography[] = { 0x08, 0x7E, 'i', 'm', 'a', '
 static uint8_t test_frame_audio_steganography[] = { 0x08, 0x7F, 'a', 'u', 'd', 'i', 'o', '_', 's', 't', 'e', 'g', 'a', 'n', 'o' };
 static uint8_t test_frame_video_steganography[] = { 0x08, 0x80, 'v', 'i', 'd', 'e', 'o', '_', 's', 't', 'e', 'g', 'a', 'n', 'o' };
 static uint8_t test_frame_network_steganography[] = { 0x08, 0x81, 'n', 'e', 't', 'w', 'o', 'r', 'k', '_', 's', 't', 'e', 'g', 'a', 'n', 'o' };
+
+/* === MISSING ATTACK FRAME DEFINITIONS === */
+
+/* Race Condition Triggers */
+static uint8_t test_frame_race_condition_toctou[] = { 0x08, 0xE0, 'R', 'A', 'C', 'E', '_', 'T', 'O', 'C', 'T', 'O', 'U' };
+static uint8_t test_frame_race_condition_double_fetch[] = { 0x08, 0xE1, 'R', 'A', 'C', 'E', '_', 'D', 'B', 'L', '_', 'F', 'E', 'T', 'C', 'H' };
+static uint8_t test_frame_race_condition_atomic_violation[] = { 0x08, 0xE2, 'R', 'A', 'C', 'E', '_', 'A', 'T', 'O', 'M', 'I', 'C' };
+
+/* Deserialization Attacks */
+static uint8_t test_frame_deserial_java_commons[] = { 0x08, 0xE3, 'J', 'A', 'V', 'A', '_', 'C', 'O', 'M', 'M', 'O', 'N', 'S' };
+static uint8_t test_frame_deserial_python_pickle[] = { 0x08, 0xE4, 'P', 'Y', '_', 'P', 'I', 'C', 'K', 'L', 'E' };
+static uint8_t test_frame_deserial_php_unserialize[] = { 0x08, 0xE5, 'P', 'H', 'P', '_', 'U', 'N', 'S', 'E', 'R' };
+static uint8_t test_frame_deserial_dotnet_binaryformatter[] = { 0x08, 0xE6, 'D', 'O', 'T', 'N', 'E', 'T', '_', 'B', 'I', 'N', 'F', 'M', 'T' };
+
+/* Blockchain/DeFi Attacks */
+static uint8_t test_frame_blockchain_reentrancy[] = { 0x08, 0xE7, 'B', 'L', 'O', 'C', 'K', '_', 'R', 'E', 'E', 'N', 'T' };
+static uint8_t test_frame_blockchain_flashloan[] = { 0x08, 0xE8, 'B', 'L', 'O', 'C', 'K', '_', 'F', 'L', 'A', 'S', 'H' };
+static uint8_t test_frame_blockchain_mev_sandwich[] = { 0x08, 0xE9, 'B', 'L', 'O', 'C', 'K', '_', 'M', 'E', 'V' };
+static uint8_t test_frame_blockchain_oracle_manipulation[] = { 0x08, 0xEA, 'B', 'L', 'O', 'C', 'K', '_', 'O', 'R', 'A', 'C', 'L', 'E' };
+
+/* AI/ML Model Attacks */
+static uint8_t test_frame_ai_model_extraction[] = { 0x08, 0xEB, 'A', 'I', '_', 'M', 'O', 'D', 'E', 'L', '_', 'E', 'X', 'T' };
+static uint8_t test_frame_ai_membership_inference[] = { 0x08, 0xEC, 'A', 'I', '_', 'M', 'E', 'M', 'B', 'E', 'R', '_', 'I', 'N', 'F' };
+static uint8_t test_frame_ai_backdoor_trigger[] = { 0x08, 0xED, 'A', 'I', '_', 'B', 'A', 'C', 'K', 'D', 'O', 'O', 'R' };
+static uint8_t test_frame_ai_prompt_injection[] = { 0x08, 0xEE, 'A', 'I', '_', 'P', 'R', 'O', 'M', 'P', 'T', '_', 'I', 'N', 'J' };
+
+/* Supply Chain Attacks */
+static uint8_t test_frame_supply_dependency_confusion[] = { 0x08, 0xEF, 'S', 'U', 'P', 'P', 'L', 'Y', '_', 'D', 'E', 'P', '_', 'C', 'O', 'N', 'F' };
+static uint8_t test_frame_supply_typosquatting[] = { 0x08, 0xF0, 'S', 'U', 'P', 'P', 'L', 'Y', '_', 'T', 'Y', 'P', 'O' };
+static uint8_t test_frame_supply_malicious_package[] = { 0x08, 0xF1, 'S', 'U', 'P', 'P', 'L', 'Y', '_', 'M', 'A', 'L', 'P', 'K', 'G' };
+static uint8_t test_frame_supply_compromised_repo[] = { 0x08, 0xF2, 'S', 'U', 'P', 'P', 'L', 'Y', '_', 'C', 'O', 'M', 'P', '_', 'R', 'E', 'P', 'O' };
+
+/* 5G/Edge Computing Attacks */
+static uint8_t test_frame_5g_slice_isolation_bypass[] = { 0x08, 0xF3, '5', 'G', '_', 'S', 'L', 'I', 'C', 'E', '_', 'B', 'Y', 'P', 'A', 'S', 'S' };
+static uint8_t test_frame_5g_compute_escape[] = { 0x08, 0xF4, '5', 'G', '_', 'C', 'O', 'M', 'P', 'U', 'T', 'E', '_', 'E', 'S', 'C' };
+static uint8_t test_frame_5g_network_slicing_attack[] = { 0x08, 0xF5, '5', 'G', '_', 'N', 'E', 'T', '_', 'S', 'L', 'I', 'C', 'E' };
+static uint8_t test_frame_edge_function_escape[] = { 0x08, 0xF6, 'E', 'D', 'G', 'E', '_', 'F', 'U', 'N', 'C', '_', 'E', 'S', 'C' };
+
+/* Advanced Binary Exploitation */
+static uint8_t test_frame_binary_rop_chain[] = { 0x08, 0xF7, 'B', 'I', 'N', '_', 'R', 'O', 'P', '_', 'C', 'H', 'A', 'I', 'N' };
+static uint8_t test_frame_binary_jop_chain[] = { 0x08, 0xF8, 'B', 'I', 'N', '_', 'J', 'O', 'P', '_', 'C', 'H', 'A', 'I', 'N' };
+static uint8_t test_frame_binary_stack_pivot[] = { 0x08, 0xF9, 'B', 'I', 'N', '_', 'S', 'T', 'A', 'C', 'K', '_', 'P', 'I', 'V' };
+static uint8_t test_frame_binary_heap_spray[] = { 0x08, 0xFA, 'B', 'I', 'N', '_', 'H', 'E', 'A', 'P', '_', 'S', 'P', 'R', 'A', 'Y' };
+
+/* Advanced Container/Orchestration Attacks */
+static uint8_t test_frame_container_runtime_escape[] = { 0x08, 0xFB, 'C', 'O', 'N', 'T', '_', 'R', 'T', '_', 'E', 'S', 'C' };
+static uint8_t test_frame_k8s_rbac_bypass[] = { 0x08, 0xFC, 'K', '8', 'S', '_', 'R', 'B', 'A', 'C', '_', 'B', 'Y', 'P' };
+static uint8_t test_frame_k8s_admission_bypass[] = { 0x08, 0xFD, 'K', '8', 'S', '_', 'A', 'D', 'M', '_', 'B', 'Y', 'P' };
+static uint8_t test_frame_k8s_pod_escape[] = { 0x08, 0xFE, 'K', '8', 'S', '_', 'P', 'O', 'D', '_', 'E', 'S', 'C' };
+
+/* Advanced Firmware/Hardware Attacks */
+static uint8_t test_frame_firmware_dump_attack[] = { 0x08, 0xFF, 'F', 'W', '_', 'D', 'U', 'M', 'P', '_', 'A', 'T', 'T', 'K' };
+static uint8_t test_frame_uefi_bootkit[] = { 0x08, 0x80, 'U', 'E', 'F', 'I', '_', 'B', 'O', 'O', 'T', 'K', 'I', 'T' };
+static uint8_t test_frame_smc_vulnerability[] = { 0x08, 0x81, 'S', 'M', 'C', '_', 'V', 'U', 'L', 'N' };
+static uint8_t test_frame_tpm_bypass[] = { 0x08, 0x82, 'T', 'P', 'M', '_', 'B', 'Y', 'P', 'A', 'S', 'S' };
 
 /* === NEXT-GENERATION ATTACK VECTORS === */
 
@@ -1696,7 +1786,6 @@ static uint8_t test_frame_rfc4456_bgp_originator_id_manipulation[] = { 0x08, 0x0
 
 /* RFC 5321 - Enhanced SMTP Protocol Violations */
 static uint8_t test_frame_rfc5321_smtp_command_injection_enhanced[] = { 0x08, 0x00, 'M', 'A', 'I', 'L', ' ', 'F', 'R', 'O', 'M', ':', '<', 'u', 's', 'e', 'r', '>', '\r', '\n', 'R', 'C', 'P', 'T', ' ', 'T', 'O', ':', '<', 'v', 'i', 'c', 't', 'i', 'm', '>' };
-static uint8_t test_frame_rfc5321_smtp_data_smuggling[] = { 0x08, 0x01, 'D', 'A', 'T', 'A', '\r', '\n', '.', '\r', '\n', 'M', 'A', 'I', 'L', ' ', 'F', 'R', 'O', 'M', ':', '<', 'a', 't', 't', 'a', 'c', 'k', 'e', 'r', '>' };
 static uint8_t test_frame_rfc5321_smtp_auth_bypass[] = { 0x08, 0x02, 'A', 'U', 'T', 'H', ' ', 'P', 'L', 'A', 'I', 'N', ' ', 'A', 'G', 'F', 'k', 'b', 'W', 'l', 'u', 'A', 'G', 'F', 'k', 'b', 'W', 'l', 'u' };
 
 /* RFC 5389 - Session Traversal Utilities for NAT (STUN) Violations */
