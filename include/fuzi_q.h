@@ -130,6 +130,7 @@ uint32_t fuzi_q_fuzzer(void* fuzz_ctx, picoquic_cnx_t* cnx,
 void fuzzer_random_cid(fuzzer_ctx_t* ctx, picoquic_connection_id_t* icid);
 void fuzi_q_fuzzer_init(fuzzer_ctx_t* fuzz_ctx, picoquic_connection_id_t* init_cid, picoquic_quic_t* quic);
 void fuzi_q_fuzzer_release(fuzzer_ctx_t* fuzz_ctx);
+void fuzzer_release_icid_ctx_by_icid(fuzzer_ctx_t* ctx, picoquic_connection_id_t* icid);
 
 /* Unification of initial and basic fuzzer
  * TODO: merge the two mechanisms in a single state

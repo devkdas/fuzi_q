@@ -54,13 +54,14 @@
  */
 
 /* Clear a connection context */
-void fuzi_q_release_connection(fuzi_q_cnx_ctx_t* cnx_ctx)
+void fuzi_q_release_connection(fuzi_q_ctx_t* fuzi_q_ctx, fuzi_q_cnx_ctx_t* cnx_ctx)
 {
     if (cnx_ctx->quicperf_ctx != NULL) {
         quicperf_delete_ctx(cnx_ctx->quicperf_ctx);
     }
     picoquic_demo_client_delete_context(&cnx_ctx->callback_ctx);
     if (cnx_ctx->cnx_client != NULL) {
+        fuzzer_release_icid_ctx_by_icid(&fuzi_q_ctx->fuzz_ctx, &cnx_ctx->icid);
         picoquic_delete_cnx(cnx_ctx->cnx_client);
     }
     memset(cnx_ctx, 0, sizeof(fuzi_q_cnx_ctx_t));
@@ -270,7 +271,7 @@ void fuzi_q_release_client_context(fuzi_q_ctx_t* fuzi_q_ctx)
 {
     if (fuzi_q_ctx->cnx_ctx != NULL) {
         for (size_t i = 0; i < fuzi_q_ctx->nb_cnx_ctx; i++) {
-            fuzi_q_release_connection(&fuzi_q_ctx->cnx_ctx[i]);
+            fuzi_q_release_connection(fuzi_q_ctx, &fuzi_q_ctx->cnx_ctx[i]);
         }
         free(fuzi_q_ctx->cnx_ctx);
         fuzi_q_ctx->cnx_ctx = NULL;
@@ -346,7 +347,7 @@ int fuzi_q_loop_check_cnx(fuzi_q_ctx_t* fuzi_q_ctx, uint64_t current_time, int *
                 if (fuzi_q_ctx->fuzz_mode == fuzi_q_mode_client && !cnx_ctx->was_fuzzed) {
                     DBG_PRINTF("Connection stopped without being fuzzed: %02x%02x...", cnx_ctx->icid.id[0], cnx_ctx->icid.id[1]);
                 }
-                fuzi_q_release_connection(cnx_ctx);
+                fuzi_q_release_connection(fuzi_q_ctx, cnx_ctx);
                 *is_active = 1;
             }
         }

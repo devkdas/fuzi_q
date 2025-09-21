@@ -2497,3 +2497,18 @@ uint32_t fuzi_q_fuzzer(void* fuzz_ctx_param, picoquic_cnx_t* cnx,
     }
     return fuzzed_length;
 }
+
+void fuzzer_release_icid_ctx_by_icid(fuzzer_ctx_t* ctx, picoquic_connection_id_t* icid)
+{
+    fuzzer_icid_ctx_t** pp_icid_ctx = &ctx->first_icid_ctx;
+
+    while (*pp_icid_ctx != NULL) {
+        if (picoquic_compare_connection_id(icid, &(*pp_icid_ctx)->icid) == 0) {
+            fuzzer_icid_ctx_t* released_ctx = *pp_icid_ctx;
+            *pp_icid_ctx = released_ctx->next_icid_ctx;
+            fuzzer_release_icid_ctx(released_ctx);
+            break;
+        }
+        pp_icid_ctx = &(*pp_icid_ctx)->next_icid_ctx;
+    }
+}
