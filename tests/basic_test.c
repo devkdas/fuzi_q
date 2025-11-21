@@ -496,7 +496,7 @@ int fuzi_q_set_test_server_ctx(fuzi_q_test_config_t* test_config, fuzi_q_ctx_t* 
         }
     }
 
-    fuzi_q_ctx->quic = picoquic_create_and_configure(&config, picoquic_h09_server_callback, NULL, test_config->simulated_time,
+fuzi_q_ctx->quic = picoquic_create_and_configure(&config, NULL, NULL, test_config->simulated_time,
         &test_config->simulated_time);
     if (fuzi_q_ctx->quic == NULL) {
         ret = -1;
