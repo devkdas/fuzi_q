@@ -87,7 +87,7 @@ int fuzi_q_server(fuzi_q_mode_enum fuzz_mode, picoquic_quic_config_t* config, ui
     }
 #endif
     if (ret == 0) {
-        fuzi_q_ctx.quic = picoquic_create_and_configure(config, picoquic_demo_server_callback, &picoquic_file_param, current_time, NULL);
+fuzi_q_ctx.quic = picoquic_create_and_configure(config, NULL, &picoquic_file_param, current_time, NULL);
         if (fuzi_q_ctx.quic == NULL) {
             ret = -1;
         }
