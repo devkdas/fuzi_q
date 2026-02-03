@@ -97,7 +97,7 @@ fuzi_q_ctx.quic = picoquic_create_and_configure(config, NULL, &picoquic_file_par
             picoquic_set_fuzz(fuzi_q_ctx.quic, fuzi_q_fuzzer, &fuzi_q_ctx.fuzz_ctx);
             picoquic_set_key_log_file_from_env(fuzi_q_ctx.quic);
 
-            picoquic_set_alpn_select_fn(fuzi_q_ctx.quic, picoquic_demo_server_callback_select_alpn);
+            picoquic_set_alpn_select_fn(fuzi_q_ctx.quic, (picoquic_alpn_select_fn)picoquic_demo_server_callback_select_alpn);
 
             picoquic_set_mtu_max(fuzi_q_ctx.quic, config->mtu_max);
             if (config->qlog_dir != NULL)
