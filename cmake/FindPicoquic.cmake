@@ -38,9 +38,9 @@ find_package_handle_standard_args(Picoquic REQUIRED_VARS
 
 if(Picoquic_FOUND)
     set(Picoquic_LIBRARIES
-        ${Picoquic_CORE_LIBRARY}
+        ${Picohttp_CORE_LIBRARY}
         ${Picoquic_LOG_LIBRARY}
-        ${Picohttp_CORE_LIBRARY} )
+        ${Picoquic_CORE_LIBRARY} )
     set(Picoquic_INCLUDE_DIRS
         ${Picoquic_INCLUDE_DIR}
         ${Picoquic_BINLOG_DIR}
